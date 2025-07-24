@@ -5,85 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lanchô - Peça Online!</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- BIBLIOTECA DO SUPABASE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .z-20 { z-index: 20; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
     <!-- Header Section -->
-    <header class="bg-white shadow-md sticky top-0 z-10">
+    <header class="bg-white shadow-md sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-3 flex justify-between items-center">
             <a href="#" class="text-3xl font-bold text-yellow-500">Lanchô</a>
-            <div class="hidden md:flex items-center space-x-8">
-                 <a href="#billboard" class="text-gray-600 hover:text-yellow-500 transition-colors">Destaque</a>
-                 <a href="#menu" class="text-gray-600 hover:text-yellow-500 transition-colors">Cardápio</a>
-                 <a href="#sales-dashboard" class="text-gray-600 hover:text-yellow-500 transition-colors">Painel</a>
-                 <a href="#menu" class="bg-red-600 text-white font-bold py-2 px-6 rounded-full text-sm hover:bg-red-700 transition-colors shadow">Peça Agora</a>
+            <div class="flex items-center space-x-2 md:space-x-4">
+                <a href="./catalog.html" class="hidden sm:block bg-yellow-400 text-white font-bold py-2 px-5 rounded-full text-sm hover:bg-yellow-500 transition-colors shadow">Cardápio</a>
+                <div class="relative">
+                    <button id="menu-toggle-button" class="p-2 rounded-full text-gray-600 hover:bg-gray-200 focus:outline-none">
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
+                    </button>
+                    <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl overflow-hidden">
+                        <div id="user-section" class="hidden p-4 border-b border-gray-200">
+                            <div class="flex items-center"><div class="p-2 bg-gray-200 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg></div><div class="ml-3"><p id="user-greeting" class="text-sm font-semibold text-gray-800"></p><a id="admin-panel-link" href="./admin.html" class="hidden text-xs text-blue-600 hover:underline">Acessar Painel Admin</a></div></div>
+                        </div>
+                        <div id="login-section" class="p-4 border-b border-gray-200"><a href="./login.html" class="block w-full text-center bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Fazer Login</a></div>
+                        <a href="#billboard" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100">Destaque</a>
+                        <a id="sales-dashboard-link" href="#sales-dashboard" class="hidden py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100">Painel de Vendas</a>
+                        <a href="./catalog.html" class="block sm:hidden py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100">Cardápio</a>
+                        <a href="./catalog.html" class="block py-3 px-4 text-sm font-bold text-red-600 text-center hover:bg-red-50">Peça Agora!</a>
+                        <div id="logout-section" class="hidden p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left text-sm text-gray-700 hover:bg-gray-100 p-2 rounded">Sair</button></div>
+                    </div>
+                </div>
             </div>
-            <button id="mobile-menu-button" class="md:hidden p-2 rounded-md text-gray-600">
-                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
-            </button>
         </nav>
-        <div id="mobile-menu" class="hidden md:hidden">
-            <a href="#billboard" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100">Destaque</a>
-            <a href="#menu" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100">Cardápio</a>
-            <a href="#sales-dashboard" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100">Painel</a>
-            <a href="#menu" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100">Peça Agora</a>
-        </div>
     </header>
 
     <!-- Main Content -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         
-        <!-- Billboard Section -->
+        <!-- Billboard Section (Destaque do Dia) -->
         <section id="billboard" class="bg-white rounded-lg shadow-lg overflow-hidden mb-12 mt-4">
-            <div class="md:flex">
-                <div class="md:w-1/2">
-                    <img class="h-64 w-full object-cover md:h-full" src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?q=80&w=2072&auto=format&fit=crop" alt="Nosso hambúrguer mais famoso">
+             <div class="md:flex md:h-96"> <!-- Altura fixa no desktop -->
+                <div class="h-64 md:h-full md:w-1/2 bg-gray-200"> <!-- Altura fixa no mobile, altura total no desktop -->
+                    <img id="billboard-image" class="h-full w-full object-cover" src="" alt="Destaque do dia">
                 </div>
                 <div class="p-8 md:w-1/2 flex flex-col justify-center">
-                    <h2 class="text-3xl font-bold text-yellow-600 mb-2">O Mais Famoso da Casa!</h2>
-                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">Lanchô Magnífico</h3>
-                    <p class="text-gray-600 mb-6">Duas carnes suculentas, queijo cheddar duplo, bacon crocante e nosso molho secreto inconfundível. Uma experiência única!</p>
-                    <form action="https://ygsziltorjcgpjbmlptr.supabase.co/functions/v1/create-checkout-session" method="POST" class="self-start">
-                        <input type="hidden" name="lookup_key" value="lancho_magnifico_key">
-                        <button type="submit" class="bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-red-700 transition-colors duration-300 shadow-lg">
-                            Quero Esse!
-                        </button>
-                    </form>
+                    <h2 class="text-3xl font-bold text-yellow-600 mb-2">Destaque do Dia!</h2>
+                    <h3 id="billboard-name" class="text-2xl font-semibold text-gray-800 mb-4"></h3>
+                    <p id="billboard-description" class="text-gray-600 mb-6"></p>
+                    <a href="./catalog.html" class="self-start bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-red-700 transition-colors duration-300 shadow-lg">
+                        Ver Cardápio e Pedir
+                    </a>
                 </div>
             </div>
         </section>
 
-        <!-- Menu Section -->
-        <section id="menu">
-            <h2 class="text-3xl font-bold text-center mb-8 text-yellow-600">Nosso Cardápio</h2>
-            <div class="flex flex-col gap-8">
-                <!-- Menu Item 1: Image Left -->
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden md:flex transition-shadow duration-300 hover:shadow-xl">
-                    <div class="md:w-1/3">
-                        <img src="https://placehold.co/600x400/fbbf24/333333?text=X-Burger" alt="Foto de um X-Burger delicioso" class="w-full h-full object-cover">
-                    </div>
-                    <div class="p-6 md:w-2/3 flex flex-col justify-center">
-                        <h4 class="text-2xl font-semibold mb-2">X-Burger Clássico</h4>
-                        <p class="text-gray-600 mb-4">Nosso clássico X-Burger vem com pão fofinho selado na manteiga, um suculento hambúrguer de 100g de carne bovina, queijo prato derretido, alface fresca, tomate em rodelas e nosso delicioso molho especial da casa.</p>
-                        <form action="https://ygsziltorjcgpjbmlptr.supabase.co/functions/v1/create-checkout-session" method="POST" class="self-start">
-                            <input type="hidden" name="lookup_key" value="xburger_classico_key">
-                            <button type="submit" class="bg-red-600 text-white font-bold py-2 px-6 rounded-full text-base hover:bg-red-700 transition-colors duration-300 shadow-lg">
-                                Comprar
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Sales Dashboard Section -->
-        <section id="sales-dashboard" class="mt-16">
+        <!-- A seção do painel de vendas fica aqui no HTML, mas escondida por padrão -->
+        <section id="sales-dashboard" class="hidden mt-16">
             <h2 class="text-3xl font-bold text-center mb-8 text-yellow-600">Painel de Vendas</h2>
             <div class="bg-white rounded-lg shadow-lg p-6">
                 <div class="overflow-x-auto">
@@ -96,83 +74,141 @@
                                 <th scope="col" class="py-3 px-6">Valor</th>
                             </tr>
                         </thead>
-                        <tbody id="sales-table-body">
-                            <tr><td colspan="4" class="text-center py-4">Carregando vendas...</td></tr>
-                        </tbody>
+                        <tbody id="sales-table-body"></tbody>
                     </table>
                 </div>
             </div>
         </section>
-
     </main>
     
     <!-- Footer Section -->
     <footer class="bg-yellow-800 text-yellow-50 mt-12">
-        <!-- O rodapé continua aqui -->
+        <div class="container mx-auto px-4 md:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
+                <div><h4 class="font-bold text-lg mb-3">Lanchô</h4><p class="text-sm text-yellow-100">O melhor hambúrguer da região.</p></div>
+                <div><h4 class="font-bold text-lg mb-3">Contato</h4><ul class="text-sm text-yellow-100 space-y-2"><li>(21) 969762713</li><li>contato@lancho.com.br</li></ul></div>
+                <div><h4 class="font-bold text-lg mb-3">Endereço</h4><p class="text-sm text-yellow-100">Rua Getúlio Vargas, 4<br>Bonsucesso, Rio de Janeiro - RJ</p></div>
+                <div><h4 class="font-bold text-lg mb-3">Siga-nos</h4><div class="flex justify-center md:justify-start space-x-4"><a href="https://www.instagram.com/felipefbr_/" class="text-yellow-100 hover:text-white"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" /></svg></a><a href="https://x.com/dahlype" class="text-yellow-100 hover:text-white"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.012 2.002c-5.523 0-10 4.477-10 10 0 5.522 4.477 10 10 10 5.522 0 10-4.478 10-10 0-5.523-4.478-10-10-10zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></a></div></div>
+            </div>
+            <div class="border-t border-yellow-700 mt-8 pt-4 text-center text-sm text-yellow-200"><p>&copy; 2025 Lanchô. Todos os direitos reservados.</p></div>
+        </div>
     </footer>
 
     <script>
+        // Lógica de autenticação e menu
         document.addEventListener('DOMContentLoaded', () => {
-            // Script do menu mobile
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
-            if(mobileMenuButton) {
-                mobileMenuButton.addEventListener('click', () => {
-                    mobileMenu.classList.toggle('hidden');
+            const menuToggleButton = document.getElementById('menu-toggle-button');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+            const userSection = document.getElementById('user-section');
+            const userGreetingSpan = document.getElementById('user-greeting');
+            const loginSection = document.getElementById('login-section');
+            const logoutSection = document.getElementById('logout-section');
+            const logoutButton = document.getElementById('logout-button');
+            const adminPanelLink = document.getElementById('admin-panel-link');
+            const salesDashboardSection = document.getElementById('sales-dashboard');
+            const salesDashboardLink = document.getElementById('sales-dashboard-link');
+            
+            menuToggleButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropdownMenu.classList.toggle('hidden');
+            });
+
+            window.addEventListener('click', (event) => {
+                if (!dropdownMenu.classList.contains('hidden') && !dropdownMenu.contains(event.target) && !menuToggleButton.contains(event.target)) {
+                    dropdownMenu.classList.add('hidden');
+                }
+            });
+
+            const userString = localStorage.getItem('currentUser');
+            if (userString) {
+                const user = JSON.parse(userString);
+                userGreetingSpan.textContent = `Olá, ${user.nome}!`;
+                userSection.classList.remove('hidden');
+                logoutSection.classList.remove('hidden');
+                loginSection.classList.add('hidden');
+                
+                if (user.email === 'admin@lancho.com') {
+                    adminPanelLink.classList.remove('hidden');
+                    salesDashboardLink.classList.remove('hidden');
+                    salesDashboardSection.classList.remove('hidden');
+                }
+            } else {
+                userSection.classList.add('hidden');
+                logoutSection.classList.add('hidden');
+                loginSection.classList.remove('hidden');
+            }
+            
+            if(logoutButton) {
+                logoutButton.addEventListener('click', () => {
+                    localStorage.removeItem('currentUser');
+                    window.location.reload();
                 });
             }
 
-            // --- SCRIPT DO PAINEL DE VENDAS (VERSÃO AVANÇADA) ---
-            const salesTableBody = document.getElementById('sales-table-body');
-            
-            // 1. SUAS CHAVES DO SUPABASE (JÁ PREENCHIDAS)
+            const { createClient } = supabase;
             const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
-
-            const { createClient } = supabase;
             const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-            // 2. FUNÇÃO PARA BUSCAR OS DADOS DAS TABELAS CORRETAS
+            const salesTableBody = document.getElementById('sales-table-body');
+            
             async function fetchSales() {
                 if(!salesTableBody) return;
-                
-                const { data, error } = await supabaseClient
-                    .from('Pedido')
-                    .select(`data, descricao, valor, Cliente ( email )`)
-                    .order('data', { ascending: false });
-
-                if (error) {
-                    console.error('Erro ao buscar pedidos:', error);
-                    salesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Falha ao carregar dados. Verifique o console.</td></tr>`;
-                    return;
-                }
-
-                if (data.length === 0) {
-                    salesTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">Nenhum pedido registrado ainda.</td></tr>`;
-                    return;
-                }
-
+                const { data, error } = await supabaseClient.from('Pedido').select(`*, Cliente (email)`).order('data', { ascending: false });
+                if (error) { console.error('Erro ao buscar vendas:', error); return; }
                 salesTableBody.innerHTML = '';
-                for (const pedido of data) {
-                    const saleDate = new Date(pedido.data).toLocaleDateString('pt-BR');
-                    const saleValue = `R$ ${parseFloat(pedido.valor).toFixed(2).replace('.', ',')}`;
-                    const customerEmail = pedido.Cliente ? pedido.Cliente.email : 'Email não encontrado';
-
-                    const row = `
-                        <tr class="bg-white border-b">
-                            <td class="py-4 px-6">${saleDate}</td>
-                            <td class="py-4 px-6">${customerEmail}</td>
-                            <td class="py-4 px-6">${pedido.descricao}</td>
-                            <td class="py-4 px-6 font-medium">${saleValue}</td>
-                        </tr>
-                    `;
+                for (const sale of data) {
+                    const saleDate = new Date(sale.data).toLocaleDateString('pt-BR');
+                    const saleValue = `R$ ${parseFloat(sale.valor).toFixed(2).replace('.', ',')}`;
+                    const row = `<tr class="bg-white border-b"><td class="py-4 px-6">${saleDate}</td><td class="py-4 px-6">${sale.Cliente.email}</td><td class="py-4 px-6">${sale.descricao}</td><td class="py-4 px-6 font-medium">${saleValue}</td></tr>`;
                     salesTableBody.innerHTML += row;
                 }
             }
+
+            if(salesDashboardSection && !salesDashboardSection.classList.contains('hidden')){
+                fetchSales();
+            }
+        });
+
+        // --- LÓGICA DO DESTAQUE DO DIA (BASEADO NO CALENDÁRIO) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const products = [
+                {
+                    name: 'Lanchô X-Burger',
+                    description: 'Nosso clássico X-Burger vem com pão fofinho selado na manteiga, um suculento hambúrguer de 100g de carne bovina, queijo prato derretido, alface fresca, tomate em rodelas e nosso delicioso molho especial da casa.',
+                    imageUrl: './images/lanchoxburger.jpg'
+                },
+                {
+                    name: 'Batata Frita da Casa',
+                    description: 'Acompanhamento perfeito para qualquer lanche. Uma porção generosa de batatas fritas selecionadas, super crocantes por fora e macias por dentro.',
+                    imageUrl: './images/batatafrita.jpg'
+                },
+                {
+                    name: 'Coca-Cola 2L',
+                    description: 'Para refrescar e acompanhar o seu lanche, uma Coca-Cola de 2 litros bem gelada para toda a galera.',
+                    imageUrl: './images/cocacola.jpg'
+                },
+                {
+                    name: 'MilkShake Especial',
+                    description: 'Cremoso e delicioso, feito com sorvete de verdade e uma calda especial. A sobremesa perfeita!',
+                    imageUrl: './images/milkshake.jpg'
+                },
+                {
+                    name: 'Onion Rings da Casa',
+                    description: 'Anéis de cebola empanados e fritos na perfeição. Crocantes e ideais para compartilhar (ou não!).',
+                    imageUrl: './images/onionrings.jpg'
+                }
+            ];
+
+            const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+            const productIndex = daysSinceEpoch % products.length; 
             
-            fetchSales();
+            const featuredProduct = products[productIndex];
+
+            document.getElementById('billboard-image').src = featuredProduct.imageUrl;
+            document.getElementById('billboard-image').alt = `Destaque do dia: ${featuredProduct.name}`;
+            document.getElementById('billboard-name').textContent = featuredProduct.name;
+            document.getElementById('billboard-description').textContent = featuredProduct.description;
         });
     </script>
-
 </body>
 </html>

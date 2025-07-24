@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Admin - Lanchô</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Header Section -->
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-4 md:px-8 py-3 flex justify-between items-center">
+            <a href="./index.html" class="text-3xl font-bold text-yellow-500">Lanchô - Admin</a>
+            <div>
+                 <a href="./index.html" class="text-gray-600 hover:text-yellow-500 transition-colors mr-4">Voltar para o Site</a>
+                 <button id="logout-button" class="bg-red-600 text-white font-bold py-2 px-6 rounded-full text-sm hover:bg-red-700 transition-colors shadow">Sair</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-4 md:p-8 flex-grow">
+        <section id="clients-dashboard">
+            <h2 class="text-3xl font-bold text-center mb-8 text-yellow-600">Painel de Clientes</h2>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="py-3 px-6">ID</th>
+                                <th scope="col" class="py-3 px-6">Nome</th>
+                                <th scope="col" class="py-3 px-6">Email</th>
+                                <th scope="col" class="py-3 px-6">Contato</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-table-body">
+                            <!-- As linhas de clientes serão inseridas aqui pelo JavaScript -->
+                            <tr>
+                                <td colspan="4" class="text-center py-4">Carregando clientes...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer Section -->
+    <footer class="bg-yellow-800 text-yellow-50 mt-12">
+        <div class="container mx-auto px-4 md:px-8 py-8 text-center">
+             <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- SCRIPT DO PAINEL DO ADMIN ---
+        const { createClient } = supabase;
+        // Cole suas chaves do Supabase aqui
+        const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const clientsTableBody = document.getElementById('clients-table-body');
+        const logoutButton = document.getElementById('logout-button');
+
+        // Função de Logout
+        logoutButton.addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            window.location.href = './index.html';
+        });
+
+        // Função para proteger a página e buscar os clientes
+        async function initializeAdminPanel() {
+            // 1. Protege a página
+            const userString = localStorage.getItem('currentUser');
+            if (!userString) {
+                window.location.href = './login.html'; // Se não tem ninguém logado, vai pro login
+                return;
+            }
+            
+            const user = JSON.parse(userString);
+            if (user.email !== 'admin@lancho.com') {
+                window.location.href = './index.html'; // Se não é o admin, vai para a página inicial
+                return;
+            }
+
+            // 2. Se for o admin, busca todos os clientes no banco de dados
+            const { data, error } = await supabaseClient
+                .from('Cliente')
+                .select('*')
+                .order('nome', { ascending: true });
+
+            if (error) {
+                console.error('Erro ao buscar clientes:', error);
+                clientsTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Falha ao carregar dados dos clientes.</td></tr>`;
+                return;
+            }
+            
+            if (data.length === 0) {
+                clientsTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">Nenhum cliente registrado.</td></tr>`;
+                return;
+            }
+
+            clientsTableBody.innerHTML = '';
+            for (const client of data) {
+                 const row = `
+                    <tr class="bg-white border-b">
+                        <td class="py-4 px-6">${client.id}</td>
+                        <td class="py-4 px-6 font-medium">${client.nome}</td>
+                        <td class="py-4 px-6">${client.email}</td>
+                        <td class="py-4 px-6">${client.contato}</td>
+                    </tr>
+                `;
+                clientsTableBody.innerHTML += row;
+            }
+        }
+
+        // Roda a função principal quando a página carrega
+        document.addEventListener('DOMContentLoaded', initializeAdminPanel);
+    </script>
+</body>
+</html>
