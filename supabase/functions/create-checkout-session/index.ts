@@ -1,4 +1,3 @@
-// Importa as bibliotecas necessárias
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@11.1.0?target=deno'
 
@@ -8,54 +7,42 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   httpClient: Stripe.createFetchHttpClient()
 })
 
-// URL pública para a pasta 'site' no seu Supabase Storage.
-// Esta é a URL base para encontrar seus arquivos HTML.
-const YOUR_DOMAIN = 'https://ygsziltorjcgpjbmlptr.supabase.co/storage/v1/object/public/site';
+// URL do seu site na Vercel (JÁ ATUALIZADA)
+const YOUR_DOMAIN = 'https://frontend-gamma-one-19.vercel.app' 
 
-// A função principal que será executada quando chamada
 serve(async (req) => {
   try {
-    // Pega os dados do formulário enviado pelo seu site
     const form = await req.formData()
     const lookupKey = form.get('lookup_key')
 
-    // Validação: verifica se a chave do produto foi enviada
     if (!lookupKey) {
-      throw new Error('lookup_key não foi encontrado no formulário.')
+      throw new Error('Lookup key não foi encontrada no formulário.');
     }
 
-    // Procura o preço do produto no Stripe usando a chave
     const prices = await stripe.prices.list({
       lookup_keys: [lookupKey as string],
       expand: ['data.product'],
     });
 
-    // Validação: verifica se o produto existe no Stripe
     if (prices.data.length === 0) {
-      throw new Error(`Nenhum preço foi encontrado no Stripe para a lookup_key: "${lookupKey}". Verifique se você criou um produto com essa chave no seu painel do Stripe.`);
+      throw new Error(`Nenhum preço encontrado para a lookup_key: ${lookupKey}`);
     }
 
-    const price = prices.data[0];
-
-    // Cria a sessão de checkout (a página de pagamento do Stripe)
     const session = await stripe.checkout.sessions.create({
       billing_address_collection: 'auto',
-      line_items: [{ price: price.id, quantity: 1 }],
+      line_items: [{ price: prices.data[0].id, quantity: 1 }],
       mode: 'payment',
-      // Define as páginas para onde o cliente será enviado após o pagamento
+      // AQUI ESTÁ A MUDANÇA: Usamos a nova URL da Vercel
       success_url: `${YOUR_DOMAIN}/success.html`,
       cancel_url: `${YOUR_DOMAIN}/cancel.html`,
     });
 
-    // Redireciona o cliente para a página de pagamento
+    // Redireciona o usuário para a página de pagamento do Stripe
     return new Response(null, { status: 303, headers: { 'Location': session.url as string } })
 
   } catch (error) {
-    // Se qualquer passo acima der errado, retorna uma mensagem de erro clara
-    console.error("Erro detalhado:", error);
-    return new Response(
-      `Erro no Servidor: ${error.message}`,
-      { status: 500 }
-    )
+    console.error('Erro na função create-checkout-session:', error.message);
+    // Retorna um erro claro que você pode ver no navegador
+    return new Response(`Erro no servidor: ${error.message}`, { status: 500 });
   }
 })
