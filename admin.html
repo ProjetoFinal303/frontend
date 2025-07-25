@@ -23,7 +23,29 @@
         </nav>
     </header>
 
-    <main class="container mx-auto p-4 md:p-8 flex-grow">
+    <main class="container mx-auto p-4 md:p-8 flex-grow space-y-12">
+        
+        <section id="sales-dashboard">
+            <h2 class="text-3xl font-bold text-center mb-8 text-yellow-600">Painel de Vendas</h2>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="py-3 px-6">Data</th>
+                                <th scope="col" class="py-3 px-6">Cliente (Email)</th>
+                                <th scope="col" class="py-3 px-6">Descrição</th>
+                                <th scope="col" class="py-3 px-6">Status</th>
+                                <th scope="col" class="py-3 px-6">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
         <section id="clients-dashboard">
             <h2 class="text-3xl font-bold text-center mb-8 text-yellow-600">Painel de Clientes</h2>
             <div class="bg-white rounded-lg shadow-lg p-6">
@@ -39,7 +61,7 @@
                             </tr>
                         </thead>
                         <tbody id="clients-table-body">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -59,6 +81,7 @@
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const clientsTableBody = document.getElementById('clients-table-body');
+        const salesTableBody = document.getElementById('sales-table-body');
         const logoutButton = document.getElementById('logout-button');
 
         logoutButton.addEventListener('click', () => {
@@ -66,14 +89,11 @@
             window.location.href = './index.html';
         });
         
-        // --- NOVA FUNÇÃO PARA EXCLUIR CLIENTE ---
-        async function deleteClient(clientId, clientName, buttonElement) {
-            // Pede confirmação antes de excluir
-            if (!confirm(`Tem certeza que deseja excluir o cliente "${clientName}" (ID: ${clientId})? Esta ação não pode ser desfeita.`)) {
+        async function deleteClient(clientId, clientName) {
+            if (!confirm(`Tem certeza que deseja excluir o cliente "${clientName}" (ID: ${clientId})?`)) {
                 return;
             }
 
-            // Chama o Supabase para deletar o cliente da tabela 'Cliente'
             const { error } = await supabaseClient
                 .from('Cliente')
                 .delete()
@@ -81,64 +101,90 @@
 
             if (error) {
                 console.error('Erro ao excluir cliente:', error);
-                alert('Falha ao excluir o cliente. Verifique o console para mais detalhes.');
+                alert('Falha ao excluir o cliente.');
                 return;
             }
-
-            // Se deu certo, remove a linha da tabela na tela
-            const row = buttonElement.closest('tr');
-            row.remove();
-            alert(`Cliente "${clientName}" excluído com sucesso!`);
+            
+            // Recarrega a lista de clientes para refletir a remoção
+            fetchClients();
         }
 
-        async function initializeAdminPanel() {
-            const userString = localStorage.getItem('currentUser');
-            if (!userString) {
-                window.location.href = './login.html';
-                return;
-            }
-            
-            const user = JSON.parse(userString);
-            if (user.email !== 'admin@lancho.com') {
-                window.location.href = './index.html';
-                return;
-            }
-
+        async function fetchClients() {
             clientsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Carregando clientes...</td></tr>`;
-            
             const { data, error } = await supabaseClient
                 .from('Cliente')
                 .select('*')
                 .order('nome', { ascending: true });
 
             if (error) {
-                console.error('Erro ao buscar clientes:', error);
-                clientsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Falha ao carregar dados.</td></tr>`;
+                clientsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Falha ao carregar clientes.</td></tr>`;
                 return;
             }
-            
             if (data.length === 0) {
                 clientsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Nenhum cliente registrado.</td></tr>`;
                 return;
             }
-
+            
             clientsTableBody.innerHTML = '';
             for (const client of data) {
-                 const row = `
+                 const row = document.createElement('tr');
+                 row.className = 'bg-white border-b';
+                 row.innerHTML = `
+                    <td class="py-4 px-6">${client.id}</td>
+                    <td class="py-4 px-6 font-medium">${client.nome}</td>
+                    <td class="py-4 px-6">${client.email}</td>
+                    <td class="py-4 px-6">${client.contato}</td>
+                    <td class="py-4 px-6 text-center">
+                        <button class="font-medium text-red-600 hover:underline">Excluir</button>
+                    </td>
+                `;
+                row.querySelector('button').addEventListener('click', () => deleteClient(client.id, client.nome));
+                clientsTableBody.appendChild(row);
+            }
+        }
+
+        async function fetchSales() {
+            salesTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Carregando vendas...</td></tr>`;
+            
+            const { data, error } = await supabaseClient
+                .from('Pedido')
+                .select(`*, Cliente (email)`)
+                .order('data', { ascending: false });
+
+            if (error) {
+                salesTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Falha ao carregar vendas.</td></tr>`;
+                return;
+            }
+            if (data.length === 0) {
+                salesTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Nenhuma venda registrada.</td></tr>`;
+                return;
+            }
+            
+            salesTableBody.innerHTML = '';
+            for (const sale of data) {
+                const saleDate = new Date(sale.data).toLocaleDateString('pt-BR');
+                const saleValue = `R$ ${parseFloat(sale.valor).toFixed(2).replace('.', ',')}`;
+                const row = `
                     <tr class="bg-white border-b">
-                        <td class="py-4 px-6">${client.id}</td>
-                        <td class="py-4 px-6 font-medium">${client.nome}</td>
-                        <td class="py-4 px-6">${client.email}</td>
-                        <td class="py-4 px-6">${client.contato}</td>
-                        <td class="py-4 px-6 text-center">
-                            <button onclick="deleteClient(${client.id}, '${client.nome}', this)" class="font-medium text-red-600 hover:underline">
-                                Excluir
-                            </button>
-                        </td>
+                        <td class="py-4 px-6">${saleDate}</td>
+                        <td class="py-4 px-6">${sale.Cliente ? sale.Cliente.email : 'N/A'}</td>
+                        <td class="py-4 px-6">${sale.descricao}</td>
+                        <td class="py-4 px-6"><span class="px-2 py-1 text-xs font-semibold text-white bg-yellow-500 rounded-full">${sale.status}</span></td>
+                        <td class="py-4 px-6 font-medium">${saleValue}</td>
                     </tr>
                 `;
-                clientsTableBody.innerHTML += row;
+                salesTableBody.innerHTML += row;
             }
+        }
+
+        function initializeAdminPanel() {
+            const userString = localStorage.getItem('currentUser');
+            if (!userString || JSON.parse(userString).email !== 'admin@lancho.com') {
+                window.location.href = './login.html';
+                return;
+            }
+            fetchClients();
+            fetchSales();
         }
 
         document.addEventListener('DOMContentLoaded', initializeAdminPanel);
