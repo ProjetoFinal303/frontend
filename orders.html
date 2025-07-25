@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lanchô - Peça Online!</title>
+    <title>Meus Pedidos - Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
 
     <header class="bg-white shadow-md sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-3 flex justify-between items-center">
-            <a href="#" class="text-3xl font-bold text-yellow-500">Lanchô</a>
+            <a href="./index.html" class="text-3xl font-bold text-yellow-500">Lanchô</a>
             <div class="flex items-center space-x-2 md:space-x-4">
                 <a href="./catalog.html" class="hidden sm:block bg-yellow-400 text-white font-bold py-2 px-5 rounded-full text-sm hover:bg-yellow-500 transition-colors shadow">Cardápio</a>
                 <div class="relative">
@@ -38,29 +38,82 @@
     </header>
 
     <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <section id="billboard" class="bg-white rounded-lg shadow-lg overflow-hidden mb-12 mt-4">
-             <div class="md:flex md:h-96">
-                <div class="h-64 md:h-full md:w-1/2 bg-gray-200">
-                    <img id="billboard-image" class="h-full w-full object-cover" src="" alt="Destaque do dia">
-                </div>
-                <div class="p-8 md:w-1/2 flex flex-col justify-center">
-                    <h2 class="text-3xl font-bold text-yellow-600 mb-2">Destaque do Dia!</h2>
-                    <h3 id="billboard-name" class="text-2xl font-semibold text-gray-800 mb-4"></h3>
-                    <p id="billboard-description" class="text-gray-600 mb-6"></p>
-                    <a href="./catalog.html" class="self-start bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-red-700 transition-colors duration-300 shadow-lg">
-                        Ver Cardápio e Pedir
-                    </a>
-                </div>
-            </div>
-        </section>
+        <h1 class="text-4xl font-bold text-center mb-10 text-yellow-600">Meus Pedidos</h1>
+        <div id="orders-container" class="space-y-6 max-w-4xl mx-auto">
+            <p id="loading-message" class="text-center text-gray-500">Carregando seus pedidos...</p>
+        </div>
     </main>
-    
+
     <footer class="bg-yellow-800 text-yellow-50 mt-12">
         <div class="container mx-auto px-4 md:px-8 py-8 text-center"><p>&copy; 2025 Lanchô. Todos os direitos reservados.</p></div>
     </footer>
 
     <script>
-        // Lógica de autenticação e menu
+        const { createClient } = supabase;
+        const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const ordersContainer = document.getElementById('orders-container');
+        const loadingMessage = document.getElementById('loading-message');
+        let currentUser = null;
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        async function loadOrders() {
+            if (!currentUser) {
+                window.location.href = './login.html';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('Pedido')
+                    .select('*')
+                    .eq('id_cliente', currentUser.id)
+                    .order('data', { ascending: false }); // Ordena pelos mais recentes
+
+                if (error) throw error;
+
+                loadingMessage.style.display = 'none';
+                ordersContainer.innerHTML = '';
+
+                if (data.length === 0) {
+                    ordersContainer.innerHTML = '<p class="text-center text-gray-500">Você ainda não fez nenhum pedido.</p>';
+                    return;
+                }
+
+                data.forEach(order => {
+                    const orderCard = `
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h2 class="text-xl font-bold text-gray-800">Pedido #${order.id}</h2>
+                                    <p class="text-sm text-gray-500">${formatDate(order.data)}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-lg font-bold text-green-600">R$${order.valor.toFixed(2).replace('.', ',')}</p>
+                                    <span class="inline-block mt-1 px-3 py-1 text-sm font-semibold text-white bg-yellow-500 rounded-full">${order.status}</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-700">${order.descricao}</p>
+                        </div>
+                    `;
+                    ordersContainer.innerHTML += orderCard;
+                });
+
+            } catch (error) {
+                console.error("Erro ao carregar pedidos:", error);
+                loadingMessage.textContent = 'Falha ao carregar seus pedidos. Tente recarregar a página.';
+            }
+        }
+
+        // --- LÓGICA DE AUTENTICAÇÃO E MENU ---
         document.addEventListener('DOMContentLoaded', () => {
             const menuToggleButton = document.getElementById('menu-toggle-button');
             const dropdownMenu = document.getElementById('dropdown-menu');
@@ -71,60 +124,39 @@
             const logoutButton = document.getElementById('logout-button');
             const adminPanelLink = document.getElementById('admin-panel-link');
             const myOrdersLink = document.getElementById('my-orders-link');
-            
+
             menuToggleButton.addEventListener('click', (event) => {
                 event.stopPropagation();
                 dropdownMenu.classList.toggle('hidden');
             });
-
             window.addEventListener('click', (event) => {
                 if (!dropdownMenu.classList.contains('hidden') && !dropdownMenu.contains(event.target) && !menuToggleButton.contains(event.target)) {
                     dropdownMenu.classList.add('hidden');
                 }
             });
-
             const userString = localStorage.getItem('currentUser');
             if (userString) {
-                const user = JSON.parse(userString);
-                userGreetingSpan.textContent = `Olá, ${user.nome}!`;
+                currentUser = JSON.parse(userString);
+                userGreetingSpan.textContent = `Olá, ${currentUser.nome}!`;
                 userSection.classList.remove('hidden');
                 logoutSection.classList.remove('hidden');
                 loginSection.classList.add('hidden');
-                myOrdersLink.classList.remove('hidden'); // Mostra o botão "Meus Pedidos"
-                
-                if (user.email === 'admin@lancho.com') {
+                myOrdersLink.classList.remove('hidden');
+
+                if (currentUser.email === 'admin@lancho.com') {
                     adminPanelLink.classList.remove('hidden');
                 }
+                
+                // Inicia o carregamento dos pedidos
+                loadOrders();
             } else {
-                userSection.classList.add('hidden');
-                logoutSection.classList.add('hidden');
-                loginSection.classList.remove('hidden');
-                myOrdersLink.classList.add('hidden'); // Esconde o botão se não estiver logado
+                // Se não estiver logado, redireciona para o login
+                window.location.href = './login.html';
             }
-            
-            if(logoutButton) {
-                logoutButton.addEventListener('click', () => {
-                    localStorage.removeItem('currentUser');
-                    window.location.reload();
-                });
-            }
-        });
-
-        // Lógica do Destaque do Dia (continua a mesma)
-        document.addEventListener('DOMContentLoaded', () => {
-            const products = [
-                { name: 'Lanchô X-Burger', description: 'Nosso clássico X-Burger...', imageUrl: './images/lanchoxburger.jpg' },
-                { name: 'Batata Frita da Casa', description: 'Acompanhamento perfeito...', imageUrl: './images/batatafrita.jpg' },
-                { name: 'Coca-Cola 2L', description: 'Para refrescar...', imageUrl: './images/cocacola.jpg' },
-                { name: 'MilkShake Especial', description: 'Cremoso e delicioso...', imageUrl: './images/milkshake.jpg' },
-                { name: 'Onion Rings da Casa', description: 'Anéis de cebola empanados...', imageUrl: './images/onionrings.jpg' }
-            ];
-            const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-            const productIndex = daysSinceEpoch % products.length; 
-            const featuredProduct = products[productIndex];
-            document.getElementById('billboard-image').src = featuredProduct.imageUrl;
-            document.getElementById('billboard-name').textContent = featuredProduct.name;
-            document.getElementById('billboard-description').textContent = featuredProduct.description;
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('currentUser');
+                window.location.href = './index.html';
+            });
         });
     </script>
 </body>
