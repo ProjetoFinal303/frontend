@@ -7,7 +7,6 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   httpClient: Stripe.createFetchHttpClient()
 })
 
-// CORREÇÃO: Usa o nome do segredo correto (sem o prefixo SUPABASE_)
 const supabaseAdmin = createClient(
   'https://ygsziltorjcgpjbmlptr.supabase.co',
   Deno.env.get('SERVICE_ROLE_KEY') ?? ''
@@ -30,20 +29,34 @@ serve(async (req) => {
     const session = event.data.object as Stripe.Checkout.Session;
 
     try {
-      const customerEmail = session.customer_details?.email;
-      if (!customerEmail) throw new Error("Email do cliente não encontrado.");
+      // Prioridade 1: Usar o ID do cliente enviado pelo app
+      const clienteId = session.client_reference_id;
 
-      let { data: cliente } = await supabaseAdmin.from('Cliente').select('id').eq('email', customerEmail).single();
+      if (!clienteId) {
+        // Se o ID não veio (ex: compra pelo site), usa o e-mail como fallback
+        const customerEmail = session.customer_details?.email;
+        if (!customerEmail) throw new Error("Email ou ID do cliente não encontrado na sessão.");
+        
+        let { data: cliente } = await supabaseAdmin.from('Cliente').select('id').eq('email', customerEmail).single();
+        if (!cliente) throw new Error("Cliente com o e-mail fornecido não encontrado.");
 
-      if (!cliente) {
-        const { data: novoCliente } = await supabaseAdmin.from('Cliente').insert({ email: customerEmail, nome: session.customer_details?.name || 'Não informado', contato: 'Não informado', senha: 'NAO_USAR' }).select('id').single();
-        cliente = novoCliente;
+        // Lógica de fallback... (pode ser ajustada conforme necessidade)
+        console.warn(`Pedido criado via fallback de e-mail para: ${customerEmail}`);
       }
-
+      
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-      for (const item of lineItems.data) {
-        await supabaseAdmin.from('Pedido').insert({ id_cliente: cliente.id, descricao: item.description, valor: item.amount_total / 100, data: new Date().toISOString(), status: 'Pago' });
-      }
+      
+      const pedidoDescricao = lineItems.data.map(item => `${item.quantity}x ${item.description}`).join(', ');
+
+      // Insere o pedido no banco usando o ID do cliente de forma confiável
+      await supabaseAdmin.from('Pedido').insert({
+        id_cliente: Number(clienteId), // Converte o ID para número
+        descricao: pedidoDescricao,
+        valor: session.amount_total / 100,
+        data: new Date().toISOString(),
+        status: 'Pendente' // Novo pedido entra como pendente para a cozinha
+      });
+
     } catch (error) {
       return new Response(`Webhook Error: ${error.message}`, { status: 400 });
     }
@@ -51,4 +64,3 @@ serve(async (req) => {
 
   return new Response(JSON.stringify({ received: true }), { status: 200 });
 })
-

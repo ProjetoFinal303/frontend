@@ -10,41 +10,42 @@ const YOUR_DOMAIN = 'https://frontend-gamma-one-19.vercel.app'
 
 serve(async (req) => {
   try {
-    // A função agora espera um JSON com priceId e clienteId
-    const { priceId, clienteId, customerEmail } = await req.json();
+    // Agora esperamos também o 'clienteId'
+    const { cartItems, customerEmail, clienteId } = await req.json()
 
-    if (!priceId) {
-      throw new Error('ID do preço (priceId) não foi encontrado.');
+    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+      throw new Error('Itens do carrinho inválidos.');
     }
     if (!clienteId) {
-        throw new Error('ID do cliente (clienteId) não foi encontrado.');
+      throw new Error('ID do cliente não fornecido.');
     }
+
+    const line_items = cartItems.map(item => ({
+      price: item.priceId,
+      quantity: item.quantity,
+    }));
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      customer_email: customerEmail, // Passa o e-mail para o Stripe
-      line_items: [{
-          price: priceId,
-          quantity: 1
-      }],
-      // Envia o ID do cliente do Supabase para o Stripe
-      client_reference_id: String(clienteId), 
+      customer_email: customerEmail,
+      line_items: line_items,
+      // A MÁGICA ACONTECE AQUI: enviamos o ID do cliente para o Stripe
+      client_reference_id: clienteId, 
       success_url: `${YOUR_DOMAIN}/success.html`,
       cancel_url: `${YOUR_DOMAIN}/cancel.html`,
     });
 
-    // Redireciona o usuário para a página de pagamento
     return new Response(JSON.stringify({ checkoutUrl: session.url }), {
-        headers: { 'Content-Type': 'application/json' },
-        status: 200,
+      headers: { 'Content-Type': 'application/json' },
+      status: 200,
     });
 
   } catch (error) {
-    console.error('Erro na função create-checkout-session:', error.message);
+    console.error('Erro na função create-mobile-checkout:', error.message);
     return new Response(JSON.stringify({ error: error.message }), {
         headers: { 'Content-Type': 'application/json' },
-        status: 500
+        status: 400
     });
   }
 })

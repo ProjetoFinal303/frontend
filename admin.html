@@ -13,7 +13,6 @@
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header Section -->
     <header class="bg-white shadow-md">
         <nav class="container mx-auto px-4 md:px-8 py-3 flex justify-between items-center">
             <a href="./index.html" class="text-3xl font-bold text-yellow-500">Lanchô - Admin</a>
@@ -24,7 +23,6 @@
         </nav>
     </header>
 
-    <!-- Main Content -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <section id="clients-dashboard">
             <h2 class="text-3xl font-bold text-center mb-8 text-yellow-600">Painel de Clientes</h2>
@@ -37,21 +35,17 @@
                                 <th scope="col" class="py-3 px-6">Nome</th>
                                 <th scope="col" class="py-3 px-6">Email</th>
                                 <th scope="col" class="py-3 px-6">Contato</th>
+                                <th scope="col" class="py-3 px-6 text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="clients-table-body">
-                            <!-- As linhas de clientes serão inseridas aqui pelo JavaScript -->
-                            <tr>
-                                <td colspan="4" class="text-center py-4">Carregando clientes...</td>
-                            </tr>
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
         </section>
     </main>
     
-    <!-- Footer Section -->
     <footer class="bg-yellow-800 text-yellow-50 mt-12">
         <div class="container mx-auto px-4 md:px-8 py-8 text-center">
              <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
@@ -59,9 +53,7 @@
     </footer>
 
     <script>
-        // --- SCRIPT DO PAINEL DO ADMIN ---
         const { createClient } = supabase;
-        // Cole suas chaves do Supabase aqui
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -69,28 +61,51 @@
         const clientsTableBody = document.getElementById('clients-table-body');
         const logoutButton = document.getElementById('logout-button');
 
-        // Função de Logout
         logoutButton.addEventListener('click', () => {
             localStorage.removeItem('currentUser');
             window.location.href = './index.html';
         });
+        
+        // --- NOVA FUNÇÃO PARA EXCLUIR CLIENTE ---
+        async function deleteClient(clientId, clientName, buttonElement) {
+            // Pede confirmação antes de excluir
+            if (!confirm(`Tem certeza que deseja excluir o cliente "${clientName}" (ID: ${clientId})? Esta ação não pode ser desfeita.`)) {
+                return;
+            }
 
-        // Função para proteger a página e buscar os clientes
+            // Chama o Supabase para deletar o cliente da tabela 'Cliente'
+            const { error } = await supabaseClient
+                .from('Cliente')
+                .delete()
+                .eq('id', clientId);
+
+            if (error) {
+                console.error('Erro ao excluir cliente:', error);
+                alert('Falha ao excluir o cliente. Verifique o console para mais detalhes.');
+                return;
+            }
+
+            // Se deu certo, remove a linha da tabela na tela
+            const row = buttonElement.closest('tr');
+            row.remove();
+            alert(`Cliente "${clientName}" excluído com sucesso!`);
+        }
+
         async function initializeAdminPanel() {
-            // 1. Protege a página
             const userString = localStorage.getItem('currentUser');
             if (!userString) {
-                window.location.href = './login.html'; // Se não tem ninguém logado, vai pro login
+                window.location.href = './login.html';
                 return;
             }
             
             const user = JSON.parse(userString);
             if (user.email !== 'admin@lancho.com') {
-                window.location.href = './index.html'; // Se não é o admin, vai para a página inicial
+                window.location.href = './index.html';
                 return;
             }
 
-            // 2. Se for o admin, busca todos os clientes no banco de dados
+            clientsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Carregando clientes...</td></tr>`;
+            
             const { data, error } = await supabaseClient
                 .from('Cliente')
                 .select('*')
@@ -98,12 +113,12 @@
 
             if (error) {
                 console.error('Erro ao buscar clientes:', error);
-                clientsTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Falha ao carregar dados dos clientes.</td></tr>`;
+                clientsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Falha ao carregar dados.</td></tr>`;
                 return;
             }
             
             if (data.length === 0) {
-                clientsTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">Nenhum cliente registrado.</td></tr>`;
+                clientsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Nenhum cliente registrado.</td></tr>`;
                 return;
             }
 
@@ -115,13 +130,17 @@
                         <td class="py-4 px-6 font-medium">${client.nome}</td>
                         <td class="py-4 px-6">${client.email}</td>
                         <td class="py-4 px-6">${client.contato}</td>
+                        <td class="py-4 px-6 text-center">
+                            <button onclick="deleteClient(${client.id}, '${client.nome}', this)" class="font-medium text-red-600 hover:underline">
+                                Excluir
+                            </button>
+                        </td>
                     </tr>
                 `;
                 clientsTableBody.innerHTML += row;
             }
         }
 
-        // Roda a função principal quando a página carrega
         document.addEventListener('DOMContentLoaded', initializeAdminPanel);
     </script>
 </body>
