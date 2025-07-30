@@ -42,10 +42,10 @@
                             <input type="number" step="0.01" id="preco" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
                         </div>
                          <div>
-                            <label for="imageUrl" class="block text-sm font-medium text-gray-700">URL da Imagem (Opcional)</label>
-                            <input type="url" id="imageUrl" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                            <label for="imageFile" class="block text-sm font-medium text-gray-700">Imagem do Produto</label>
+                            <input type="file" id="imageFile" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100">
                         </div>
-                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-full hover:bg-green-700">Adicionar ao Stripe</button>
+                        <button type="submit" id="add-product-button" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-full hover:bg-green-700">Adicionar ao Stripe</button>
                     </form>
                 </div>
                 <div class="md:col-span-2 bg-white rounded-lg shadow-lg p-6">
@@ -121,6 +121,7 @@
         const syncProductsButton = document.getElementById('sync-products-button');
         const syncMessage = document.getElementById('sync-message');
         const addProductForm = document.getElementById('add-product-form');
+        const addProductButton = document.getElementById('add-product-button');
         const productListContainer = document.getElementById('product-list-admin');
 
         logoutButton.addEventListener('click', () => {
@@ -139,22 +140,54 @@
 
         addProductForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            addProductButton.disabled = true;
+            addProductButton.textContent = 'Enviando...';
+
             const form = e.target;
-            const produto = {
-                nome: form.nome.value,
-                descricao: form.descricao.value,
-                preco: parseFloat(form.preco.value),
-                imageUrl: form.imageUrl.value
-            };
-            alert("Adicionando... Após a confirmação, lembre-se de sincronizar para ver o novo produto na lista.");
-            const { error } = await supabaseClient.functions.invoke('add-stripe-product', {
-                body: produto
-            });
-            if (error) {
-                alert(`Erro ao adicionar: ${error.message}`);
-            } else {
+            const file = form.imageFile.files[0];
+            let imageUrl = null;
+
+            try {
+                if (file) {
+                    const filePath = `public/${Date.now()}-${file.name}`;
+                    const { data: uploadData, error: uploadError } = await supabaseClient
+                        .storage
+                        .from('produtos')
+                        .upload(filePath, file);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: urlData } = supabaseClient
+                        .storage
+                        .from('produtos')
+                        .getPublicUrl(uploadData.path);
+                    
+                    imageUrl = urlData.publicUrl;
+                }
+
+                const produto = {
+                    nome: form.nome.value,
+                    descricao: form.descricao.value,
+                    preco: parseFloat(form.preco.value),
+                    imageUrl: imageUrl
+                };
+                
+                alert("Adicionando produto ao Stripe... Após a confirmação, lembre-se de sincronizar para ver o novo produto na lista.");
+
+                const { error: functionError } = await supabaseClient.functions.invoke('add-stripe-product', {
+                    body: produto
+                });
+
+                if (functionError) throw functionError;
+
                 alert('Produto adicionado ao Stripe! Clique em "Sincronizar" para vê-lo na lista.');
                 form.reset();
+
+            } catch (error) {
+                alert(`Erro: ${error.message}`);
+            } finally {
+                addProductButton.disabled = false;
+                addProductButton.textContent = 'Adicionar ao Stripe';
             }
         });
         
@@ -248,10 +281,9 @@
                     <td class="py-4 px-6">${client.email}</td>
                     <td class="py-4 px-6">${client.contato}</td>
                     <td class="py-4 px-6 text-center">
-                        <button class="font-medium text-red-600 hover:underline">Excluir</button>
+                        <button onclick="deleteClient(${client.id}, '${client.nome}')" class="font-medium text-red-600 hover:underline">Excluir</button>
                     </td>
                 `;
-                row.querySelector('button').addEventListener('click', () => deleteClient(client.id, client.nome));
                 clientsTableBody.appendChild(row);
             }
         }

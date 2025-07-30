@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lanchô - Peça Online!</title>
+    <title>Lanchô - O Melhor Lanche da Cidade</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .z-20 { z-index: 20; }
+        /* Estilo para a imagem de fundo do Destaque */
+        #hero {
+            background-size: cover;
+            background-position: center;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
@@ -18,56 +23,96 @@
         <nav class="container mx-auto px-4 md:px-8 py-3 flex justify-between items-center">
             <a href="#" class="text-3xl font-bold text-yellow-500">Lanchô</a>
             <div class="flex items-center space-x-2 md:space-x-4">
-                <a href="./catalog.html" class="hidden sm:block bg-yellow-400 text-white font-bold py-2 px-5 rounded-full text-sm hover:bg-yellow-500 transition-colors shadow">Cardápio</a>
+                <a href="./catalog.html" class="hidden md:inline-block bg-red-600 text-white font-bold py-2 px-6 rounded-full text-sm hover:bg-red-700 transition-colors shadow">VER CARDÁPIO</a>
                 <div class="relative">
                     <button id="menu-toggle-button" class="p-2 rounded-full text-gray-600 hover:bg-gray-200 focus:outline-none">
                         <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
                     </button>
                     <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl overflow-hidden">
                         <div id="user-section" class="hidden p-4 border-b border-gray-200">
-                            <div class="flex items-center"><div class="p-2 bg-gray-200 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg></div><div class="ml-3"><p id="user-greeting" class="text-sm font-semibold text-gray-800"></p><a id="admin-panel-link" href="./admin.html" class="hidden text-xs text-blue-600 hover:underline">Acessar Painel Admin</a></div></div>
+                            <div class="flex items-center">
+                                <div class="p-2 bg-gray-200 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p id="user-greeting" class="text-sm font-semibold text-gray-800"></p>
+                                    <a id="admin-panel-link" href="./admin.html" class="hidden text-xs text-blue-600 hover:underline">Acessar Painel Admin</a>
+                                </div>
+                            </div>
                         </div>
-                        <div id="login-section" class="p-4 border-b border-gray-200"><a href="./login.html" class="block w-full text-center bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Fazer Login</a></div>
-                        <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100">Cardápio</a>
+                        <div id="login-section" class="p-4 border-b border-gray-200">
+                            <a href="./login.html" class="block w-full text-center bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full">Fazer Login</a>
+                        </div>
                         <a id="my-orders-link" href="./orders.html" class="hidden block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100">Meus Pedidos</a>
-                        <div id="logout-section" class="hidden p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left text-sm text-gray-700 hover:bg-gray-100 p-2 rounded">Sair</button></div>
+                        <div id="logout-section" class="hidden p-2 border-t border-gray-200">
+                            <button id="logout-button" class="w-full text-left text-sm text-gray-700 hover:bg-gray-100 p-2 rounded">Sair</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </nav>
     </header>
 
-    <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <section id="billboard" class="bg-white rounded-lg shadow-lg overflow-hidden mb-12 mt-4">
-             <div class="md:flex md:h-96">
-                <div class="h-64 md:h-full md:w-1/2 bg-gray-200">
-                    <img id="billboard-image" class="h-full w-full object-cover" src="" alt="Destaque do dia">
-                </div>
-                <div class="p-8 md:w-1/2 flex flex-col justify-center">
-                    <h2 class="text-3xl font-bold text-yellow-600 mb-2">Destaque do Dia!</h2>
-                    <h3 id="billboard-name" class="text-2xl font-semibold text-gray-800 mb-4"></h3>
-                    <p id="billboard-description" class="text-gray-600 mb-6"></p>
-                    <a href="./catalog.html" class="self-start bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-red-700 transition-colors duration-300 shadow-lg">
-                        Ver Cardápio e Pedir
-                    </a>
-                </div>
+    <main class="flex-grow">
+        <section id="hero" class="relative text-white h-[60vh] md:h-[80vh] flex items-center justify-center text-center transition-all duration-500" style="background-image: url('./images/background.jpg');">
+            <div class="absolute inset-0 bg-black opacity-50"></div>
+            <div class="relative z-10 px-4">
+                <h1 id="hero-title" class="text-4xl md:text-6xl font-extrabold leading-tight mb-4">O sabor que você <span class="text-yellow-400">nunca esquece.</span></h1>
+                <p id="hero-description" class="text-lg md:text-xl max-w-2xl mx-auto mb-8">Feito com ingredientes frescos e muito amor. Peça agora e experimente a diferença!</p>
+                <a href="./catalog.html" class="bg-red-600 text-white font-bold py-3 px-10 rounded-full text-lg hover:bg-red-700 transition-transform transform hover:scale-105 shadow-lg">PEÇA O SEU AGORA</a>
+            </div>
+        </section>
+
+        <section id="menu" class="py-16 bg-white">
+            <div class="container mx-auto px-4 md:px-8 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-10">Conheça nosso Cardápio</h2>
+                <p class="max-w-3xl mx-auto text-gray-600 mb-12">Dos clássicos que todo mundo ama até as novidades que só a gente tem. Cada lanche é uma experiência única. Venha descobrir o seu favorito!</p>
+                <a href="./catalog.html" class="bg-yellow-500 text-white font-bold py-3 px-10 rounded-full text-lg hover:bg-yellow-600 transition-colors shadow-md">VER CARDÁPIO COMPLETO</a>
             </div>
         </section>
     </main>
-    
-    <footer class="bg-yellow-800 text-yellow-50 mt-12">
-        <div class="container mx-auto px-4 md:px-8 py-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
-                <div><h4 class="font-bold text-lg mb-3">Lanchô</h4><p class="text-sm text-yellow-100">O melhor hambúrguer da região.</p></div>
-                <div><h4 class="font-bold text-lg mb-3">Contato</h4><ul class="text-sm text-yellow-100 space-y-2"><li>(21) 969762713</li><li>contato@lancho.com.br</li></ul></div>
-                <div><h4 class="font-bold text-lg mb-3">Endereço</h4><p class="text-sm text-yellow-100">Rua Getúlio Vargas, 4<br>Bonsucesso, Rio de Janeiro - RJ</p></div>
-                <div><h4 class="font-bold text-lg mb-3">Siga-nos</h4><div class="flex justify-center md:justify-start space-x-4"><a href="https://www.instagram.com/felipefbr_/" class="text-yellow-100 hover:text-white"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" /></svg></a><a href="https://x.com/dahlype" class="text-yellow-100 hover:text-white"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.012 2.002c-5.523 0-10 4.477-10 10 0 5.522 4.477 10 10 10 5.522 0 10-4.478 10-10 0-5.523-4.478-10-10-10zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></a></div></div>
-            </div>
-            <div class="border-t border-yellow-700 mt-8 pt-4 text-center text-sm text-yellow-200"><p>&copy; 2025 Lanchô. Todos os direitos reservados.</p></div>
+
+    <footer class="bg-yellow-800 text-yellow-50">
+        <div class="container mx-auto px-4 md:px-8 py-8 text-center">
+             <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
         </div>
     </footer>
 
     <script>
+        const { createClient } = supabase;
+        const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- NOVA FUNÇÃO PARA CARREGAR O DESTAQUE DO DIA ---
+        async function loadFeaturedProduct() {
+            const { data: products, error } = await supabaseClient
+                .from('Produto')
+                .select('*');
+
+            if (error || !products || products.length === 0) {
+                console.error('Não foi possível carregar produtos para o destaque.', error);
+                return; // Mantém o conteúdo padrão se der erro
+            }
+
+            // Lógica para escolher o produto do dia
+            const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+            const productIndex = daysSinceEpoch % products.length;
+            const featuredProduct = products[productIndex];
+
+            // Pega os elementos do HTML que vamos alterar
+            const heroSection = document.getElementById('hero');
+            const heroTitle = document.getElementById('hero-title');
+            const heroDescription = document.getElementById('hero-description');
+            
+            // Altera o conteúdo com os dados do produto
+            if (featuredProduct.image_url) {
+                heroSection.style.backgroundImage = `url('${featuredProduct.image_url}')`;
+            }
+            heroTitle.innerHTML = `O destaque de hoje: <span class="text-yellow-400">${featuredProduct.nome}</span>`;
+            heroDescription.textContent = featuredProduct.descricao;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const menuToggleButton = document.getElementById('menu-toggle-button');
             const dropdownMenu = document.getElementById('dropdown-menu');
@@ -83,7 +128,6 @@
                 event.stopPropagation();
                 dropdownMenu.classList.toggle('hidden');
             });
-
             window.addEventListener('click', (event) => {
                 if (!dropdownMenu.classList.contains('hidden') && !dropdownMenu.contains(event.target) && !menuToggleButton.contains(event.target)) {
                     dropdownMenu.classList.add('hidden');
@@ -94,10 +138,18 @@
             if (userString) {
                 const user = JSON.parse(userString);
                 userGreetingSpan.textContent = `Olá, ${user.nome}!`;
+                
+                const userIconContainer = userSection.querySelector('.flex.items-center > div:first-child');
+                if (user.avatar_url) {
+                    userIconContainer.innerHTML = `<img src="${user.avatar_url}" class="h-8 w-8 rounded-full object-cover">`;
+                    userIconContainer.classList.remove('p-2', 'bg-gray-200');
+                }
+                
                 userSection.classList.remove('hidden');
                 logoutSection.classList.remove('hidden');
                 loginSection.classList.add('hidden');
                 myOrdersLink.classList.remove('hidden');
+
                 if (user.email === 'admin@lancho.com') {
                     adminPanelLink.classList.remove('hidden');
                 }
@@ -107,27 +159,15 @@
                 loginSection.classList.remove('hidden');
                 myOrdersLink.classList.add('hidden');
             }
-            
             if(logoutButton) {
                 logoutButton.addEventListener('click', () => {
                     localStorage.removeItem('currentUser');
-                    window.location.reload();
+                    window.location.href = './index.html';
                 });
             }
 
-            const products = [
-                { name: 'Lanchô X-Burger', description: 'Nosso clássico X-Burger vem com pão fofinho selado na manteiga, um suculento hambúrguer de 100g de carne bovina, queijo prato derretido, alface fresca, tomate em rodelas e nosso delicioso molho especial da casa.', imageUrl: './images/lanchoxburger.jpg' },
-                { name: 'Batata Frita da Casa', description: 'Acompanhamento perfeito para qualquer lanche. Uma porção generosa de batatas fritas selecionadas, super crocantes por fora e macias por dentro, temperadas com um toque de sal.', imageUrl: './images/batatafrita.jpg' },
-                { name: 'Coca-Cola 2L', description: 'Para refrescar e acompanhar o seu lanche, uma Coca-Cola de 2 litros bem gelada para toda a galera.', imageUrl: './images/cocacola.jpg' },
-                { name: 'MilkShake Especial', description: 'Cremoso e delicioso, feito com sorvete de verdade e uma calda especial. A sobremesa perfeita!', imageUrl: './images/milkshake.jpg' },
-                { name: 'Onion Rings da Casa', description: 'Anéis de cebola empanados e fritos na perfeição. Crocantes e ideais para compartilhar (ou não!).', imageUrl: './images/onionrings.jpg' }
-            ];
-            const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-            const productIndex = daysSinceEpoch % products.length; 
-            const featuredProduct = products[productIndex];
-            document.getElementById('billboard-image').src = featuredProduct.imageUrl;
-            document.getElementById('billboard-name').textContent = featuredProduct.name;
-            document.getElementById('billboard-description').textContent = featuredProduct.description;
+            // CHAMA A NOVA FUNÇÃO QUANDO A PÁGINA CARREGAR
+            loadFeaturedProduct();
         });
     </script>
 </body>
