@@ -7,9 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
@@ -25,6 +23,43 @@
 
     <main class="container mx-auto p-4 md:p-8 flex-grow space-y-12">
         
+        <section id="actions-dashboard">
+            <h2 class="text-3xl font-bold text-center mb-8 text-yellow-600">Gerenciamento de Produtos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-1 bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4">Adicionar Novo Produto</h3>
+                    <form id="add-product-form" class="space-y-4">
+                        <div>
+                            <label for="nome" class="block text-sm font-medium text-gray-700">Nome do Produto</label>
+                            <input type="text" id="nome" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <div>
+                            <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                            <textarea id="descricao" rows="3" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"></textarea>
+                        </div>
+                        <div>
+                            <label for="preco" class="block text-sm font-medium text-gray-700">Preço (Ex: 15.50)</label>
+                            <input type="number" step="0.01" id="preco" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                         <div>
+                            <label for="imageUrl" class="block text-sm font-medium text-gray-700">URL da Imagem (Opcional)</label>
+                            <input type="url" id="imageUrl" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-full hover:bg-green-700">Adicionar ao Stripe</button>
+                    </form>
+                </div>
+                <div class="md:col-span-2 bg-white rounded-lg shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold">Produtos Atuais</h3>
+                        <button id="sync-products-button" class="bg-blue-600 text-white font-bold py-2 px-5 rounded-full hover:bg-blue-700 text-sm">Sincronizar</button>
+                    </div>
+                    <p id="sync-message" class="text-center text-sm text-gray-600 mb-4"></p>
+                    <div id="product-list-admin" class="overflow-x-auto">
+                        </div>
+                </div>
+            </div>
+        </section>
+
         <section id="sales-dashboard">
             <h2 class="text-3xl font-bold text-center mb-8 text-yellow-600">Painel de Vendas</h2>
             <div class="bg-white rounded-lg shadow-lg p-6">
@@ -83,30 +118,109 @@
         const clientsTableBody = document.getElementById('clients-table-body');
         const salesTableBody = document.getElementById('sales-table-body');
         const logoutButton = document.getElementById('logout-button');
+        const syncProductsButton = document.getElementById('sync-products-button');
+        const syncMessage = document.getElementById('sync-message');
+        const addProductForm = document.getElementById('add-product-form');
+        const productListContainer = document.getElementById('product-list-admin');
 
         logoutButton.addEventListener('click', () => {
             localStorage.removeItem('currentUser');
             window.location.href = './index.html';
         });
+
+        syncProductsButton.addEventListener('click', async () => {
+            syncMessage.textContent = 'Sincronizando...';
+            syncProductsButton.disabled = true;
+            const { data, error } = await supabaseClient.functions.invoke('sync-stripe-products');
+            syncMessage.textContent = error ? `Erro: ${error.message}` : data.message;
+            syncProductsButton.disabled = false;
+            fetchAdminProducts();
+        });
+
+        addProductForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const produto = {
+                nome: form.nome.value,
+                descricao: form.descricao.value,
+                preco: parseFloat(form.preco.value),
+                imageUrl: form.imageUrl.value
+            };
+            alert("Adicionando... Após a confirmação, lembre-se de sincronizar para ver o novo produto na lista.");
+            const { error } = await supabaseClient.functions.invoke('add-stripe-product', {
+                body: produto
+            });
+            if (error) {
+                alert(`Erro ao adicionar: ${error.message}`);
+            } else {
+                alert('Produto adicionado ao Stripe! Clique em "Sincronizar" para vê-lo na lista.');
+                form.reset();
+            }
+        });
+        
+        async function deleteProduct(stripe_price_id, nome) {
+            if (!confirm(`Tem certeza que deseja EXCLUIR o produto "${nome}" do Stripe? Esta ação não pode ser desfeita.`)) return;
+            alert("Excluindo... Após a confirmação, lembre-se de sincronizar para atualizar a lista.");
+            const { error } = await supabaseClient.functions.invoke('delete-stripe-product', {
+                body: { stripe_price_id }
+            });
+            if (error) {
+                alert(`Erro ao excluir: ${error.message}`);
+            } else {
+                alert('Produto excluído do Stripe! Clique em "Sincronizar" para ver a lista atualizada.');
+            }
+        }
         
         async function deleteClient(clientId, clientName) {
             if (!confirm(`Tem certeza que deseja excluir o cliente "${clientName}" (ID: ${clientId})?`)) {
                 return;
             }
-
             const { error } = await supabaseClient
                 .from('Cliente')
                 .delete()
                 .eq('id', clientId);
-
             if (error) {
                 console.error('Erro ao excluir cliente:', error);
                 alert('Falha ao excluir o cliente.');
                 return;
             }
-            
-            // Recarrega a lista de clientes para refletir a remoção
             fetchClients();
+        }
+
+        async function fetchAdminProducts() {
+            productListContainer.innerHTML = `<p class="text-center">Carregando produtos...</p>`;
+            const { data, error } = await supabaseClient.from('Produto').select('*').order('nome');
+            if (error) {
+                productListContainer.innerHTML = `<p class="text-red-500 text-center">Erro ao carregar produtos.</p>`;
+                return;
+            }
+            if (data.length === 0) {
+                 productListContainer.innerHTML = `<p class="text-center text-gray-500">Nenhum produto no banco de dados. Sincronize com o Stripe.</p>`;
+                return;
+            }
+            const productTable = `
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th class="py-3 px-6">Produto</th>
+                            <th class="py-3 px-6">Preço</th>
+                            <th class="py-3 px-6 text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(p => `
+                            <tr class="bg-white border-b">
+                                <td class="py-4 px-6 font-medium">${p.nome}</td>
+                                <td class="py-4 px-6">R$ ${parseFloat(p.preco).toFixed(2)}</td>
+                                <td class="py-4 px-6 text-center">
+                                    <button onclick="deleteProduct('${p.stripe_price_id}', '${p.nome}')" class="font-medium text-red-600 hover:underline">Excluir</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            productListContainer.innerHTML = productTable;
         }
 
         async function fetchClients() {
@@ -124,7 +238,6 @@
                 clientsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Nenhum cliente registrado.</td></tr>`;
                 return;
             }
-            
             clientsTableBody.innerHTML = '';
             for (const client of data) {
                  const row = document.createElement('tr');
@@ -145,7 +258,6 @@
 
         async function fetchSales() {
             salesTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Carregando vendas...</td></tr>`;
-            
             const { data, error } = await supabaseClient
                 .from('Pedido')
                 .select(`*, Cliente (email)`)
@@ -159,7 +271,6 @@
                 salesTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Nenhuma venda registrada.</td></tr>`;
                 return;
             }
-            
             salesTableBody.innerHTML = '';
             for (const sale of data) {
                 const saleDate = new Date(sale.data).toLocaleDateString('pt-BR');
@@ -183,8 +294,10 @@
                 window.location.href = './login.html';
                 return;
             }
-            fetchClients();
+            
+            fetchAdminProducts();
             fetchSales();
+            fetchClients();
         }
 
         document.addEventListener('DOMContentLoaded', initializeAdminPanel);

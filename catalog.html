@@ -74,7 +74,7 @@
             buttonElement.textContent = 'Processando...';
             try {
                 const { data, error } = await supabaseClient.functions.invoke('create-checkout-session', {
-                    body: { priceId, clienteId: currentUser.id, customerEmail: currentUser.email },
+                    body: { priceId: priceId, clienteId: currentUser.id, customerEmail: currentUser.email },
                 });
                 if (error) throw error;
                 window.location.href = data.checkoutUrl;
@@ -88,7 +88,12 @@
         
         async function loadProducts() {
             try {
-                const { data, error } = await supabaseClient.functions.invoke('get-stripe-products');
+                // MODIFICADO: Busca direto da tabela 'Produto'
+                const { data, error } = await supabaseClient
+                    .from('Produto')
+                    .select('*')
+                    .order('nome', { ascending: true });
+
                 if (error) throw error;
 
                 loadingMessage.style.display = 'none';
@@ -102,19 +107,20 @@
                 const isAdmin = currentUser && currentUser.email === 'admin@lancho.com';
 
                 data.forEach(product => {
+                    // O botão de comprar agora usa o 'stripe_price_id' do produto no banco
                     const buyButtonHtml = isAdmin 
                         ? ''
-                        : `<button onclick="buyProduct('${product.id}', this)" class="mt-auto block w-full text-center bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full transition-colors">Comprar</button>`;
+                        : `<button onclick="buyProduct('${product.stripe_price_id}', this)" class="mt-auto block w-full text-center bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full transition-colors">Comprar</button>`;
 
                     const productCard = `
                         <div class="bg-white rounded-lg shadow-lg overflow-hidden product-card">
-                            <img src="${product.imageUrl || './images/lanchoxburger.jpg'}" alt="Foto de ${product.name}" class="w-full h-56 object-cover">
+                            <img src="${product.image_url || './images/lanchoxburger.jpg'}" alt="Foto de ${product.nome}" class="w-full h-56 object-cover">
                             <div class="p-6 product-card-content">
                                 <div class="flex justify-between items-baseline mb-2">
-                                    <h4 class="text-2xl font-semibold">${product.name}</h4>
-                                    <p class="text-xl font-bold text-green-600">R$${product.price.toFixed(2).replace('.', ',')}</p>
+                                    <h4 class="text-2xl font-semibold">${product.nome}</h4>
+                                    <p class="text-xl font-bold text-green-600">R$${parseFloat(product.preco).toFixed(2).replace('.', ',')}</p>
                                 </div>
-                                <p class="text-gray-600 mb-4 product-card-description">${product.description}</p>
+                                <p class="text-gray-600 mb-4 product-card-description">${product.descricao}</p>
                                 ${buyButtonHtml}
                             </div>
                         </div>
@@ -144,7 +150,7 @@
                 dropdownMenu.classList.toggle('hidden');
             });
             window.addEventListener('click', (event) => {
-                if (!dropdownMenu.classList.contains('hidden') && !dropdownMenu.contains(event.target) && !menuToggleButton.contains(event.target)) {
+                if (!dropdownMenu.classList.contains('hidden') && !dropdownMenu.contains(event.target) && !dropdownMenu.contains(event.target)) {
                     dropdownMenu.classList.add('hidden');
                 }
             });
