@@ -68,3 +68,7 @@ verify_jwt = false
 enabled = true
 verify_jwt = false
 # ----> FIM DA CORREÇÃO <----
+
+[functions.get-destaque-do-dia]
+enabled = true
+verify_jwt = false

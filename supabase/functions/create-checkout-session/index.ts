@@ -1,7 +1,6 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@11.1.0?target=deno'
 
-// Headers para permitir o acesso do seu site (CORS)
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -15,22 +14,18 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
 const YOUR_DOMAIN = 'https://frontend-gamma-one-19.vercel.app'
 
 serve(async (req) => {
-  // Trata a requisição OPTIONS (necessária para CORS)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { priceId, clienteId, customerEmail } = await req.json();
+    const { priceId, clienteId, customerEmail, applyDiscount } = await req.json();
 
-    if (!priceId) {
-      throw new Error('ID do preço (priceId) não foi encontrado.');
-    }
-    if (!clienteId) {
-        throw new Error('ID do cliente (clienteId) não foi encontrado.');
+    if (!priceId || !clienteId) {
+      throw new Error('ID do preço (priceId) e ID do cliente (clienteId) são obrigatórios.');
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionOptions: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['card'],
       mode: 'payment',
       customer_email: customerEmail,
@@ -41,7 +36,13 @@ serve(async (req) => {
       client_reference_id: String(clienteId), 
       success_url: `${YOUR_DOMAIN}/success.html`,
       cancel_url: `${YOUR_DOMAIN}/cancel.html`,
-    });
+    };
+
+    if (applyDiscount) {
+      sessionOptions.discounts = [{ coupon: 'DESTAQUE10' }];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionOptions);
 
     return new Response(JSON.stringify({ checkoutUrl: session.url }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -49,7 +50,6 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Erro na função create-checkout-session:', error.message);
     return new Response(JSON.stringify({ error: error.message }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
