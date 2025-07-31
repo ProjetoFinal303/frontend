@@ -6,6 +6,7 @@
     <title>Lanchô - O Melhor Lanche da Cidade</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://js.stripe.com/v3/"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -13,6 +14,7 @@
         #hero {
             background-size: cover;
             background-position: center;
+            transition: background-image 0.5s ease-in-out;
         }
     </style>
 </head>
@@ -53,12 +55,17 @@
     </header>
 
     <main class="flex-grow">
-        <section id="hero" class="relative text-white h-[60vh] md:h-[80vh] flex items-center justify-center text-center transition-all duration-500" style="background-image: url('./images/background.jpg');">
-            <div class="absolute inset-0 bg-black opacity-50"></div>
+        <section id="hero" class="relative text-white h-[60vh] md:h-[80vh] flex items-center justify-center text-center">
+            <div class="absolute inset-0 bg-black opacity-60"></div>
             <div class="relative z-10 px-4">
                 <h1 id="hero-title" class="text-4xl md:text-6xl font-extrabold leading-tight mb-4">O sabor que você <span class="text-yellow-400">nunca esquece.</span></h1>
                 <p id="hero-description" class="text-lg md:text-xl max-w-2xl mx-auto mb-8">Feito com ingredientes frescos e muito amor. Peça agora e experimente a diferença!</p>
-                <a href="./catalog.html" class="bg-red-600 text-white font-bold py-3 px-10 rounded-full text-lg hover:bg-red-700 transition-transform transform hover:scale-105 shadow-lg">PEÇA O SEU AGORA</a>
+                <div id="hero-prices" class="mb-8 hidden">
+                    <span id="hero-price-original" class="text-xl text-gray-300 line-through"></span>
+                    <p id="hero-price-discounted" class="text-3xl font-bold text-green-400">
+                        </p>
+                </div>
+                <a id="hero-action-button" href="./catalog.html" class="bg-red-600 text-white font-bold py-3 px-10 rounded-full text-lg hover:bg-red-700 transition-transform transform hover:scale-105 shadow-lg">PEÇA O SEU AGORA</a>
             </div>
         </section>
 
@@ -84,35 +91,124 @@
     </footer>
 
     <script>
+        // --- INICIALIZAÇÃO DOS CLIENTES ---
         const { createClient } = supabase;
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const STRIPE_PUBLIC_KEY = 'pk_test_51RBbNs2NItfZ5k37GgSA2ViosWpFMcTW798pO61fk5k9wiHmMv1XjHKBKl062HqmRIMmfMFDnHOXdNsB4DETeOH300aJgTE5CD';
+        const stripe = Stripe(STRIPE_PUBLIC_KEY);
 
-        async function loadFeaturedProduct() {
-            const { data: products, error } = await supabaseClient
-                .from('Produto')
-                .select('*');
+        // --- FUNÇÕES DE APOIO ---
 
-            if (error || !products || products.length === 0) {
-                console.error('Não foi possível carregar produtos para o destaque.', error);
+        async function comprarProduto(produto) {
+            const userString = localStorage.getItem('currentUser');
+            if (!userString) {
+                alert('Você precisa fazer login para comprar!');
+                window.location.href = './login.html';
                 return;
             }
-
-            const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-            const productIndex = daysSinceEpoch % products.length;
-            const featuredProduct = products[productIndex];
-
-            const heroSection = document.getElementById('hero');
-            const heroTitle = document.getElementById('hero-title');
-            const heroDescription = document.getElementById('hero-description');
             
-            if (featuredProduct.image_url) {
-                heroSection.style.backgroundImage = `url('${featuredProduct.image_url}')`;
+            const button = document.getElementById('hero-action-button');
+            const originalText = button.textContent;
+            button.textContent = 'PROCESSANDO...';
+            button.disabled = true;
+
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('create-checkout-session', {
+                    body: { produto },
+                });
+
+                if (error) throw new Error('Erro ao criar sessão de checkout: ' + error.message);
+                const { sessionId } = data;
+                if (!sessionId) throw new Error('A resposta da função não continha um sessionId.');
+                const { error: stripeError } = await stripe.redirectToCheckout({ sessionId });
+                if (stripeError) throw new Error('Erro ao redirecionar para o Stripe: ' + stripeError.message);
+
+            } catch (err) {
+                console.error('Falha crítica no processo de compra:', err);
+                alert('Não foi possível iniciar a compra. Por favor, tente novamente.');
+                button.textContent = originalText;
+                button.disabled = false;
             }
-            heroTitle.innerHTML = `O destaque de hoje: <span class="text-yellow-400">${featuredProduct.nome}</span>`;
-            heroDescription.textContent = featuredProduct.descricao;
         }
+
+        async function loadAndDisplayFeaturedProduct() {
+            let featuredProduct = null;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('Produto') 
+                    .select('*')
+                    .eq('destaque', true)
+                    .single();
+                
+                if (data && !error) {
+                    featuredProduct = data;
+                } else {
+                    console.log("Info: Nenhum destaque 'oficial' encontrado. Usando fallback.");
+                }
+            } catch (error) {
+                console.log("Info: Erro ao buscar destaque oficial, usando fallback. Detalhes:", error.message);
+            }
+
+            if (!featuredProduct) {
+                try {
+                    const { data: allProducts, error: productsError } = await supabaseClient
+                        .from('Produto')
+                        .select('*');
+
+                    if (productsError || !allProducts || allProducts.length === 0) {
+                        throw new Error("Não foi possível carregar nenhum produto para o fallback.");
+                    }
+
+                    const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+                    const productIndex = daysSinceEpoch % allProducts.length;
+                    featuredProduct = allProducts[productIndex];
+                } catch (e) {
+                    console.error("ERRO CRÍTICO: Falha ao carregar o destaque oficial E o produto de fallback.", e);
+                    return;
+                }
+            }
+
+            if (featuredProduct) {
+                const heroSection = document.getElementById('hero');
+                const heroTitle = document.getElementById('hero-title');
+                const heroDescription = document.getElementById('hero-description');
+                const heroPrices = document.getElementById('hero-prices');
+                const heroPriceOriginal = document.getElementById('hero-price-original');
+                const heroPriceDiscounted = document.getElementById('hero-price-discounted');
+                const heroButton = document.getElementById('hero-action-button');
+
+                const isOfficialHighlight = featuredProduct.destaque === true;
+
+                heroTitle.innerHTML = `<span class="text-yellow-400">${isOfficialHighlight ? 'Oferta do Dia:' : 'Sugestão do Dia:'}</span> ${featuredProduct.nome}`;
+                heroDescription.textContent = featuredProduct.descricao || 'Uma delícia indescritível que você precisa provar!';
+                
+                if (isOfficialHighlight) {
+                    const precoOriginal = parseFloat(featuredProduct.preco);
+                    const precoComDesconto = precoOriginal * 0.9;
+                    heroPriceOriginal.textContent = `De: R$ ${precoOriginal.toFixed(2).replace('.', ',')}`;
+                    heroPriceDiscounted.innerHTML = `Por: R$ ${precoComDesconto.toFixed(2).replace('.', ',')}
+                        <span class="ml-2 text-sm font-semibold bg-green-500 text-white px-3 py-1 rounded-full align-middle">10% OFF</span>`;
+                    heroPrices.classList.remove('hidden');
+                }
+
+                // CORREÇÃO DA IMAGEM: Verifica se a URL existe e não está vazia
+                if (featuredProduct.image_url && featuredProduct.image_url.trim() !== '') {
+                    heroSection.style.backgroundImage = `url('${featuredProduct.image_url}')`;
+                }
+
+                heroButton.textContent = isOfficialHighlight ? 'APROVEITAR OFERTA!' : 'PEÇA O SEU AGORA';
+                heroButton.removeAttribute('href'); 
+                heroButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    comprarProduto(featuredProduct);
+                });
+            }
+        }
+        
+        // --- EVENTO PRINCIPAL DA PÁGINA ---
 
         document.addEventListener('DOMContentLoaded', () => {
             const menuToggleButton = document.getElementById('menu-toggle-button');
@@ -129,6 +225,7 @@
                 event.stopPropagation();
                 dropdownMenu.classList.toggle('hidden');
             });
+
             window.addEventListener('click', (event) => {
                 if (!dropdownMenu.classList.contains('hidden') && !dropdownMenu.contains(event.target) && !menuToggleButton.contains(event.target)) {
                     dropdownMenu.classList.add('hidden');
@@ -160,6 +257,7 @@
                 loginSection.classList.remove('hidden');
                 myOrdersLink.classList.add('hidden');
             }
+
             if(logoutButton) {
                 logoutButton.addEventListener('click', () => {
                     localStorage.removeItem('currentUser');
@@ -167,7 +265,7 @@
                 });
             }
 
-            loadFeaturedProduct();
+            loadAndDisplayFeaturedProduct();
         });
     </script>
 </body>
