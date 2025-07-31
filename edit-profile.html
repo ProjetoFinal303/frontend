@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Perfil - Lanchô</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-4 md:px-8 py-3 flex justify-between items-center">
+            <a href="./index.html" class="text-3xl font-bold text-yellow-500">Lanchô</a>
+            <a href="./profile.html" class="text-gray-600 hover:text-yellow-500 transition-colors">Voltar para o Perfil</a>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8 flex-grow flex items-center justify-center">
+        <div class="w-full max-w-lg bg-white rounded-lg shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Editar Informações</h2>
+            <form id="edit-profile-form" class="space-y-4">
+                <div>
+                    <label for="nome" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                    <input type="text" id="nome" name="nome" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500" required>
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" name="email" class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm" disabled>
+                </div>
+                <div>
+                    <label for="contato" class="block text-sm font-medium text-gray-700">Contato (Telefone)</label>
+                    <input type="text" id="contato" name="contato" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                </div>
+                <div id="message" class="text-center text-sm pt-2"></div>
+                <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-full hover:bg-green-700 transition-colors">
+                    Salvar Alterações
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const { createClient } = supabase;
+        const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const editProfileForm = document.getElementById('edit-profile-form');
+        const messageDiv = document.getElementById('message');
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // VERIFICA SE HÁ UMA SESSÃO DE LOGIN OFICIAL
+            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+            if (sessionError || !session) {
+                // Se não tiver, tenta pegar do localStorage (fallback para o login antigo)
+                const userString = localStorage.getItem('currentUser');
+                 if (!userString) {
+                    window.location.href = './login.html';
+                    return;
+                }
+                currentUser = JSON.parse(userString);
+            } else {
+                 const { data: profileData, error } = await supabaseClient.from('Cliente').select('*').eq('id', session.user.id).single();
+                 if (profileData) {
+                    currentUser = profileData;
+                    localStorage.setItem('currentUser', JSON.stringify(profileData));
+                 } else {
+                     window.location.href = './login.html';
+                     return;
+                 }
+            }
+            
+            editProfileForm.nome.value = currentUser.nome || '';
+            editProfileForm.email.value = currentUser.email || '';
+            editProfileForm.contato.value = currentUser.contato || '';
+        });
+
+        editProfileForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            messageDiv.textContent = '';
+            messageDiv.classList.remove('text-red-500', 'text-green-500');
+            
+            const nome = editProfileForm.nome.value;
+            const contato = editProfileForm.contato.value;
+
+            // ESTE COMANDO AGORA VAI FUNCIONAR GRAÇAS À SESSÃO DE LOGIN OFICIAL
+            const { data, error } = await supabaseClient
+                .from('Cliente')
+                .update({ nome: nome, contato: contato })
+                .eq('id', currentUser.id)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Erro ao atualizar perfil:', error);
+                messageDiv.textContent = 'Erro ao salvar. Tente novamente.';
+                messageDiv.classList.add('text-red-500');
+                return;
+            }
+
+            localStorage.setItem('currentUser', JSON.stringify(data));
+
+            messageDiv.textContent = 'Perfil atualizado com sucesso!';
+            messageDiv.classList.add('text-green-500');
+
+            setTimeout(() => {
+                window.location.href = './profile.html';
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

@@ -10,7 +10,6 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .z-20 { z-index: 20; }
-        /* Estilo para a imagem de fundo do Destaque */
         #hero {
             background-size: cover;
             background-position: center;
@@ -31,11 +30,11 @@
                     <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl overflow-hidden">
                         <div id="user-section" class="hidden p-4 border-b border-gray-200">
                             <div class="flex items-center">
-                                <div class="p-2 bg-gray-200 rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                <div class="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-full w-full text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                                 </div>
                                 <div class="ml-3">
-                                    <p id="user-greeting" class="text-sm font-semibold text-gray-800"></p>
+                                    <a href="./profile.html" id="user-greeting-link" class="text-sm font-semibold text-gray-800 hover:text-yellow-600"></a>
                                     <a id="admin-panel-link" href="./admin.html" class="hidden text-xs text-blue-600 hover:underline">Acessar Painel Admin</a>
                                 </div>
                             </div>
@@ -70,11 +69,18 @@
                 <a href="./catalog.html" class="bg-yellow-500 text-white font-bold py-3 px-10 rounded-full text-lg hover:bg-yellow-600 transition-colors shadow-md">VER CARDÁPIO COMPLETO</a>
             </div>
         </section>
+
     </main>
 
-    <footer class="bg-yellow-800 text-yellow-50">
-        <div class="container mx-auto px-4 md:px-8 py-8 text-center">
-             <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
+    <footer class="bg-yellow-800 text-yellow-50 mt-12">
+        <div class="container mx-auto px-4 md:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
+                <div><h4 class="font-bold text-lg mb-3">Lanchô</h4><p class="text-sm text-yellow-100">O melhor hambúrguer da região.</p></div>
+                <div><h4 class="font-bold text-lg mb-3">Contato</h4><ul class="text-sm text-yellow-100 space-y-2"><li>(21) 969762713</li><li>contato@lancho.com.br</li></ul></div>
+                <div><h4 class="font-bold text-lg mb-3">Endereço</h4><p class="text-sm text-yellow-100">Rua Getúlio Vargas, 4<br>Bonsucesso, Rio de Janeiro - RJ</p></div>
+                <div><h4 class="font-bold text-lg mb-3">Siga-nos</h4><div class="flex justify-center md:justify-start space-x-4"><a href="https://www.instagram.com/felipefbr_/" class="text-yellow-100 hover:text-white"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" /></svg></a><a href="https://x.com/dahlype" class="text-yellow-100 hover:text-white"><svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.012 2.002c-5.523 0-10 4.477-10 10 0 5.522 4.477 10 10 10 5.522 0 10-4.478 10-10 0-5.523-4.478-10-10-10zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></a></div></div>
+            </div>
+            <div class="border-t border-yellow-700 mt-8 pt-4 text-center text-sm text-yellow-200"><p>&copy; 2025 Lanchô. Todos os direitos reservados.</p></div>
         </div>
     </footer>
 
@@ -84,7 +90,6 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- NOVA FUNÇÃO PARA CARREGAR O DESTAQUE DO DIA ---
         async function loadFeaturedProduct() {
             const { data: products, error } = await supabaseClient
                 .from('Produto')
@@ -92,20 +97,17 @@
 
             if (error || !products || products.length === 0) {
                 console.error('Não foi possível carregar produtos para o destaque.', error);
-                return; // Mantém o conteúdo padrão se der erro
+                return;
             }
 
-            // Lógica para escolher o produto do dia
             const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
             const productIndex = daysSinceEpoch % products.length;
             const featuredProduct = products[productIndex];
 
-            // Pega os elementos do HTML que vamos alterar
             const heroSection = document.getElementById('hero');
             const heroTitle = document.getElementById('hero-title');
             const heroDescription = document.getElementById('hero-description');
             
-            // Altera o conteúdo com os dados do produto
             if (featuredProduct.image_url) {
                 heroSection.style.backgroundImage = `url('${featuredProduct.image_url}')`;
             }
@@ -117,7 +119,7 @@
             const menuToggleButton = document.getElementById('menu-toggle-button');
             const dropdownMenu = document.getElementById('dropdown-menu');
             const userSection = document.getElementById('user-section');
-            const userGreetingSpan = document.getElementById('user-greeting');
+            const userGreetingLink = document.getElementById('user-greeting-link');
             const loginSection = document.getElementById('login-section');
             const logoutSection = document.getElementById('logout-section');
             const logoutButton = document.getElementById('logout-button');
@@ -137,11 +139,11 @@
             const userString = localStorage.getItem('currentUser');
             if (userString) {
                 const user = JSON.parse(userString);
-                userGreetingSpan.textContent = `Olá, ${user.nome}!`;
+                userGreetingLink.textContent = `Olá, ${user.nome}!`;
                 
                 const userIconContainer = userSection.querySelector('.flex.items-center > div:first-child');
                 if (user.avatar_url) {
-                    userIconContainer.innerHTML = `<img src="${user.avatar_url}" class="h-8 w-8 rounded-full object-cover">`;
+                    userIconContainer.innerHTML = `<a href="./profile.html"><img src="${user.avatar_url}" class="h-10 w-10 rounded-full object-cover"></a>`;
                     userIconContainer.classList.remove('p-2', 'bg-gray-200');
                 }
                 
@@ -166,7 +168,6 @@
                 });
             }
 
-            // CHAMA A NOVA FUNÇÃO QUANDO A PÁGINA CARREGAR
             loadFeaturedProduct();
         });
     </script>

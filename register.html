@@ -65,11 +65,10 @@
             messageDiv.textContent = '';
             messageDiv.classList.remove('text-red-500', 'text-green-500');
 
-            // Insere o novo cliente na tabela 'Cliente'
             const { data, error } = await supabaseClient
                 .from('Cliente')
                 .insert([
-                    { nome, email, contato, senha },
+                    { nome, email, contato, senha }, // INSERE A SENHA DIRETO NA TABELA
                 ]);
 
             if (error) {
@@ -81,8 +80,7 @@
 
             messageDiv.textContent = 'Cadastro realizado com sucesso! Redirecionando para o login...';
             messageDiv.classList.add('text-green-500');
-
-            // Redireciona para a página de login após 2 segundos
+            
             setTimeout(() => {
                 window.location.href = './login.html';
             }, 2000);
