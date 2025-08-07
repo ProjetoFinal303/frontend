@@ -6,7 +6,6 @@
     <title>Login - Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -14,110 +13,105 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-    <div class="w-full max-w-md bg-white rounded-lg shadow-md p-8">
-        <h2 class="text-3xl font-bold text-center text-yellow-500 mb-6">Login</h2>
-        <form id="login-form">
-            <div class="mb-4">
-                <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                <input type="email" id="email" name="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+    <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg">
+        
+        <div class="text-center">
+            <h1 class="text-4xl font-bold text-yellow-600">Lanchô</h1>
+            <p class="mt-2 text-gray-600">Bem-vindo de volta! Faça login para continuar.</p>
+        </div>
+
+        <form id="login-form" class="mt-8 space-y-6">
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label for="email-address" class="sr-only">Email</label>
+                    <input id="email-address" name="email" type="email" autocomplete="email" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm" placeholder="Seu e-mail">
+                </div>
+                <div>
+                    <label for="password" class="sr-only">Senha</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm" placeholder="Sua senha">
+                </div>
             </div>
-            <div class="mb-6">
-                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Senha</label>
-                <input type="password" id="password" name="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" required>
+
+            <div id="error-message" class="hidden text-sm text-center text-red-600 bg-red-100 p-3 rounded-md">
+                <!-- Error messages will appear here -->
             </div>
-            <div id="message" class="text-center text-sm text-red-500 mb-4"></div>
-            <div class="flex items-center justify-between mb-4">
-                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline">
+
+            <div>
+                <button type="submit" id="login-button" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-full text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
                     Entrar
                 </button>
             </div>
         </form>
-        
-        <div class="relative flex py-5 items-center">
-            <div class="flex-grow border-t border-gray-300"></div>
-            <span class="flex-shrink mx-4 text-gray-400">ou</span>
-            <div class="flex-grow border-t border-gray-300"></div>
-        </div>
 
-        <div id="g_id_onload"
-             data-client_id="975618621125-k0qaq6qimn0ddb45gv8d9mfkps0pttgv.apps.googleusercontent.com"
-             data-callback="handleCredentialResponse"
-             data-context="signin">
-        </div>
-        <div class="g_id_signin"
-             data-type="standard"
-             data-shape="rectangular"
-             data-theme="outline"
-             data-text="signin_with"
-             data-size="large"
-             data-logo_alignment="left"
-             data-width="336">
-        </div>
-        
-        <div class="text-center mt-4">
-            <a href="./register.html" class="inline-block align-baseline font-bold text-sm text-yellow-500 hover:text-yellow-800">
-                Não tem uma conta? Cadastre-se
+        <div class="text-sm text-center">
+            <a href="./register.html" class="font-medium text-yellow-600 hover:text-yellow-500">
+                Não tem uma conta? Crie uma agora!
             </a>
         </div>
     </div>
 
     <script>
-        const { createClient } = supabase;
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         const loginForm = document.getElementById('login-form');
-        const messageDiv = document.getElementById('message');
+        const loginButton = document.getElementById('login-button');
+        const errorMessageDiv = document.getElementById('error-message');
 
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const email = loginForm.email.value;
-            const password = loginForm.password.value;
-            messageDiv.textContent = '';
+
+            const email = document.getElementById('email-address').value;
+            const password = document.getElementById('password').value;
             
-            const { data, error } = await supabaseClient
+            loginButton.disabled = true;
+            loginButton.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+            errorMessageDiv.classList.add('hidden');
+
+            // Lógica de login original: busca o cliente pelo e-mail
+            const { data: users, error } = await supabaseClient
                 .from('Cliente')
                 .select('*')
-                .eq('email', email)
-                .eq('senha', password)
-                .single();
+                .eq('email', email);
 
-            if (error || !data) {
-                messageDiv.textContent = 'Email ou senha inválidos.';
+            if (error || !users || users.length === 0) {
+                console.error('Login error:', error);
+                showError('E-mail ou senha inválidos. Tente novamente.');
                 return;
             }
 
-            localStorage.setItem('currentUser', JSON.stringify(data));
+            const user = users[0];
 
-            if (data.email === 'admin@lancho.com') {
-                window.location.href = './admin.html';
+            // Verifica se a senha corresponde
+            if (user.senha === password) {
+                // Sucesso! Armazena os dados do usuário no localStorage.
+                // Isto é o que permite que a página do cardápio saiba quem está logado.
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                // Redireciona para o cardápio
+                window.location.href = './catalog.html';
             } else {
-                window.location.href = './index.html';
+                // Senha incorreta
+                showError('E-mail ou senha inválidos. Tente novamente.');
             }
         });
 
-        async function handleCredentialResponse(response) {
-            messageDiv.textContent = 'Autenticando com Google...';
-            
-            const { data, error } = await supabaseClient.functions.invoke('handle-google-signin', {
-                body: { id_token: response.credential }
-            });
-
-            if (error) {
-                messageDiv.textContent = 'Erro ao autenticar com o servidor.';
-                console.error("Erro da função Supabase:", error);
-                return;
-            }
-            
-            localStorage.setItem('currentUser', JSON.stringify(data));
-
-            if (data.email === 'admin@lancho.com') {
-                window.location.href = './admin.html';
-            } else {
-                window.location.href = './index.html';
-            }
+        function showError(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+            loginButton.disabled = false;
+            loginButton.textContent = 'Entrar';
         }
+
+        // Redireciona se o usuário já estiver "logado" (via localStorage)
+        document.addEventListener('DOMContentLoaded', () => {
+            const loggedInUser = localStorage.getItem('currentUser');
+            if (loggedInUser) {
+                window.location.href = './catalog.html';
+            }
+        });
     </script>
+
 </body>
 </html>
