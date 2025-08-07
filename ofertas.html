@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lanchô - O melhor lanche da região</title>
+    <title>Ofertas - Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -12,70 +12,48 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header Redesenhado -->
+    <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
-            <!-- Lado Esquerdo: Menu Principal -->
             <div class="relative">
                 <button id="main-menu-button" class="p-2 rounded-full text-gray-600 hover:bg-gray-200">
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
                 <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                    <a href="./index.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100 font-semibold"><i class="fas fa-home w-6 mr-2"></i>Home</a>
+                    <a href="./index.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-home w-6 mr-2"></i>Home</a>
                     <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
-                    <a href="./ofertas.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
+                    <a href="./ofertas.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100 font-semibold"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
                     <a href="./sobre.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
                 </div>
             </div>
-
-            <!-- Centro: Logo -->
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                <a href="./index.html">
-                    <img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto">
-                </a>
+                <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
             </div>
-
-            <!-- Lado Direito: Ações do Usuário -->
             <div class="flex items-center space-x-4">
-                <a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700 transition-colors">Entrar</a>
-                <div id="user-menu-container" class="relative hidden">
-                    <!-- O menu do usuário (logado) será inserido aqui pelo JS -->
-                </div>
+                <a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700">Entrar</a>
+                <div id="user-menu-container" class="relative hidden"></div>
             </div>
         </nav>
     </header>
 
-    <main>
-        <!-- Seção de Boas-vindas -->
-        <section class="bg-white">
-            <div class="container mx-auto px-4 md:px-8 py-20 text-center">
-                <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">O sabor que você não esquece.</h1>
-                <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">Feito com os melhores ingredientes, direto para a sua casa. Dê uma olhada no nosso destaque de hoje!</p>
-            </div>
-        </section>
-
-        <!-- Destaque do Dia Section -->
-        <section id="destaque-section" class="py-16 bg-gray-50">
-            <div class="container mx-auto px-4 md:px-8">
-                <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">🔥 Destaque do Dia 🔥</h2>
-                <div id="destaque-content" class="max-w-4xl mx-auto">
-                    <div id="destaque-loading" class="text-center text-gray-500">
-                        <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        A procurar a delícia de hoje...
-                    </div>
-                </div>
-            </div>
-        </section>
+    <!-- Conteúdo Principal -->
+    <main class="container mx-auto p-4 md:p-8 flex-grow">
+        <div class="text-center py-16">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Ofertas & Cupons</h1>
+            <p class="text-lg text-gray-600 mb-8">Fique de olho! Em breve, teremos cupons e ofertas imperdíveis para você.</p>
+            <i class="fas fa-gift text-yellow-500 text-6xl"></i>
+        </div>
     </main>
 
-    <footer class="bg-gray-800 text-white">
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
                 <div>
                     <h3 class="text-lg font-bold text-yellow-500 mb-4">Lanchô</h3>
-                    <p class="text-gray-400">O melhor lanche da região, feito com carinho e os ingredientes mais frescos. Uma experiência de sabor inesquecível.</p>
+                    <p class="text-gray-400">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
                 </div>
                 <div>
                     <h3 class="text-lg font-bold mb-4">Links Rápidos</h3>
@@ -112,50 +90,11 @@
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         let currentUser = null;
 
-        async function loadDestaque() {
-            const destaqueContent = document.getElementById('destaque-content');
-            const destaqueLoading = document.getElementById('destaque-loading');
-
-            try {
-                const { data: product, error } = await supabaseClient.functions.invoke('get-destaque-do-dia');
-                if (error) throw error;
-                if (!product) throw new Error("Nenhum produto em destaque encontrado hoje.");
-
-                destaqueLoading.style.display = 'none';
-                destaqueContent.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-xl overflow-hidden md:flex transform hover:scale-[1.02] transition-transform duration-300">
-                        <div class="md:w-1/2">
-                            <img src="${product.image_url || './images/lanchoxburger.jpg'}" alt="Foto de ${product.nome}" class="w-full h-64 md:h-full object-cover">
-                        </div>
-                        <div class="p-8 md:p-10 md:w-1/2 flex flex-col justify-center">
-                            <h3 class="text-4xl font-bold text-gray-900">${product.nome}</h3>
-                            <p class="text-2xl font-semibold text-green-600 my-3">R$${parseFloat(product.preco).toFixed(2).replace('.', ',')}</p>
-                            <p class="text-gray-600 mb-8">${product.descricao}</p>
-                            <a href="./catalog.html" class="w-full text-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-full transition-colors text-lg">Ver no Cardápio</a>
-                        </div>
-                    </div>
-                `;
-
-            } catch (error) {
-                console.error('Erro ao carregar destaque:', error);
-                destaqueContent.innerHTML = '<div class="text-center py-10"><p>Não conseguimos encontrar o destaque de hoje. Dê uma olhada no nosso <a href="./catalog.html" class="text-yellow-600 hover:underline font-semibold">cardápio completo</a>!</p></div>';
-            }
-        }
-        
-        // Função para buscar estatísticas do usuário (simulada por enquanto)
         async function fetchUserStats(userId) {
-            // No futuro, você pode substituir isso por uma chamada a uma Supabase Function
-            // que calcula os valores reais.
             console.log("Buscando estatísticas para o usuário:", userId);
-            // Exemplo:
-            // const { data, error } = await supabaseClient.rpc('get_user_stats', { user_id: userId });
-            return {
-                totalPedidos: 12, // Valor de exemplo
-                dinheiroGasto: 485.50 // Valor de exemplo
-            };
+            return { totalPedidos: 12, dinheiroGasto: 485.50 };
         }
 
         async function setupMenusAndAuth() {
@@ -191,14 +130,10 @@
                 loginButton.classList.add('hidden');
                 userMenuContainer.classList.remove('hidden');
                 const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
-                
-                // Busca as estatísticas do usuário
                 const stats = await fetchUserStats(user.id);
 
                 userMenuContainer.innerHTML = `
-                    <button id="user-menu-button" class="p-2 rounded-full focus:outline-none">
-                        <img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover">
-                    </button>
+                    <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
                     <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
                         <div class="p-4 border-b border-gray-200">
                             <div class="flex items-center">
@@ -209,14 +144,8 @@
                                 </div>
                             </div>
                             <div class="mt-4 grid grid-cols-2 gap-4 text-center">
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p>
-                                    <p class="text-xs text-gray-500">Pedidos</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-800">R$ ${stats.dinheiroGasto.toFixed(2)}</p>
-                                    <p class="text-xs text-gray-500">Gasto Total</p>
-                                </div>
+                                <div><p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p><p class="text-xs text-gray-500">Pedidos</p></div>
+                                <div><p class="text-sm font-semibold text-gray-800">R$ ${stats.dinheiroGasto.toFixed(2)}</p><p class="text-xs text-gray-500">Gasto Total</p></div>
                             </div>
                         </div>
                         <div class="py-2">
@@ -224,11 +153,8 @@
                             <a href="./orders.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
                             ${user.email === 'admin@lancho.com' ? '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>' : ''}
                         </div>
-                        <div class="p-2 border-t border-gray-200">
-                            <button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button>
-                        </div>
-                    </div>
-                `;
+                        <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
+                    </div>`;
 
                 const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
                 const userMenuDropdown = userMenuContainer.querySelector('#user-menu-dropdown');
@@ -237,7 +163,6 @@
                     userMenuDropdown.classList.toggle('hidden');
                 });
                 userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); window.location.reload(); };
-
             } else {
                 loginButton.classList.remove('hidden');
                 userMenuContainer.classList.add('hidden');
@@ -246,7 +171,6 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             setupMenusAndAuth();
-            loadDestaque();
         });
     </script>
 </body>
