@@ -1,15 +1,8 @@
+// supabase/functions/delete-stripe-product/index.ts
+
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import Stripe from 'https://esm.sh/stripe@11.1.0?target=deno'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
-  apiVersion: '2022-11-15',
-  httpClient: Stripe.createFetchHttpClient()
-})
+import Stripe from 'https://esm.sh/stripe@11.1.0'
+import { corsHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -17,30 +10,26 @@ serve(async (req) => {
   }
 
   try {
-    // ---> INÍCIO DA CORREÇÃO: Bloco de segurança removido <---
-    const { stripe_price_id } = await req.json();
-    if (!stripe_price_id) {
-      throw new Error("ID do preço do Stripe (stripe_price_id) é obrigatório.");
-    }
+    const { priceId } = await req.json()
 
-    // 1. Pega os detalhes do preço para encontrar a ID do produto
-    const price = await stripe.prices.retrieve(stripe_price_id);
-    const productId = typeof price.product === 'string' ? price.product : price.product.id;
+    // CORREÇÃO: A função agora procura pela variável de ambiente 'STRIPE_API_KEY',
+    // que é o nome que você configurou no seu painel do Supabase.
+    const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY') as string, {
+      apiVersion: '2022-11-15',
+      httpClient: Stripe.createFetchHttpClient(),
+    })
 
-    // 2. Desativa o preço
-    await stripe.prices.update(stripe_price_id, { active: false });
+    // Desativar um preço é a forma correta de o "remover" no Stripe.
+    const price = await stripe.prices.update(priceId, { active: false })
 
-    // 3. Arquiva (desativa) o produto
-    await stripe.products.update(productId, { active: false });
-
-    return new Response(JSON.stringify({ message: "Produto removido com sucesso no Stripe!" }), {
+    return new Response(JSON.stringify({ message: `Price ${price.id} deactivated.` }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    })
+  } catch (e) {
+    console.error('Erro na função delete-stripe-product:', e)
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
-    });
+    })
   }
 })

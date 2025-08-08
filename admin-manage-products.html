@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin - Lanchô</title>
+    <title>Gerenciar Produtos - Admin Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .modal { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
@@ -41,44 +43,26 @@
     <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <div class="max-w-6xl mx-auto">
-            <h1 class="text-4xl font-bold mb-10 text-gray-800">Painel Administrativo</h1>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                
-                <!-- Card: Adicionar Produto -->
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                    <i class="fas fa-plus-circle text-yellow-500 text-3xl mb-4"></i>
-                    <h2 class="text-xl font-bold mb-2">Adicionar Produto</h2>
-                    <p class="text-gray-600 mb-4">Crie novos itens para o cardápio e adicione-os ao Stripe.</p>
-                    <a href="./admin-add-product.html" class="font-semibold text-red-600 hover:text-red-800">Iniciar ›</a>
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Gerenciar Produtos</h1>
+                <a href="./admin.html" class="text-sm text-yellow-600 hover:underline">‹ Voltar ao Painel</a>
+            </div>
+            <div class="bg-white rounded-lg shadow-md">
+                <div id="product-list-container">
+                    <div id="loading-products" class="text-center text-gray-500 p-10">
+                        <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        A carregar produtos...
+                    </div>
                 </div>
-
-                <!-- Card: Gerenciar Produtos -->
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                    <i class="fas fa-edit text-yellow-500 text-3xl mb-4"></i>
-                    <h2 class="text-xl font-bold mb-2">Gerenciar Produtos</h2>
-                    <p class="text-gray-600 mb-4">Edite preços, estoque, imagens e exclua produtos.</p>
-                    <a href="./admin-manage-products.html" class="font-semibold text-red-600 hover:text-red-800">Gerenciar ›</a>
-                </div>
-
-                <!-- Card: Visualizar Pedidos -->
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                    <i class="fas fa-receipt text-yellow-500 text-3xl mb-4"></i>
-                    <h2 class="text-xl font-bold mb-2">Visualizar Pedidos</h2>
-                    <p class="text-gray-600 mb-4">Acompanhe todos os pedidos realizados pelos clientes.</p>
-                    <a href="./admin-view-orders.html" class="font-semibold text-red-600 hover:text-red-800">Ver Pedidos ›</a>
-                </div>
-
-                <!-- Card: Gerenciar Clientes -->
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                    <i class="fas fa-users-cog text-yellow-500 text-3xl mb-4"></i>
-                    <h2 class="text-xl font-bold mb-2">Gerenciar Clientes</h2>
-                    <p class="text-gray-600 mb-4">Veja a lista de clientes cadastrados e suas informações.</p>
-                    <a href="./admin-manage-clients.html" class="font-semibold text-red-600 hover:text-red-800">Ver Clientes ›</a>
-                </div>
-
             </div>
         </div>
     </main>
+    
+    <!-- Modal de Edição -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden opacity-0 modal">
+        <div id="edit-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95 modal-content"></div>
+    </div>
+
 
     <!-- Footer -->
     <footer class="bg-gray-800 text-white mt-auto">
@@ -125,12 +109,142 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
 
+        const productListContainer = document.getElementById('product-list-container');
+        const loadingProducts = document.getElementById('loading-products');
+        const editModal = document.getElementById('edit-modal');
+        const editModalContent = document.getElementById('edit-modal-content');
+
+        async function loadProducts() {
+            try {
+                const { data: produtos, error } = await supabaseClient
+                    .from('Produto')
+                    .select('*') // REMOVIDO: busca pelo Estoque
+                    .order('nome', { ascending: true });
+
+                if (error) throw error;
+                loadingProducts.style.display = 'none';
+
+                if (!produtos || produtos.length === 0) {
+                    productListContainer.innerHTML = '<p class="text-center text-gray-500 p-10">Nenhum produto cadastrado.</p>';
+                    return;
+                }
+
+                productListContainer.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${produtos.map(p => `
+                                    <tr id="product-row-${p.id}">
+                                        <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center"><div class="flex-shrink-0 h-10 w-10"><img class="h-10 w-10 rounded-full object-cover" src="${p.image_url || 'https://placehold.co/40x40/e2e8f0/a0aec0?text=L'}" alt=""></div><div class="ml-4"><div class="text-sm font-medium text-gray-900">${p.nome}</div></div></div></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${parseFloat(p.preco).toFixed(2)}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"><button onclick='openEditModal(${JSON.stringify(p)})' class="text-yellow-600 hover:text-yellow-900">Editar</button><button onclick="deleteProduct(${p.id}, '${p.stripe_price_id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-900">Excluir</button></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                console.error("Erro ao carregar produtos:", error);
+                loadingProducts.innerHTML = `<p class="text-center text-red-500 p-10">Ocorreu um erro ao buscar os produtos.</p>`;
+            }
+        }
+
+        function openEditModal(product) {
+            editModal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            setTimeout(() => { editModal.classList.remove('opacity-0'); editModalContent.classList.remove('scale-95'); }, 10);
+            
+            editModalContent.innerHTML = `
+                <div class="flex justify-between items-center p-4 border-b"><h3 class="text-2xl font-bold">Editar ${product.nome}</h3><button onclick="closeEditModal()" class="p-2 rounded-full text-gray-500 hover:bg-gray-200">&times;</button></div>
+                <div class="p-6 overflow-y-auto"><form id="edit-product-form" class="space-y-6">
+                    <div><label for="edit-nome" class="block text-sm font-medium text-gray-700">Nome</label><input type="text" id="edit-nome" value="${product.nome}" required class="mt-1 block w-full px-3 py-2 border rounded-md"></div>
+                    <div><label for="edit-descricao" class="block text-sm font-medium text-gray-700">Descrição</label><textarea id="edit-descricao" rows="3" required class="mt-1 block w-full px-3 py-2 border rounded-md">${product.descricao}</textarea></div>
+                    <div><label for="edit-preco" class="block text-sm font-medium text-gray-700">Preço</label><input type="number" step="0.01" id="edit-preco" value="${product.preco}" required class="mt-1 block w-full px-3 py-2 border rounded-md"></div>
+                    <div><label class="block text-sm font-medium text-gray-700">Imagem</label><div class="mt-1 flex items-center space-x-4"><img id="edit-image-preview" src="${product.image_url || 'https://placehold.co/100x100/e2e8f0/a0aec0?text=L'}" class="w-24 h-24 rounded-md object-cover"><label for="edit-image-upload" class="cursor-pointer bg-yellow-500 text-white font-bold py-2 px-4 rounded-full hover:bg-yellow-600"><span>Alterar Imagem</span><input id="edit-image-upload" type="file" class="sr-only" accept="image/png, image/jpeg"></label></div></div>
+                    <div class="pt-4 flex justify-end space-x-3"><button type="button" onclick="closeEditModal()" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-red-600 text-white font-bold py-2 px-4 rounded-full hover:bg-red-700">Salvar Alterações</button></div>
+                    <p id="edit-form-message" class="text-sm text-center mt-4"></p>
+                </form></div>
+            `;
+
+            document.getElementById('edit-image-upload').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) document.getElementById('edit-image-preview').src = URL.createObjectURL(file);
+            });
+
+            document.getElementById('edit-product-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveProductChanges(product.id);
+            });
+        }
+
+        function closeEditModal() {
+            editModal.classList.add('opacity-0');
+            editModalContent.classList.add('scale-95');
+            setTimeout(() => { editModal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }, 300);
+        }
+
+        async function saveProductChanges(productId) {
+            const formMessage = document.getElementById('edit-form-message');
+            formMessage.textContent = 'A salvar...';
+
+            const nome = document.getElementById('edit-nome').value;
+            const descricao = document.getElementById('edit-descricao').value;
+            const preco = parseFloat(document.getElementById('edit-preco').value);
+            const imageFile = document.getElementById('edit-image-upload').files[0];
+            let imageUrl = document.getElementById('edit-image-preview').src;
+
+            try {
+                if (imageFile) {
+                    const fileName = `${Date.now()}-${imageFile.name}`;
+                    const { error } = await supabaseClient.storage.from('produtos').upload(fileName, imageFile, { upsert: true });
+                    if (error) throw error;
+                    imageUrl = supabaseClient.storage.from('produtos').getPublicUrl(fileName).data.publicUrl;
+                }
+
+                const { error: productError } = await supabaseClient.from('Produto').update({ nome, descricao, preco, image_url: imageUrl }).eq('id', productId);
+                if (productError) throw productError;
+                
+                formMessage.textContent = 'Produto atualizado com sucesso!';
+                formMessage.className = 'text-sm text-center mt-4 text-green-600';
+                setTimeout(() => { closeEditModal(); loadProducts(); }, 1500);
+
+            } catch (error) {
+                console.error("Erro ao salvar alterações:", error);
+                formMessage.textContent = `Erro: ${error.message}`;
+                formMessage.className = 'text-sm text-center mt-4 text-red-600';
+            }
+        }
+
+        async function deleteProduct(productId, stripePriceId, productName) {
+            if (!confirm(`Tem a certeza de que quer excluir o produto "${productName}"? Esta ação não pode ser desfeita.`)) return;
+            try {
+                const { error: stripeError } = await supabaseClient.functions.invoke('delete-stripe-product', { body: { priceId: stripePriceId } });
+                if (stripeError) throw stripeError;
+                await supabaseClient.from('avaliacoes').delete().eq('produto_id', productId);
+                await supabaseClient.from('Estoque').delete().eq('id_produto', productId);
+                await supabaseClient.from('Produto').delete().eq('id', productId);
+                alert(`Produto "${productName}" excluído com sucesso.`);
+                document.getElementById(`product-row-${productId}`).remove();
+            } catch (error) {
+                console.error("Erro ao excluir produto:", error);
+                alert(`Ocorreu um erro ao excluir o produto: ${error.message}`);
+            }
+        }
+
         async function fetchUserStats(userId) {
             try {
                 const { data, error } = await supabaseClient.rpc('get_user_stats', { p_user_id: userId });
                 if (error) throw error;
                 return data;
-            } catch (error) { // CORREÇÃO: Adicionadas as chavetas {} em falta
+            } catch (error) {
                 console.error("Erro ao buscar estatísticas:", error);
                 return { totalPedidos: 0, dinheiroGasto: 0.00 };
             }
@@ -217,6 +331,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await setupMenusAndAuth();
+            loadProducts();
         });
     </script>
 </body>

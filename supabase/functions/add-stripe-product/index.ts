@@ -1,16 +1,8 @@
+// supabase/functions/add-stripe-product/index.ts
+
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import Stripe from 'https://esm.sh/stripe@11.1.0?target=deno'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-// Inicializa o Stripe
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
-  apiVersion: '2022-11-15',
-  httpClient: Stripe.createFetchHttpClient()
-})
+import Stripe from 'https://esm.sh/stripe@11.1.0'
+import { corsHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -18,39 +10,36 @@ serve(async (req) => {
   }
 
   try {
-    // ---> INÍCIO DA CORREÇÃO: Bloco de segurança removido <---
-    // A segurança agora é garantida pela própria página admin.html,
-    // que só é acessível pelo administrador.
-    // ---> FIM DA CORREÇÃO <---
+    const { productName, unitAmount } = await req.json()
 
-    const { nome, descricao, preco, imageUrl } = await req.json();
-    if (!nome || !preco) {
-      throw new Error("Nome e preço do produto são obrigatórios.");
-    }
+    // CORREÇÃO: A função agora procura pela variável de ambiente 'STRIPE_API_KEY',
+    // que é o nome que você configurou no seu painel do Supabase.
+    const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY') as string, {
+      apiVersion: '2022-11-15',
+      httpClient: Stripe.createFetchHttpClient(),
+    })
 
-    // 1. Cria o Produto no Stripe
-    const stripeProduct = await stripe.products.create({
-      name: nome,
-      description: descricao || 'Sem descrição',
-      images: imageUrl ? [imageUrl] : [],
-    });
+    // Cria o produto no Stripe
+    const product = await stripe.products.create({
+      name: productName,
+    })
 
-    // 2. Cria o Preço associado ao Produto no Stripe
-    await stripe.prices.create({
-      product: stripeProduct.id,
-      unit_amount: Math.round(preco * 100), // Converte para centavos
-      currency: 'brl',
-    });
+    // Cria o preço para o produto
+    const price = await stripe.prices.create({
+      product: product.id,
+      unit_amount: unitAmount, // O preço deve ser em centavos
+      currency: 'brl', // Moeda brasileira
+    })
 
-    return new Response(JSON.stringify({ message: `Produto "${nome}" criado com sucesso no Stripe!` }), {
+    // Retorna o ID do preço para o frontend
+    return new Response(JSON.stringify({ priceId: price.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    });
-
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    })
+  } catch (e) {
+    console.error('Erro na função add-stripe-product:', e)
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
-    });
+    })
   }
 })

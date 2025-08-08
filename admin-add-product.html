@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meus Pedidos - Lanchô</title>
+    <title>Adicionar Produto - Admin Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -40,15 +40,44 @@
 
     <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl font-bold text-center mb-10 text-gray-800">Meus Pedidos</h1>
-            <div id="orders-list" class="space-y-6">
-                <div id="loading-orders" class="text-center text-gray-500 py-10">
-                    <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    A buscar seus pedidos...
-                </div>
-                <!-- Os pedidos serão inseridos aqui -->
+        <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Adicionar Novo Produto</h1>
+                <a href="./admin.html" class="text-sm text-yellow-600 hover:underline">‹ Voltar ao Painel</a>
             </div>
+
+            <form id="add-product-form" class="space-y-6">
+                <div>
+                    <label for="nome" class="block text-sm font-medium text-gray-700">Nome do Produto</label>
+                    <input type="text" id="nome" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                </div>
+                <div>
+                    <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                    <textarea id="descricao" rows="3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"></textarea>
+                </div>
+                <div>
+                    <label for="preco" class="block text-sm font-medium text-gray-700">Preço (ex: 19.99)</label>
+                    <input type="number" step="0.01" id="preco" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Imagem do Produto</label>
+                    <div class="mt-1 flex items-center space-x-4">
+                        <img id="image-preview" src="https://placehold.co/100x100/e2e8f0/a0aec0?text=Imagem" alt="Pré-visualização" class="w-24 h-24 rounded-md object-cover bg-gray-100">
+                        <label for="image-upload" class="cursor-pointer bg-yellow-500 text-white font-bold py-2 px-4 rounded-full hover:bg-yellow-600 transition-colors">
+                            <span>Escolher Ficheiro</span>
+                            <input id="image-upload" name="image-upload" type="file" class="sr-only" accept="image/png, image/jpeg">
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" id="submit-button" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-full hover:bg-red-700 transition-colors flex justify-center items-center">
+                        Upload
+                    </button>
+                    <p id="form-message" class="text-sm text-center mt-4"></p>
+                </div>
+            </form>
         </div>
     </main>
 
@@ -97,64 +126,78 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
 
-        function getStatusBadge(status) {
-            switch (status.toLowerCase()) {
-                case 'entregue':
-                    return `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${status}</span>`;
-                case 'em preparo':
-                    return `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${status}</span>`;
-                case 'cancelado':
-                    return `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${status}</span>`;
-                default:
-                    return `<span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${status}</span>`;
-            }
-        }
+        const addProductForm = document.getElementById('add-product-form');
+        const submitButton = document.getElementById('submit-button');
+        const formMessage = document.getElementById('form-message');
+        const imageUploadInput = document.getElementById('image-upload');
+        const imagePreview = document.getElementById('image-preview');
 
-        async function loadOrders() {
-            if (!currentUser) {
-                window.location.href = './login.html';
-                return;
+        imageUploadInput.addEventListener('change', () => {
+            const file = imageUploadInput.files[0];
+            if (file) {
+                imagePreview.src = URL.createObjectURL(file);
             }
+        });
 
-            const ordersList = document.getElementById('orders-list');
-            const loadingOrders = document.getElementById('loading-orders');
+        addProductForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            formMessage.textContent = '';
+            submitButton.disabled = true;
+            submitButton.innerHTML = `<svg class="animate-spin h-5 w-5 -ml-1 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processando...`;
+
+            const nome = document.getElementById('nome').value;
+            const descricao = document.getElementById('descricao').value;
+            const preco = parseFloat(document.getElementById('preco').value);
+            const imageFile = imageUploadInput.files[0];
+            let imageUrl = null;
 
             try {
-                const { data: orders, error } = await supabaseClient
-                    .from('Pedido')
-                    .select('*')
-                    .eq('id_cliente', currentUser.id)
-                    .order('data', { ascending: false });
+                if (imageFile) {
+                    const fileName = `${Date.now()}-${imageFile.name}`;
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                        .from('produtos')
+                        .upload(fileName, imageFile);
+                    
+                    if (uploadError) throw uploadError;
 
-                if (error) throw error;
-
-                loadingOrders.style.display = 'none';
-
-                if (!orders || orders.length === 0) {
-                    ordersList.innerHTML = `<p class="text-center text-gray-500">Você ainda não fez nenhum pedido.</p>`;
-                    return;
+                    const { data: { publicUrl } } = supabaseClient.storage.from('produtos').getPublicUrl(fileName);
+                    imageUrl = publicUrl;
                 }
 
-                ordersList.innerHTML = orders.map(order => `
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-lg font-semibold text-gray-800">${order.descricao}</p>
-                                <p class="text-sm text-gray-500">Pedido em ${new Date(order.data).toLocaleDateString('pt-BR')}</p>
-                            </div>
-                            ${getStatusBadge(order.status)}
-                        </div>
-                        <div class="mt-4 border-t pt-4">
-                            <p class="text-right font-bold text-lg text-green-600">R$ ${parseFloat(order.valor).toFixed(2).replace('.', ',')}</p>
-                        </div>
-                    </div>
-                `).join('');
+                const { data: stripeData, error: stripeError } = await supabaseClient.functions.invoke('add-stripe-product', {
+                    body: { productName: nome, unitAmount: Math.round(preco * 100) },
+                });
+                if (stripeError) throw stripeError;
+                if (stripeData.error) throw new Error(stripeData.error);
+                
+                const stripe_price_id = stripeData.priceId;
+
+                const { data: produtoData, error: produtoError } = await supabaseClient
+                    .from('Produto')
+                    .insert({ nome, descricao, preco, image_url: imageUrl, stripe_price_id })
+                    .select()
+                    .single();
+                if (produtoError) throw produtoError;
+
+                const { error: estoqueError } = await supabaseClient
+                    .from('Estoque')
+                    .insert({ id_produto: produtoData.id, quantidade: 0 });
+                if (estoqueError) throw estoqueError;
+
+                formMessage.textContent = 'Produto adicionado com sucesso!';
+                formMessage.className = 'text-sm text-center mt-4 text-green-600';
+                addProductForm.reset();
+                imagePreview.src = 'https://placehold.co/100x100/e2e8f0/a0aec0?text=Imagem';
 
             } catch (error) {
-                console.error("Erro ao carregar pedidos:", error);
-                loadingOrders.innerHTML = `<p class="text-center text-red-500">Ocorreu um erro ao buscar seus pedidos.</p>`;
+                console.error("Erro ao adicionar produto:", error);
+                formMessage.textContent = `Erro: ${error.message}`;
+                formMessage.className = 'text-sm text-center mt-4 text-red-600';
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Upload';
             }
-        }
+        });
 
         async function fetchUserStats(userId) {
             try {
@@ -178,7 +221,15 @@
             const userString = localStorage.getItem('currentUser');
             if (userString) {
                 currentUser = JSON.parse(userString);
+                if (currentUser.email !== 'admin@lancho.com') {
+                    alert('Acesso negado.');
+                    window.location.href = './index.html';
+                }
+            } else {
+                alert('Você precisa estar logado como administrador para acessar esta página.');
+                window.location.href = './login.html';
             }
+            
             await updateNavUI(currentUser);
 
             window.addEventListener('click', (event) => {
@@ -220,8 +271,7 @@
                         </div>
                         <div class="py-2">
                             <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
-                            <a href="./orders.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
-                            ${user.email === 'admin@lancho.com' ? '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>' : ''}
+                            <a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>
                         </div>
                         <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                     </div>`;
@@ -241,7 +291,6 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await setupMenusAndAuth();
-            loadOrders();
         });
     </script>
 </body>

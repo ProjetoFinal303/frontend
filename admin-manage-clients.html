@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meus Pedidos - Lanchô</title>
+    <title>Gerenciar Clientes - Admin Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .modal { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
@@ -40,17 +42,27 @@
 
     <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl font-bold text-center mb-10 text-gray-800">Meus Pedidos</h1>
-            <div id="orders-list" class="space-y-6">
-                <div id="loading-orders" class="text-center text-gray-500 py-10">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Gerenciar Clientes</h1>
+                <a href="./admin.html" class="text-sm text-yellow-600 hover:underline">‹ Voltar ao Painel</a>
+            </div>
+            <div id="clients-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="loading-clients" class="col-span-full text-center text-gray-500 p-10">
                     <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    A buscar seus pedidos...
+                    A carregar clientes...
                 </div>
-                <!-- Os pedidos serão inseridos aqui -->
+                <!-- A lista de clientes será inserida aqui -->
             </div>
         </div>
     </main>
+
+    <!-- Modal de Edição de Cliente -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden opacity-0 modal">
+        <div id="edit-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform scale-95 modal-content">
+            <!-- Conteúdo do modal é carregado dinamicamente -->
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="bg-gray-800 text-white mt-auto">
@@ -97,62 +109,141 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
 
-        function getStatusBadge(status) {
-            switch (status.toLowerCase()) {
-                case 'entregue':
-                    return `<span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${status}</span>`;
-                case 'em preparo':
-                    return `<span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${status}</span>`;
-                case 'cancelado':
-                    return `<span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${status}</span>`;
-                default:
-                    return `<span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${status}</span>`;
-            }
-        }
+        const clientsListContainer = document.getElementById('clients-list-container');
+        const loadingClients = document.getElementById('loading-clients');
+        const editModal = document.getElementById('edit-modal');
+        const editModalContent = document.getElementById('edit-modal-content');
 
-        async function loadOrders() {
-            if (!currentUser) {
-                window.location.href = './login.html';
-                return;
-            }
-
-            const ordersList = document.getElementById('orders-list');
-            const loadingOrders = document.getElementById('loading-orders');
-
+        async function loadClients() {
             try {
-                const { data: orders, error } = await supabaseClient
-                    .from('Pedido')
+                const { data: clients, error } = await supabaseClient
+                    .from('Cliente')
                     .select('*')
-                    .eq('id_cliente', currentUser.id)
-                    .order('data', { ascending: false });
+                    .order('nome', { ascending: true });
 
                 if (error) throw error;
+                loadingClients.style.display = 'none';
 
-                loadingOrders.style.display = 'none';
-
-                if (!orders || orders.length === 0) {
-                    ordersList.innerHTML = `<p class="text-center text-gray-500">Você ainda não fez nenhum pedido.</p>`;
+                if (!clients || clients.length === 0) {
+                    clientsListContainer.innerHTML = '<p class="col-span-full text-center text-gray-500 p-10">Nenhum cliente encontrado.</p>';
                     return;
                 }
 
-                ordersList.innerHTML = orders.map(order => `
-                    <div class="bg-white rounded-lg shadow-md p-6">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-lg font-semibold text-gray-800">${order.descricao}</p>
-                                <p class="text-sm text-gray-500">Pedido em ${new Date(order.data).toLocaleDateString('pt-BR')}</p>
+                clientsListContainer.innerHTML = clients.map(client => `
+                    <div id="client-card-${client.id}" class="bg-white rounded-lg shadow-md p-6 flex flex-col">
+                        <div class="flex items-center mb-4">
+                            <img class="h-16 w-16 rounded-full object-cover" src="${client.avatar_url || `https://ui-avatars.com/api/?name=${client.nome}`}" alt="Avatar de ${client.nome}">
+                            <div class="ml-4">
+                                <p class="text-lg font-bold text-gray-900">${client.nome}</p>
+                                <p class="text-sm text-gray-500">${client.email}</p>
                             </div>
-                            ${getStatusBadge(order.status)}
                         </div>
-                        <div class="mt-4 border-t pt-4">
-                            <p class="text-right font-bold text-lg text-green-600">R$ ${parseFloat(order.valor).toFixed(2).replace('.', ',')}</p>
+                        <p class="text-sm text-gray-600 flex-grow"><i class="fas fa-phone-alt w-4 mr-2 text-gray-400"></i>${client.contato || 'Não informado'}</p>
+                        <div class="mt-6 pt-4 border-t flex justify-end space-x-3">
+                            <button onclick='openEditModal(${JSON.stringify(client)})' class="text-sm font-semibold text-yellow-600 hover:text-yellow-800">Editar</button>
+                            <button onclick="deleteClient(${client.id}, '${client.nome.replace(/'/g, "\\'")}')" class="text-sm font-semibold text-red-600 hover:text-red-800">Excluir</button>
                         </div>
                     </div>
                 `).join('');
+            } catch (error) {
+                console.error("Erro ao carregar clientes:", error);
+                loadingClients.innerHTML = `<p class="col-span-full text-center text-red-500 p-10">Ocorreu um erro ao buscar os clientes.</p>`;
+            }
+        }
+        
+        function openEditModal(client) {
+            editModal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            setTimeout(() => { editModal.classList.remove('opacity-0'); editModalContent.classList.remove('scale-95'); }, 10);
+            
+            editModalContent.innerHTML = `
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h3 class="text-2xl font-bold">Editar ${client.nome}</h3>
+                    <button onclick="closeEditModal()" class="p-2 rounded-full text-gray-500 hover:bg-gray-200">&times;</button>
+                </div>
+                <div class="p-6 overflow-y-auto">
+                    <form id="edit-client-form" class="space-y-6">
+                        <div>
+                            <label for="edit-nome" class="block text-sm font-medium text-gray-700">Nome</label>
+                            <input type="text" id="edit-nome" value="${client.nome}" required class="mt-1 block w-full px-3 py-2 border rounded-md">
+                        </div>
+                        <div>
+                            <label for="edit-contato" class="block text-sm font-medium text-gray-700">Contato</label>
+                            <input type="text" id="edit-contato" value="${client.contato || ''}" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                        </div>
+                        <div class="border-t pt-6">
+                            <p class="text-md font-semibold text-gray-800 mb-2">Alterar Senha</p>
+                            <div>
+                                <label for="edit-password" class="block text-sm font-medium text-gray-700">Nova Senha</label>
+                                <input type="password" id="edit-password" placeholder="Deixe em branco para não alterar" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                            </div>
+                        </div>
+                        <div class="pt-4 flex justify-end space-x-3">
+                            <button type="button" onclick="closeEditModal()" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full hover:bg-gray-300">Cancelar</button>
+                            <button type="submit" class="bg-red-600 text-white font-bold py-2 px-4 rounded-full hover:bg-red-700">Salvar Alterações</button>
+                        </div>
+                        <p id="edit-form-message" class="text-sm text-center mt-4"></p>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('edit-client-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveClientChanges(client.id);
+            });
+        }
+
+        function closeEditModal() {
+            editModal.classList.add('opacity-0');
+            editModalContent.classList.add('scale-95');
+            setTimeout(() => { editModal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }, 300);
+        }
+
+        async function saveClientChanges(clientId) {
+            const formMessage = document.getElementById('edit-form-message');
+            formMessage.textContent = 'A salvar...';
+
+            const nome = document.getElementById('edit-nome').value;
+            const contato = document.getElementById('edit-contato').value;
+            const newPassword = document.getElementById('edit-password').value;
+
+            const updates = { nome, contato };
+            if (newPassword) {
+                updates.senha = newPassword;
+            }
+
+            try {
+                const { error } = await supabaseClient.from('Cliente').update(updates).eq('id', clientId);
+                if (error) throw error;
+
+                formMessage.textContent = 'Cliente atualizado com sucesso!';
+                formMessage.className = 'text-sm text-center mt-4 text-green-600';
+                setTimeout(() => { closeEditModal(); loadClients(); }, 1500);
 
             } catch (error) {
-                console.error("Erro ao carregar pedidos:", error);
-                loadingOrders.innerHTML = `<p class="text-center text-red-500">Ocorreu um erro ao buscar seus pedidos.</p>`;
+                console.error("Erro ao salvar alterações do cliente:", error);
+                formMessage.textContent = `Erro: ${error.message}`;
+                formMessage.className = 'text-sm text-center mt-4 text-red-600';
+            }
+        }
+
+        async function deleteClient(clientId, clientName) {
+            if (!confirm(`Tem a certeza de que quer excluir o cliente "${clientName}"? Esta ação é irreversível e apagará todos os pedidos associados.`)) {
+                return;
+            }
+
+            try {
+                await supabaseClient.from('Pedido').delete().eq('id_cliente', clientId);
+                await supabaseClient.from('avaliacoes').delete().eq('cliente_id', clientId);
+                const { error } = await supabaseClient.from('Cliente').delete().eq('id', clientId);
+                if (error) throw error;
+
+                alert(`Cliente "${clientName}" e todos os seus dados foram excluídos com sucesso.`);
+                document.getElementById(`client-card-${clientId}`).remove();
+
+            } catch (error) {
+                console.error("Erro ao excluir cliente:", error);
+                alert(`Ocorreu um erro ao excluir o cliente: ${error.message}`);
             }
         }
 
@@ -178,7 +269,15 @@
             const userString = localStorage.getItem('currentUser');
             if (userString) {
                 currentUser = JSON.parse(userString);
+                if (currentUser.email !== 'admin@lancho.com') {
+                    alert('Acesso negado.');
+                    window.location.href = './index.html';
+                }
+            } else {
+                alert('Você precisa estar logado como administrador para acessar esta página.');
+                window.location.href = './login.html';
             }
+            
             await updateNavUI(currentUser);
 
             window.addEventListener('click', (event) => {
@@ -220,8 +319,7 @@
                         </div>
                         <div class="py-2">
                             <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
-                            <a href="./orders.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
-                            ${user.email === 'admin@lancho.com' ? '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>' : ''}
+                            <a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>
                         </div>
                         <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                     </div>`;
@@ -241,7 +339,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await setupMenusAndAuth();
-            loadOrders();
+            loadClients();
         });
     </script>
 </body>
