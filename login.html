@@ -131,9 +131,11 @@
             }
         });
 
-        // --- LISTENER PARA PEGAR A RESPOSTA DO GOOGLE ---
+        // --- LISTENER PARA PEGAR A RESPOSTA DO GOOGLE (CORRIGIDO) ---
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
-            if (event === "SIGNED_IN" && session) {
+            // Este listener só vai agir se o evento for de login bem-sucedido
+            // E se tiver um token na URL (o que só acontece depois do redirect do Google)
+            if (event === "SIGNED_IN" && session && window.location.hash.includes('access_token')) {
                 const userEmail = session.user.email;
                 
                 const { data: cliente, error } = await supabaseClient
@@ -145,6 +147,8 @@
                 if (error || !cliente) {
                     await supabaseClient.auth.signOut();
                     showError("Login com Google bem-sucedido, mas não há cadastro de cliente para este e-mail.");
+                    // Limpa o token da URL para evitar loops
+                    window.location.hash = ''; 
                     return;
                 }
 
