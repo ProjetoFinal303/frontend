@@ -13,14 +13,18 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-    <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg">
+    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-lg">
         
         <div class="text-center">
             <h1 class="text-4xl font-bold text-yellow-600">Lanchô</h1>
             <p class="mt-2 text-gray-600">Bem-vindo de volta! Faça login para continuar.</p>
         </div>
 
-        <form id="login-form" class="mt-8 space-y-6">
+        <div id="error-message" class="hidden text-sm text-center text-red-600 bg-red-100 p-3 rounded-md">
+            <!-- As mensagens de erro aparecerão aqui -->
+        </div>
+
+        <form id="login-form" class="space-y-6">
             <div class="rounded-md shadow-sm -space-y-px">
                 <div>
                     <label for="email-address" class="sr-only">Email</label>
@@ -30,10 +34,6 @@
                     <label for="password" class="sr-only">Senha</label>
                     <input id="password" name="password" type="password" autocomplete="current-password" required class="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 focus:z-10 sm:text-sm" placeholder="Sua senha">
                 </div>
-            </div>
-
-            <div id="error-message" class="hidden text-sm text-center text-red-600 bg-red-100 p-3 rounded-md">
-                <!-- Error messages will appear here -->
             </div>
 
             <div>
@@ -81,14 +81,28 @@
         const googleLoginButton = document.getElementById('google-login-button');
         const errorMessageDiv = document.getElementById('error-message');
 
+        function showError(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+            loginButton.disabled = false;
+            loginButton.innerHTML = `Entrar`;
+        }
+
+        function clearError() {
+            errorMessageDiv.textContent = '';
+            errorMessageDiv.classList.add('hidden');
+        }
+
+        // --- LÓGICA DE LOGIN MANUAL (DO SEU JEITO ANTIGO, QUE FUNCIONA COM SUA TABELA) ---
+        // ATENÇÃO: Este método não é seguro. O ideal é usar o sistema de autenticação do Supabase.
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
+            clearError();
             const email = document.getElementById('email-address').value;
             const password = document.getElementById('password').value;
             
             loginButton.disabled = true;
             loginButton.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l-2.647z"></path></svg>`;
-            errorMessageDiv.classList.add('hidden');
 
             const { data: users, error } = await supabaseClient.from('Cliente').select('*').eq('email', email);
 
@@ -106,7 +120,9 @@
             }
         });
 
+        // --- LÓGICA DE LOGIN COM GOOGLE ---
         googleLoginButton.addEventListener('click', async () => {
+            clearError();
             const { error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
             });
@@ -115,18 +131,28 @@
             }
         });
 
-        function showError(message) {
-            errorMessageDiv.textContent = message;
-            errorMessageDiv.classList.remove('hidden');
-            loginButton.disabled = false;
-            loginButton.textContent = 'Entrar';
-        }
+        // --- LISTENER PARA PEGAR A RESPOSTA DO GOOGLE ---
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            if (event === "SIGNED_IN" && session) {
+                const userEmail = session.user.email;
+                
+                const { data: cliente, error } = await supabaseClient
+                    .from('Cliente')
+                    .select('*')
+                    .eq('email', userEmail)
+                    .single();
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('currentUser')) {
+                if (error || !cliente) {
+                    await supabaseClient.auth.signOut();
+                    showError("Login com Google bem-sucedido, mas não há cadastro de cliente para este e-mail.");
+                    return;
+                }
+
+                localStorage.setItem('currentUser', JSON.stringify(cliente));
                 window.location.href = './catalog.html';
             }
         });
+
     </script>
 
 </body>
