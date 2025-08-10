@@ -94,7 +94,6 @@
         }
 
         // --- LÓGICA DE LOGIN MANUAL (DO SEU JEITO ANTIGO, QUE FUNCIONA COM SUA TABELA) ---
-        // ATENÇÃO: Este método não é seguro. O ideal é usar o sistema de autenticação do Supabase.
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             clearError();
@@ -133,9 +132,9 @@
 
         // --- LISTENER PARA PEGAR A RESPOSTA DO GOOGLE (CORRIGIDO) ---
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
-            // Este listener só vai agir se o evento for de login bem-sucedido
-            // E se tiver um token na URL (o que só acontece depois do redirect do Google)
-            if (event === "SIGNED_IN" && session && window.location.hash.includes('access_token')) {
+            // A condição foi simplificada para ser mais robusta.
+            // Se uma sessão foi estabelecida e a URL contém o token do Google, processa o login.
+            if (session && window.location.hash.includes('access_token')) {
                 const userEmail = session.user.email;
                 
                 const { data: cliente, error } = await supabaseClient
@@ -147,7 +146,7 @@
                 if (error || !cliente) {
                     await supabaseClient.auth.signOut();
                     showError("Login com Google bem-sucedido, mas não há cadastro de cliente para este e-mail.");
-                    // Limpa o token da URL para evitar loops
+                    // Limpa o token da URL para evitar que o código rode em loop
                     window.location.hash = ''; 
                     return;
                 }
