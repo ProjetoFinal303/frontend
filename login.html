@@ -21,8 +21,7 @@
         </div>
 
         <div id="error-message" class="hidden text-sm text-center text-red-600 bg-red-100 p-3 rounded-md">
-            <!-- As mensagens de erro aparecerão aqui -->
-        </div>
+            </div>
 
         <form id="login-form" class="space-y-6">
             <div class="rounded-md shadow-sm -space-y-px">
@@ -93,7 +92,7 @@
             errorMessageDiv.classList.add('hidden');
         }
 
-        // --- LÓGICA DE LOGIN MANUAL (DO SEU JEITO ANTIGO, QUE FUNCIONA COM SUA TABELA) ---
+        // --- LÓGICA DE LOGIN MANUAL ---
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             clearError();
@@ -132,27 +131,34 @@
 
         // --- LISTENER PARA PEGAR A RESPOSTA DO GOOGLE (CORRIGIDO) ---
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
-            // A condição foi simplificada para ser mais robusta.
             // Se uma sessão foi estabelecida e a URL contém o token do Google, processa o login.
-            if (session && window.location.hash.includes('access_token')) {
-                const userEmail = session.user.email;
-                
-                const { data: cliente, error } = await supabaseClient
-                    .from('Cliente')
-                    .select('*')
-                    .eq('email', userEmail)
-                    .single();
+            if (event === 'SIGNED_IN' && session && session.provider_token) {
+                try {
+                    // Chama a sua Edge Function para criar ou buscar o cliente
+                    const { data: cliente, error: functionError } = await supabaseClient.functions.invoke('handle-google-signin', {
+                        body: { id_token: session.provider_token },
+                    });
 
-                if (error || !cliente) {
+                    if (functionError) {
+                        throw functionError;
+                    }
+                    
+                    if (!cliente) {
+                         throw new Error("Não foi possível obter os dados do cliente após o login.");
+                    }
+
+                    // Armazena os dados do cliente e redireciona
+                    localStorage.setItem('currentUser', JSON.stringify(cliente));
+                    window.location.href = './catalog.html';
+
+                } catch (error) {
+                    showError(`Erro no login com Google: ${error.message}`);
+                    // Opcional: fazer logout do Supabase Auth se o processo falhar
                     await supabaseClient.auth.signOut();
-                    showError("Login com Google bem-sucedido, mas não há cadastro de cliente para este e-mail.");
+                } finally {
                     // Limpa o token da URL para evitar que o código rode em loop
-                    window.location.hash = ''; 
-                    return;
+                    window.location.hash = '';
                 }
-
-                localStorage.setItem('currentUser', JSON.stringify(cliente));
-                window.location.href = './catalog.html';
             }
         });
 
