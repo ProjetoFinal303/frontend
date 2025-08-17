@@ -314,6 +314,58 @@
             }
         }
 
+        async function fetchReviews(productId) {
+            const { data, error } = await supabaseClient.from('avaliacoes').select('*, Cliente!inner(id, nome, avatar_url)').eq('produto_id', productId).order('created_at', { ascending: false });
+            if (error) { console.error('Erro ao buscar avaliações:', error); return []; }
+            return data;
+        }
+
+        async function openProductModal(product) {
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10);
+            modalContent.innerHTML = `<div class="p-8 text-center"><svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto" ...></svg></div>`;
+            const reviews = await fetchReviews(product.id);
+            modalContent.innerHTML = `<div class="flex justify-between items-center p-4 border-b"><h3 class="text-2xl font-bold">${product.nome}</h3><button id="close-modal" class="p-2 rounded-full text-gray-500 hover:bg-gray-200">&times;</button></div><div class="p-6 overflow-y-auto"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><img src="${product.image_url || './images/lanchoxburger.jpg'}" class="w-full h-auto rounded-lg shadow-md"><div><p class="text-gray-600 mb-4">${product.descricao || 'Sem descrição.'}</p><p class="text-3xl font-bold text-green-600 mb-4">R$${parseFloat(product.preco).toFixed(2).replace('.', ',')}</p><div class="flex items-center mb-6">${getStarRatingDisplay(product.media_avaliacoes)}<span class="ml-3 text-gray-600">${Number(product.media_avaliacoes).toFixed(1)} de 5</span></div></div></div><hr class="my-6"><h4 class="text-xl font-bold mb-4">Avaliações</h4><div class="bg-gray-50 rounded-lg p-4 mb-6"><h5 class="font-semibold mb-2">Deixe sua avaliação</h5><fieldset class="star-rating mb-2 flex flex-row-reverse justify-end"><input type="radio" id="star5" name="rating" value="5" /><label for="star5">&#9733;</label><input type="radio" id="star4" name="rating" value="4" /><label for="star4">&#9733;</label><input type="radio" id="star3" name="rating" value="3" /><label for="star3">&#9733;</label><input type="radio" id="star2" name="rating" value="2" /><label for="star2">&#9733;</label><input type="radio" id="star1" name="rating" value="1" /><label for="star1">&#9733;</label></fieldset><textarea id="review-comment" class="w-full mt-2 p-2 border rounded-md" rows="3" placeholder="Escreva seu comentário..."></textarea><button id="submit-review" class="mt-3 w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700">Enviar</button><p id="review-message" class="text-sm text-center mt-2"></p></div><div id="reviews-list" class="space-y-6">${reviews.length > 0 ? reviews.map(r => `<div class="flex"><img src="${r.Cliente.avatar_url || `https://ui-avatars.com/api/?name=${r.Cliente.nome}`}" class="w-12 h-12 rounded-full mr-4"><div class="w-full"><div class="flex items-center justify-between"><p class="font-semibold">${r.Cliente.nome}</p>${getStarRatingDisplay(r.nota)}</div><p class="text-xs text-gray-500 mb-1">${new Date(r.created_at).toLocaleDateString('pt-BR')}</p><p class="text-gray-700">${r.comentario || ''}</p></div></div>`).join('<hr>') : '<p class="text-gray-500 text-center">Seja o primeiro a avaliar!</p>'}</div></div>`;
+            document.getElementById('close-modal').onclick = closeEditModal;
+            document.getElementById('submit-review').onclick = () => submitReview(product.id);
+        }
+
+        function closeEditModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }, 300);
+        }
+
+        modal.addEventListener('click', e => { if (e.target === modal) closeEditModal(); });
+        
+        async function submitReview(productId) {
+            const ratingInput = document.querySelector('#product-modal input[name="rating"]:checked');
+            const commentInput = document.getElementById('review-comment');
+            const messageP = document.getElementById('review-message');
+            const submitButton = document.getElementById('submit-review');
+            if (!currentUser) { messageP.textContent = 'Você precisa estar logado para avaliar.'; messageP.className = 'text-sm text-center mt-2 text-red-600'; return; }
+            if (!ratingInput) { messageP.textContent = 'Por favor, selecione uma nota de 1 a 5 estrelas.'; messageP.className = 'text-sm text-center mt-2 text-red-600'; return; }
+            submitButton.disabled = true;
+            submitButton.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto" ...></svg> Enviando...`;
+            const { error } = await supabaseClient.from('avaliacoes').insert({ produto_id: productId, cliente_id: currentUser.id, nota: parseInt(ratingInput.value), comentario: commentInput.value.trim() });
+            submitButton.disabled = false;
+            submitButton.textContent = 'Enviar Avaliação';
+            if (error) {
+                console.error('Erro ao enviar avaliação:', error);
+                messageP.textContent = `Erro: ${error.message.includes('duplicate key') ? 'Você já avaliou este produto.' : error.message}`;
+                messageP.className = 'text-sm text-center mt-2 text-red-600';
+            } else {
+                messageP.textContent = 'Avaliação enviada com sucesso!';
+                messageP.className = 'text-sm text-center mt-2 text-green-600';
+                setTimeout(async () => {
+                    loadProducts();
+                    const { data: p } = await supabaseClient.from('Produto').select('*').eq('id', productId).single();
+                    if(p) await openProductModal(p);
+                }, 1500);
+            }
+        }
+
         async function fetchUserStats(userId) {
             try {
                 const { data, error } = await supabaseClient.rpc('get_user_stats', { p_user_id: userId });
