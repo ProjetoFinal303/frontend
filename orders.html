@@ -95,7 +95,7 @@
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let currentUser = null;
+        let loggedUser = null; // Unificando a variável do usuário logado
 
         function getStatusBadge(status) {
             switch (status.toLowerCase()) {
@@ -111,8 +111,8 @@
         }
 
         async function loadOrders() {
-            if (!currentUser) {
-                window.location.href = './login.html';
+            if (!loggedUser) {
+                // Se não estiver logado, não há o que carregar. A proteção da página já o redirecionará.
                 return;
             }
 
@@ -120,10 +120,11 @@
             const loadingOrders = document.getElementById('loading-orders');
 
             try {
+                // Usando a sua lógica de query direta na tabela 'Pedido'
                 const { data: orders, error } = await supabaseClient
                     .from('Pedido')
                     .select('*')
-                    .eq('id_cliente', currentUser.id)
+                    .eq('id_cliente', loggedUser.id)
                     .order('data', { ascending: false });
 
                 if (error) throw error;
@@ -175,11 +176,16 @@
                 mainMenuDropdown.classList.toggle('hidden');
             });
 
-            const userString = localStorage.getItem('currentUser');
+            // Lógica de autenticação unificada
+            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
             if (userString) {
-                currentUser = JSON.parse(userString);
+                loggedUser = JSON.parse(userString);
+            } else {
+                alert("Você precisa estar logado para ver seus pedidos.");
+                window.location.href = './login.html';
+                return; // Para a execução
             }
-            await updateNavUI(currentUser);
+            await updateNavUI(loggedUser);
 
             window.addEventListener('click', (event) => {
                 const userMenuDropdown = document.getElementById('user-menu-dropdown');
@@ -202,6 +208,11 @@
                 const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
                 const stats = await fetchUserStats(user.id);
 
+                let adminLink = '';
+                if (user.role === 'admin') {
+                    adminLink = '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>';
+                }
+
                 userMenuContainer.innerHTML = `
                     <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
                     <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
@@ -221,7 +232,7 @@
                         <div class="py-2">
                             <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
                             <a href="./orders.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
-                            ${user.email === 'admin@lancho.com' ? '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>' : ''}
+                            ${adminLink}
                         </div>
                         <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                     </div>`;
@@ -232,7 +243,7 @@
                     event.stopPropagation();
                     userMenuDropdown.classList.toggle('hidden');
                 });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); window.location.reload(); };
+                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); localStorage.removeItem('currentAdmin'); window.location.reload(); };
             } else {
                 loginButton.classList.remove('hidden');
                 userMenuContainer.classList.add('hidden');
@@ -241,7 +252,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await setupMenusAndAuth();
-            loadOrders();
+            await loadOrders();
         });
     </script>
 </body>

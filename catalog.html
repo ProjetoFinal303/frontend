@@ -27,7 +27,7 @@
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header -->
+    <!-- Header (Seu design original) -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -55,7 +55,7 @@
         </nav>
     </header>
 
-    <!-- Conteúdo Principal -->
+    <!-- Conteúdo Principal (Seu design original) -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <h1 class="text-4xl font-bold text-center mb-10 text-gray-800">Nosso Cardápio</h1>
         <div id="product-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -66,12 +66,12 @@
         </div>
     </main>
 
-    <!-- Modal de Detalhes do Produto -->
+    <!-- Modal de Detalhes do Produto (Seu design original) -->
     <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden opacity-0 modal">
         <div id="modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transform scale-95 modal-content"></div>
     </div>
 
-    <!-- Painel do Carrinho -->
+    <!-- Painel do Carrinho (Seu design original) -->
     <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-40 hidden opacity-0"></div>
     <div id="cart-panel" class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col" style="transform: translateX(100%);">
         <div class="flex justify-between items-center p-4 border-b">
@@ -90,7 +90,7 @@
         </div>
     </div>
 
-    <!-- Footer -->
+    <!-- Footer (Seu design original) -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -133,7 +133,9 @@
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let currentUser = null;
+        
+        // A variável currentUser agora é chamada de loggedUser para evitar confusão
+        let loggedUser = null; 
         let cart = [];
 
         const productListContainer = document.getElementById('product-list');
@@ -168,25 +170,17 @@
         closeCartButton.addEventListener('click', toggleCart);
         cartOverlay.addEventListener('click', toggleCart);
 
-        function saveCart() {
-            localStorage.setItem('shoppingCart', JSON.stringify(cart));
-        }
-
+        function saveCart() { localStorage.setItem('shoppingCart', JSON.stringify(cart)); }
         function loadCart() {
             const savedCart = localStorage.getItem('shoppingCart');
-            if (savedCart) {
-                cart = JSON.parse(savedCart);
-            }
+            if (savedCart) { cart = JSON.parse(savedCart); }
             updateCartUI();
         }
 
         function addToCart(product) {
             const existingItem = cart.find(item => item.id === product.id);
-            if (existingItem) {
-                existingItem.quantity++;
-            } else {
-                cart.push({ ...product, quantity: 1 });
-            }
+            if (existingItem) { existingItem.quantity++; } 
+            else { cart.push({ ...product, quantity: 1 }); }
             saveCart();
             updateCartUI();
             alert(`${product.nome} foi adicionado ao carrinho!`);
@@ -196,30 +190,13 @@
             cartItemsContainer.innerHTML = '';
             let total = 0;
             let count = 0;
-
             if (cart.length === 0) {
                 cartItemsContainer.innerHTML = '<p class="text-center text-gray-500 py-10">Seu carrinho está vazio.</p>';
             } else {
                 cart.forEach(item => {
                     total += item.preco * item.quantity;
                     count += item.quantity;
-                    cartItemsContainer.innerHTML += `
-                        <div class="flex items-center justify-between py-4 border-b">
-                            <div class="flex items-center">
-                                <img src="${item.image_url || 'https://placehold.co/64x64'}" class="w-16 h-16 rounded-md object-cover mr-4">
-                                <div>
-                                    <p class="font-semibold">${item.nome}</p>
-                                    <p class="text-sm text-gray-600">R$ ${parseFloat(item.preco).toFixed(2)}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-3">
-                                <button onclick="changeQuantity(${item.id}, -1)" class="w-6 h-6 rounded-full bg-gray-200">-</button>
-                                <span>${item.quantity}</span>
-                                <button onclick="changeQuantity(${item.id}, 1)" class="w-6 h-6 rounded-full bg-gray-200">+</button>
-                                <button onclick="removeFromCart(${item.id})" class="text-red-500 hover:text-red-700 text-xl">&times;</button>
-                            </div>
-                        </div>
-                    `;
+                    cartItemsContainer.innerHTML += `<div class="flex items-center justify-between py-4 border-b"><div class="flex items-center"><img src="${item.image_url || 'https://placehold.co/64x64'}" class="w-16 h-16 rounded-md object-cover mr-4"><div><p class="font-semibold">${item.nome}</p><p class="text-sm text-gray-600">R$ ${parseFloat(item.preco).toFixed(2)}</p></div></div><div class="flex items-center space-x-3"><button onclick="changeQuantity(${item.id}, -1)" class="w-6 h-6 rounded-full bg-gray-200">-</button><span>${item.quantity}</span><button onclick="changeQuantity(${item.id}, 1)" class="w-6 h-6 rounded-full bg-gray-200">+</button><button onclick="removeFromCart(${item.id})" class="text-red-500 hover:text-red-700 text-xl">&times;</button></div></div>`;
                 });
             }
             cartCount.textContent = count;
@@ -231,12 +208,8 @@
             const item = cart.find(i => i.id === productId);
             if (item) {
                 item.quantity += amount;
-                if (item.quantity <= 0) {
-                    removeFromCart(productId);
-                } else {
-                    saveCart();
-                    updateCartUI();
-                }
+                if (item.quantity <= 0) { removeFromCart(productId); } 
+                else { saveCart(); updateCartUI(); }
             }
         }
 
@@ -247,31 +220,21 @@
         }
 
         checkoutButton.addEventListener('click', async () => {
-            if (!currentUser) {
+            if (!loggedUser) { // Usa a variável unificada
                 alert('Você precisa fazer login para finalizar a compra!');
                 window.location.href = './login.html';
                 return;
             }
-
             checkoutButton.disabled = true;
             checkoutButton.textContent = 'A processar...';
-
-            const line_items = cart.map(item => ({
-                price: item.stripe_price_id,
-                quantity: item.quantity,
-            }));
-
+            const line_items = cart.map(item => ({ price: item.stripe_price_id, quantity: item.quantity }));
             try {
-                const { data, error } = await supabaseClient.functions.invoke('create-cart-checkout', {
-                    body: { line_items, clienteId: currentUser.id, customerEmail: currentUser.email },
-                });
+                const { data, error } = await supabaseClient.functions.invoke('create-cart-checkout', { body: { line_items, clienteId: loggedUser.id, customerEmail: loggedUser.email }, });
                 if (error) throw error;
                 if (data.error) throw new Error(data.error);
-                
                 cart = [];
                 saveCart();
                 window.location.href = data.checkoutUrl;
-
             } catch (e) {
                 console.error('Erro ao finalizar compra:', e);
                 alert(`Ocorreu um erro: ${e.message}`);
@@ -344,11 +307,11 @@
             const commentInput = document.getElementById('review-comment');
             const messageP = document.getElementById('review-message');
             const submitButton = document.getElementById('submit-review');
-            if (!currentUser) { messageP.textContent = 'Você precisa estar logado para avaliar.'; messageP.className = 'text-sm text-center mt-2 text-red-600'; return; }
+            if (!loggedUser) { messageP.textContent = 'Você precisa estar logado para avaliar.'; messageP.className = 'text-sm text-center mt-2 text-red-600'; return; }
             if (!ratingInput) { messageP.textContent = 'Por favor, selecione uma nota de 1 a 5 estrelas.'; messageP.className = 'text-sm text-center mt-2 text-red-600'; return; }
             submitButton.disabled = true;
             submitButton.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto" ...></svg> Enviando...`;
-            const { error } = await supabaseClient.from('avaliacoes').insert({ produto_id: productId, cliente_id: currentUser.id, nota: parseInt(ratingInput.value), comentario: commentInput.value.trim() });
+            const { error } = await supabaseClient.from('avaliacoes').insert({ produto_id: productId, cliente_id: loggedUser.id, nota: parseInt(ratingInput.value), comentario: commentInput.value.trim() });
             submitButton.disabled = false;
             submitButton.textContent = 'Enviar Avaliação';
             if (error) {
@@ -385,11 +348,12 @@
                 mainMenuDropdown.classList.toggle('hidden');
             });
 
-            const userString = localStorage.getItem('currentUser');
+            // LÓGICA DE LOGIN UNIFICADA
+            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
             if (userString) {
-                currentUser = JSON.parse(userString);
+                loggedUser = JSON.parse(userString);
             }
-            await updateNavUI(currentUser);
+            await updateNavUI(loggedUser);
 
             window.addEventListener('click', (event) => {
                 const userMenuDropdown = document.getElementById('user-menu-dropdown');
@@ -412,6 +376,11 @@
                 const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
                 const stats = await fetchUserStats(user.id);
 
+                let adminLink = '';
+                if (user.role === 'admin') {
+                    adminLink = '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>';
+                }
+
                 userMenuContainer.innerHTML = `
                     <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
                     <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
@@ -431,7 +400,7 @@
                         <div class="py-2">
                             <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
                             <a href="./orders.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
-                            ${user.email === 'admin@lancho.com' ? '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>' : ''}
+                            ${adminLink}
                         </div>
                         <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                     </div>`;
@@ -442,7 +411,11 @@
                     event.stopPropagation();
                     userMenuDropdown.classList.toggle('hidden');
                 });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); window.location.reload(); };
+                userMenuContainer.querySelector('#logout-button').onclick = () => { 
+                    localStorage.removeItem('currentUser'); 
+                    localStorage.removeItem('currentAdmin'); 
+                    window.location.reload(); 
+                };
             } else {
                 loginButton.classList.remove('hidden');
                 userMenuContainer.classList.add('hidden');

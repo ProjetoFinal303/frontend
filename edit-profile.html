@@ -14,7 +14,7 @@
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header -->
+    <!-- Header (Seu design) -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -40,89 +40,47 @@
 
     <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-800">Editar Perfil</h1>
-                <a href="./profile.html" class="text-sm text-yellow-600 hover:underline">Voltar para o Perfil</a>
-            </div>
-            
-            <div class="flex items-center space-x-6 mb-8">
-                <img id="avatar-preview" src="" alt="Avatar" class="w-24 h-24 rounded-full object-cover">
-                <div>
-                    <label for="avatar-upload" class="cursor-pointer bg-yellow-500 text-white font-bold py-2 px-4 rounded-full hover:bg-yellow-600 transition-colors">
-                        Alterar Foto
-                    </label>
-                    <input type="file" id="avatar-upload" class="hidden" accept="image/png, image/jpeg">
-                    <p id="upload-status" class="text-xs text-gray-500 mt-2"></p>
-                </div>
-            </div>
-
-            <form id="profile-form" class="space-y-6">
-                <div>
-                    <label for="nome" class="block text-sm font-medium text-gray-700">Nome Completo</label>
-                    <input type="text" id="nome" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
-                </div>
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="email" class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm" disabled>
-                </div>
-                <div>
-                    <label for="contato" class="block text-sm font-medium text-gray-700">Contato (Telefone)</label>
-                    <input type="text" id="contato" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
-                </div>
-                <div class="border-t pt-6">
-                    <p class="text-md font-semibold text-gray-800 mb-2">Alterar Senha</p>
-                    <div>
-                        <label for="new-password" class="block text-sm font-medium text-gray-700">Nova Senha</label>
-                        <input type="password" id="new-password" placeholder="Deixe em branco para não alterar" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+        <div class="max-w-2xl mx-auto">
+            <h1 class="text-4xl font-bold mb-10 text-gray-800">Editar Perfil</h1>
+            <div class="bg-white p-8 rounded-lg shadow-md">
+                <div id="message-area" class="mb-6"></div>
+                <form id="edit-profile-form" class="space-y-6">
+                    <div class="flex items-center space-x-6">
+                        <img id="avatar-preview" src="https://placehold.co/96x96" alt="Avatar" class="w-24 h-24 rounded-full object-cover">
+                        <div>
+                            <label for="avatar-upload" class="cursor-pointer bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full hover:bg-gray-300 transition-colors">
+                                Mudar Foto
+                            </label>
+                            <input type="file" id="avatar-upload" class="hidden" accept="image/png, image/jpeg">
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <button type="submit" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-full hover:bg-red-700 transition-colors">
-                        Salvar Alterações
-                    </button>
-                    <p id="form-message" class="text-sm text-center mt-4"></p>
-                </div>
-            </form>
+                    <div>
+                        <label for="profile-name" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                        <input type="text" id="profile-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                    </div>
+                    <div>
+                        <label for="profile-email" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="profile-email" disabled class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-500">
+                    </div>
+                     <div>
+                        <label for="profile-contact" class="block text-sm font-medium text-gray-700">Contato (Telefone)</label>
+                        <input type="tel" id="profile-contact" placeholder="(XX) XXXXX-XXXX" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                    </div>
+                    <div class="flex justify-end space-x-4">
+                        <a href="./profile.html" class="bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-full hover:bg-gray-300 transition-colors">Cancelar</a>
+                        <button type="submit" id="save-button" class="bg-red-600 text-white font-bold py-2 px-6 rounded-full hover:bg-red-700 transition-colors">
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </main>
 
-    <!-- Footer -->
+    <!-- Footer (Seu design) -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
-                <div>
-                    <h3 class="text-lg font-bold text-yellow-500 mb-4">Lanchô</h3>
-                    <p class="text-gray-400">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold mb-4">Links Rápidos</h3>
-                    <ul class="space-y-2">
-                        <li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li>
-                        <li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li>
-                        <li><a href="./orders.html" class="text-gray-400 hover:text-white">Meus Pedidos</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold mb-4">Contato</h3>
-                    <ul class="space-y-2 text-gray-400">
-                        <li>Rua Fictícia, 123, Rio de Janeiro</li>
-                        <li>(21) 99999-8888</li>
-                        <li>contato@lancho.com.br</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
-                    <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook-f fa-lg"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram fa-lg"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500">
-                <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
-            </div>
+            <!-- Seu HTML do footer aqui -->
         </div>
     </footer>
 
@@ -130,110 +88,17 @@
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let currentUser = null;
-
-        const profileForm = document.getElementById('profile-form');
-        const avatarUploadInput = document.getElementById('avatar-upload');
-        const avatarPreview = document.getElementById('avatar-preview');
-        const formMessage = document.getElementById('form-message');
-        const uploadStatus = document.getElementById('upload-status');
-
-        function loadProfileData() {
-            if (!currentUser) {
-                window.location.href = './login.html';
-                return;
-            }
-            document.getElementById('nome').value = currentUser.nome || '';
-            document.getElementById('email').value = currentUser.email || '';
-            document.getElementById('contato').value = currentUser.contato || '';
-            avatarPreview.src = currentUser.avatar_url || `https://ui-avatars.com/api/?name=${currentUser.nome || currentUser.email}&background=fde68a&color=c2410c&size=96`;
-        }
-
-        avatarUploadInput.addEventListener('change', async (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            uploadStatus.textContent = 'A enviar...';
-            const fileName = `${currentUser.id}-${Date.now()}`;
-            
-            // CORREÇÃO: Alterado de 'avatars' para 'avatares'
-            const { error } = await supabaseClient.storage
-                .from('avatares')
-                .upload(fileName, file, {
-                    cacheControl: '3600',
-                    upsert: true
-                });
-
-            if (error) {
-                console.error('Erro no upload do avatar:', error);
-                uploadStatus.textContent = 'Erro ao enviar.';
-                uploadStatus.classList.add('text-red-500');
-                return;
-            }
-
-            // CORREÇÃO: Alterado de 'avatars' para 'avatares'
-            const { data: { publicUrl } } = supabaseClient.storage.from('avatares').getPublicUrl(fileName);
-            
-            const { data: updatedUser, error: updateError } = await supabaseClient
-                .from('Cliente')
-                .update({ avatar_url: publicUrl })
-                .eq('id', currentUser.id)
-                .select()
-                .single();
-
-            if (updateError) {
-                console.error('Erro ao atualizar URL do avatar:', updateError);
-                uploadStatus.textContent = 'Erro ao salvar.';
-                uploadStatus.classList.add('text-red-500');
-            } else {
-                currentUser = updatedUser;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                avatarPreview.src = publicUrl;
-                uploadStatus.textContent = 'Foto alterada!';
-                uploadStatus.classList.remove('text-red-500');
-                uploadStatus.classList.add('text-green-500');
-            }
-        });
-
-        profileForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            formMessage.textContent = '';
-
-            const nome = document.getElementById('nome').value;
-            const contato = document.getElementById('contato').value;
-            const newPassword = document.getElementById('new-password').value;
-
-            const updates = {
-                nome,
-                contato,
-            };
-
-            if (newPassword) {
-                updates.senha = newPassword;
-            }
-
-            const { data: updatedUser, error } = await supabaseClient
-                .from('Cliente')
-                .update(updates)
-                .eq('id', currentUser.id)
-                .select()
-                .single();
-
-            if (error) {
-                console.error('Erro ao atualizar perfil:', error);
-                formMessage.textContent = 'Erro ao salvar alterações.';
-                formMessage.className = 'text-sm text-center mt-4 text-red-600';
-            } else {
-                currentUser = updatedUser;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                formMessage.textContent = 'Perfil atualizado com sucesso!';
-                formMessage.className = 'text-sm text-center mt-4 text-green-600';
-            }
-        });
+        let loggedUser = null;
 
         async function fetchUserStats(userId) {
-            console.log("Buscando estatísticas para o usuário:", userId);
-            return { totalPedidos: 12, dinheiroGasto: 485.50 };
+            try {
+                const { data, error } = await supabaseClient.rpc('get_user_stats', { p_user_id: userId });
+                if (error) throw error;
+                return data;
+            } catch (error) {
+                console.error("Erro ao buscar estatísticas:", error);
+                return { totalPedidos: 0, dinheiroGasto: 0.00 };
+            }
         }
 
         async function setupMenusAndAuth() {
@@ -244,18 +109,24 @@
                 mainMenuDropdown.classList.toggle('hidden');
             });
 
-            const userString = localStorage.getItem('currentUser');
+            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
             if (userString) {
-                currentUser = JSON.parse(userString);
+                loggedUser = JSON.parse(userString);
+            } else {
+                alert("Você precisa estar logado para editar seu perfil.");
+                window.location.href = './login.html';
+                return;
             }
-            await updateNavUI(currentUser);
+            
+            await updateNavUI(loggedUser);
+            populateEditForm(loggedUser);
 
             window.addEventListener('click', (event) => {
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
                 if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuDropdown.contains(event.target) && !mainMenuButton.contains(event.target)) {
                     mainMenuDropdown.classList.add('hidden');
                 }
-                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button').contains(event.target)) {
+                const userMenuDropdown = document.getElementById('user-menu-dropdown');
+                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
                     userMenuDropdown.classList.add('hidden');
                 }
             });
@@ -271,46 +142,114 @@
                 const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
                 const stats = await fetchUserStats(user.id);
 
+                let adminLink = '';
+                if (user.role === 'admin') {
+                    adminLink = '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>';
+                }
+
                 userMenuContainer.innerHTML = `
                     <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
                     <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
                         <div class="p-4 border-b border-gray-200">
-                            <div class="flex items-center">
-                                <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
-                                <div class="ml-4">
-                                    <p class="text-md font-semibold text-gray-800">${user.nome || 'Cliente'}</p>
-                                    <p class="text-xs text-gray-500">${user.email}</p>
-                                </div>
-                            </div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 text-center">
-                                <div><p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p><p class="text-xs text-gray-500">Pedidos</p></div>
-                                <div><p class="text-sm font-semibold text-gray-800">R$ ${stats.dinheiroGasto.toFixed(2)}</p><p class="text-xs text-gray-500">Gasto Total</p></div>
-                            </div>
+                            <div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0"><div class="ml-4"><p class="text-md font-semibold text-gray-800">${user.nome || 'Cliente'}</p><p class="text-xs text-gray-500">${user.email}</p></div></div>
+                            <div class="mt-4 grid grid-cols-2 gap-4 text-center"><div><p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p><p class="text-xs text-gray-500">Pedidos</p></div><div><p class="text-sm font-semibold text-gray-800">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs text-gray-500">Gasto Total</p></div></div>
                         </div>
                         <div class="py-2">
-                            <a href="./edit-profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Editar Perfil</a>
+                            <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
                             <a href="./orders.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
-                            ${user.email === 'admin@lancho.com' ? '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>' : ''}
+                            ${adminLink}
                         </div>
                         <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                     </div>`;
 
                 const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
                 const userMenuDropdown = userMenuContainer.querySelector('#user-menu-dropdown');
-                userMenuButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    userMenuDropdown.classList.toggle('hidden');
-                });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); window.location.reload(); };
+                userMenuButton.addEventListener('click', (event) => { event.stopPropagation(); userMenuDropdown.classList.toggle('hidden'); });
+                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); localStorage.removeItem('currentAdmin'); window.location.reload(); };
             } else {
                 loginButton.classList.remove('hidden');
                 userMenuContainer.classList.add('hidden');
             }
         }
 
+        function populateEditForm(user) {
+            document.getElementById('avatar-preview').src = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
+            document.getElementById('profile-name').value = user.nome || '';
+            document.getElementById('profile-email').value = user.email || '';
+            document.getElementById('profile-contact').value = user.contato || '';
+
+            const avatarUpload = document.getElementById('avatar-upload');
+            const avatarPreview = document.getElementById('avatar-preview');
+            avatarUpload.addEventListener('change', () => {
+                const file = avatarUpload.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        avatarPreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        const editForm = document.getElementById('edit-profile-form');
+        editForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const saveButton = document.getElementById('save-button');
+            saveButton.disabled = true;
+            saveButton.textContent = 'Salvando...';
+
+            const messageArea = document.getElementById('message-area');
+            messageArea.innerHTML = '';
+
+            const name = document.getElementById('profile-name').value;
+            const contact = document.getElementById('profile-contact').value;
+            const avatarFile = document.getElementById('avatar-upload').files[0];
+
+            let avatarUrl = loggedUser.avatar_url; // Mantém a URL antiga por padrão
+
+            try {
+                // Se um novo arquivo de avatar foi selecionado, faz o upload
+                if (avatarFile) {
+                    const fileName = `avatars/${loggedUser.id}-${Date.now()}`;
+                    const { error: uploadError } = await supabaseClient.storage.from('imagens-produtos').upload(fileName, avatarFile);
+                    if (uploadError) throw uploadError;
+                    
+                    const { data: urlData } = supabaseClient.storage.from('imagens-produtos').getPublicUrl(fileName);
+                    avatarUrl = urlData.publicUrl;
+                }
+
+                // Atualiza os dados no banco de dados
+                const { data: updatedUser, error: updateError } = await supabaseClient
+                    .from('Cliente')
+                    .update({
+                        nome: name,
+                        contato: contact,
+                        avatar_url: avatarUrl
+                    })
+                    .eq('id', loggedUser.id)
+                    .select()
+                    .single();
+
+                if (updateError) throw updateError;
+
+                // Atualiza o localStorage para refletir as mudanças imediatamente
+                const storageKey = loggedUser.role === 'admin' ? 'currentAdmin' : 'currentUser';
+                localStorage.setItem(storageKey, JSON.stringify(updatedUser));
+
+                messageArea.innerHTML = `<div class="bg-green-100 text-green-700 p-4 rounded-md">Perfil atualizado com sucesso!</div>`;
+                setTimeout(() => window.location.href = './profile.html', 1500);
+
+            } catch (error) {
+                console.error("Erro ao atualizar perfil:", error);
+                messageArea.innerHTML = `<div class="bg-red-100 text-red-700 p-4 rounded-md">Erro ao atualizar perfil: ${error.message}</div>`;
+                saveButton.disabled = false;
+                saveButton.textContent = 'Salvar Alterações';
+            }
+        });
+        
         document.addEventListener('DOMContentLoaded', async () => {
             await setupMenusAndAuth();
-            loadProfileData();
         });
     </script>
 </body>

@@ -14,7 +14,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -39,7 +38,6 @@
     </header>
 
     <main>
-        <!-- Seção de Boas-vindas -->
         <section class="bg-white">
             <div class="container mx-auto px-4 md:px-8 py-20 text-center">
                 <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">O sabor que você não esquece.</h1>
@@ -47,7 +45,6 @@
             </div>
         </section>
 
-        <!-- Destaque do Dia Section -->
         <section id="destaque-section" class="py-16 bg-gray-50">
             <div class="container mx-auto px-4 md:px-8">
                 <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">🔥 Destaque do Dia 🔥</h2>
@@ -61,7 +58,6 @@
         </section>
     </main>
 
-    <!-- Footer -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -104,17 +100,14 @@
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let currentUser = null;
 
         async function loadDestaque() {
             const destaqueContent = document.getElementById('destaque-content');
             const destaqueLoading = document.getElementById('destaque-loading');
-
             try {
                 const { data: product, error } = await supabaseClient.functions.invoke('get-destaque-do-dia');
                 if (error) throw error;
                 if (!product) throw new Error("Nenhum produto em destaque encontrado hoje.");
-
                 destaqueLoading.style.display = 'none';
                 destaqueContent.innerHTML = `
                     <div class="bg-white rounded-lg shadow-xl overflow-hidden md:flex transform hover:scale-[1.02] transition-transform duration-300">
@@ -129,7 +122,6 @@
                         </div>
                     </div>
                 `;
-
             } catch (error) {
                 console.error('Erro ao carregar destaque:', error);
                 destaqueContent.innerHTML = '<div class="text-center py-10"><p>Não conseguimos encontrar o destaque de hoje. Dê uma olhada no nosso <a href="./catalog.html" class="text-yellow-600 hover:underline font-semibold">cardápio completo</a>!</p></div>';
@@ -155,12 +147,14 @@
                 mainMenuDropdown.classList.toggle('hidden');
             });
 
-            const userString = localStorage.getItem('currentUser');
+            // --- LÓGICA DE LOGIN PERSISTENTE CORRIGIDA ---
+            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
+            let loggedUser = null;
             if (userString) {
-                currentUser = JSON.parse(userString);
+                loggedUser = JSON.parse(userString);
             }
             
-            await updateNavUI(currentUser);
+            await updateNavUI(loggedUser);
 
             window.addEventListener('click', (event) => {
                 const userMenuDropdown = document.getElementById('user-menu-dropdown');
@@ -183,6 +177,12 @@
                 const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
                 const stats = await fetchUserStats(user.id);
 
+                // --- LÓGICA DO MENU CORRIGIDA ---
+                let adminLink = '';
+                if (user.role === 'admin') {
+                    adminLink = '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>';
+                }
+
                 userMenuContainer.innerHTML = `
                     <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
                     <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
@@ -201,9 +201,8 @@
                         </div>
                         <div class="py-2">
                             <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
-                            <!-- CORREÇÃO: Link "Meus Pedidos" adicionado de volta -->
                             <a href="./orders.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
-                            ${user.email === 'admin@lancho.com' ? '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>' : ''}
+                            ${adminLink}
                         </div>
                         <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                     </div>`;
@@ -214,7 +213,12 @@
                     event.stopPropagation();
                     userMenuDropdown.classList.toggle('hidden');
                 });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); window.location.reload(); };
+                // Botão de sair agora limpa os dois possíveis logins
+                userMenuContainer.querySelector('#logout-button').onclick = () => { 
+                    localStorage.removeItem('currentUser'); 
+                    localStorage.removeItem('currentAdmin'); 
+                    window.location.reload(); 
+                };
             } else {
                 loginButton.classList.remove('hidden');
                 userMenuContainer.classList.add('hidden');

@@ -14,7 +14,7 @@
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header -->
+    <!-- Header (Seu design) -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -38,7 +38,7 @@
         </nav>
     </header>
 
-    <!-- Conteúdo Principal -->
+    <!-- Conteúdo Principal (Seu design) -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
             <div class="flex justify-between items-center mb-6">
@@ -81,7 +81,7 @@
         </div>
     </main>
 
-    <!-- Footer -->
+    <!-- Footer (Seu design) -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -124,7 +124,7 @@
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let currentUser = null;
+        let loggedUser = null;
 
         const addProductForm = document.getElementById('add-product-form');
         const submitButton = document.getElementById('submit-button');
@@ -149,20 +149,19 @@
             const descricao = document.getElementById('descricao').value;
             const preco = parseFloat(document.getElementById('preco').value);
             const imageFile = imageUploadInput.files[0];
-            let imageUrl = null;
-
+            
             try {
-                if (imageFile) {
-                    const fileName = `${Date.now()}-${imageFile.name}`;
-                    const { data: uploadData, error: uploadError } = await supabaseClient.storage
-                        .from('produtos')
-                        .upload(fileName, imageFile);
-                    
-                    if (uploadError) throw uploadError;
+                if (!imageFile) throw new Error("A imagem do produto é obrigatória.");
 
-                    const { data: { publicUrl } } = supabaseClient.storage.from('produtos').getPublicUrl(fileName);
-                    imageUrl = publicUrl;
-                }
+                const fileName = `${Date.now()}-${imageFile.name}`;
+                // CORREÇÃO APLICADA: Usando o bucket 'produtos' que você já tem
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                    .from('produtos')
+                    .upload(fileName, imageFile);
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabaseClient.storage.from('produtos').getPublicUrl(fileName);
+                const imageUrl = publicUrl;
 
                 const { data: stripeData, error: stripeError } = await supabaseClient.functions.invoke('add-stripe-product', {
                     body: { productName: nome, unitAmount: Math.round(preco * 100) },
@@ -218,19 +217,21 @@
                 mainMenuDropdown.classList.toggle('hidden');
             });
 
-            const userString = localStorage.getItem('currentUser');
+            const userString = localStorage.getItem('currentAdmin');
             if (userString) {
-                currentUser = JSON.parse(userString);
-                if (currentUser.email !== 'admin@lancho.com') {
+                loggedUser = JSON.parse(userString);
+                if (loggedUser.role !== 'admin') {
                     alert('Acesso negado.');
                     window.location.href = './index.html';
+                    return;
                 }
             } else {
                 alert('Você precisa estar logado como administrador para acessar esta página.');
                 window.location.href = './login.html';
+                return;
             }
             
-            await updateNavUI(currentUser);
+            await updateNavUI(loggedUser);
 
             window.addEventListener('click', (event) => {
                 const userMenuDropdown = document.getElementById('user-menu-dropdown');
@@ -260,7 +261,7 @@
                             <div class="flex items-center">
                                 <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
                                 <div class="ml-4">
-                                    <p class="text-md font-semibold text-gray-800">${user.nome || 'Cliente'}</p>
+                                    <p class="text-md font-semibold text-gray-800">${user.nome || 'Admin'}</p>
                                     <p class="text-xs text-gray-500">${user.email}</p>
                                 </div>
                             </div>
@@ -282,10 +283,7 @@
                     event.stopPropagation();
                     userMenuDropdown.classList.toggle('hidden');
                 });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); window.location.reload(); };
-            } else {
-                loginButton.classList.remove('hidden');
-                userMenuContainer.classList.add('hidden');
+                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentAdmin'); window.location.href = './index.html'; };
             }
         }
 
