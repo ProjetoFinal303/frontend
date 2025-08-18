@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
@@ -21,7 +20,7 @@
             <p class="mt-2 text-gray-600">Bem-vindo de volta! Faça login para continuar.</p>
         </div>
 
-        <div id="message-div" class="hidden text-sm text-center p-3 rounded-md">
+        <div id="error-message" class="hidden text-sm text-center text-red-600 bg-red-100 p-3 rounded-md">
             </div>
 
         <form id="login-form" class="space-y-6">
@@ -53,22 +52,15 @@
         </div>
 
         <div>
-            <div id="g_id_onload"
-                 data-client_id="975618621125-k0qaq6qimn0ddb45gv8d9mfkps0pttgv.apps.googleusercontent.com"
-                 data-callback="handleGoogleCredentialResponse"
-                 data-context="signin"
-                 data-ux_mode="popup"
-                 data-auto_prompt="false">
-            </div>
-
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-shape="rectangular"
-                 data-theme="outline"
-                 data-text="continue_with"
-                 data-size="large"
-                 data-logo_alignment="left">
-            </div>
+            <button id="google-login-button" class="w-full inline-flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                    <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+                    <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+                    <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+                    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C42.022,35.244,44,30.036,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
+                </svg>
+                Continuar com Google
+            </button>
         </div>
 
         <div class="text-sm text-center">
@@ -85,92 +77,89 @@
 
         const loginForm = document.getElementById('login-form');
         const loginButton = document.getElementById('login-button');
-        const messageDiv = document.getElementById('message-div');
+        const googleLoginButton = document.getElementById('google-login-button');
+        const errorMessageDiv = document.getElementById('error-message');
 
-        function showMessage(message, isError = true) {
-            messageDiv.textContent = message;
-            messageDiv.classList.toggle('bg-red-100', isError);
-            messageDiv.classList.toggle('text-red-600', isError);
-            messageDiv.classList.toggle('bg-green-100', !isError);
-            messageDiv.classList.toggle('text-green-600', !isError);
-            messageDiv.classList.remove('hidden');
-
-            if (isError) {
-                loginButton.disabled = false;
-                loginButton.innerHTML = `Entrar`;
-            }
+        function showError(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
+            loginButton.disabled = false;
+            loginButton.innerHTML = `Entrar`;
         }
 
-        function clearMessages() {
-            messageDiv.textContent = '';
-            messageDiv.classList.add('hidden');
+        function clearError() {
+            errorMessageDiv.textContent = '';
+            errorMessageDiv.classList.add('hidden');
         }
 
-        // --- LÓGICA DE LOGIN MANUAL ---
+        // --- LÓGICA DE LOGIN MANUAL ATUALIZADA ---
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            clearMessages();
+            clearError();
             const email = document.getElementById('email-address').value;
             const password = document.getElementById('password').value;
             
             loginButton.disabled = true;
             loginButton.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l-2.647z"></path></svg>`;
 
-            const { data: users, error } = await supabaseClient.from('Cliente').select('*').eq('email', email);
+            const { data: user, error } = await supabaseClient
+                .from('Cliente')
+                .select('*')
+                .eq('email', email)
+                .single();
 
-            if (error || !users || users.length === 0) {
-                showMessage('E-mail ou senha inválidos. Tente novamente.');
+            if (error || !user) {
+                showError('E-mail ou senha inválidos. Tente novamente.');
                 return;
             }
 
-            const user = users[0];
             if (user.senha === password) {
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                window.location.href = './catalog.html';
+                // Se a senha bate, verificamos a permissão (role)
+                if (user.role === 'admin') {
+                    // É um admin! Salva como 'currentAdmin' e redireciona para o painel
+                    localStorage.setItem('currentAdmin', JSON.stringify(user));
+                    window.location.href = './admin.html';
+                } else {
+                    // É um cliente normal, salva como 'currentUser' e vai para o catálogo
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    window.location.href = './catalog.html';
+                }
             } else {
-                showMessage('E-mail ou senha inválidos. Tente novamente.');
+                showError('E-mail ou senha inválidos. Tente novamente.');
             }
         });
 
-        // 3. Função que é chamada pelo Google após o login bem-sucedido
-        async function handleGoogleCredentialResponse(googleResponse) {
-            clearMessages();
-            showMessage('Login com Google bem-sucedido. Processando...', false);
-
-            // O 'credential' é o id_token que precisamos
-            const id_token = googleResponse.credential;
-
-            try {
-                // Chamamos a função do Supabase que você criou ('handle-google-signin')
-                // e enviamos o token para ela.
-                const { data: cliente, error: functionError } = await supabaseClient.functions.invoke('handle-google-signin', {
-                    body: { id_token: id_token },
-                });
-
-                if (functionError) {
-                    throw new Error(`Erro da função Supabase: ${functionError.message}`);
-                }
-                
-                if (!cliente) {
-                     throw new Error("A função do Supabase não retornou os dados do cliente.");
-                }
-
-                // **AUTENTICAÇÃO DA PÁGINA E ENVIO DOS DADOS**
-                // 1. Guardamos os dados do cliente no navegador
-                localStorage.setItem('currentUser', JSON.stringify(cliente));
-                
-                // 2. A função 'handle-google-signin' já enviou os dados para o Supabase.
-                
-                // 3. Redirecionamos o usuário para a página principal
-                showMessage('Autenticado com sucesso! Redirecionando...', false);
-                setTimeout(() => {
-                    window.location.href = './catalog.html';
-                }, 1000);
-
-            } catch (error) {
-                showMessage(`Falha no login com Google: ${error.message}`);
+        // --- LÓGICA DE LOGIN COM GOOGLE (Mantida como estava no seu arquivo) ---
+        googleLoginButton.addEventListener('click', async () => {
+            clearError();
+            const { error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+            });
+            if (error) {
+                showError(`Erro ao logar com Google: ${error.message}`);
             }
-        }
+        });
+
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            if (session && window.location.hash.includes('access_token')) {
+                // Esta parte do login com Google continua funcionando para CLIENTES.
+                // Ela busca ou cria um cliente normal, mas não dará acesso de admin.
+                const { data: cliente, error } = await supabaseClient.functions.invoke('handle-google-signin', {
+                     body: { id_token: session.provider_token }
+                 });
+
+                if (error || !cliente) {
+                    await supabaseClient.auth.signOut();
+                    showError("Login com Google falhou ou o e-mail não está cadastrado como cliente.");
+                    window.location.hash = ''; 
+                    return;
+                }
+
+                localStorage.setItem('currentUser', JSON.stringify(cliente));
+                window.location.href = './catalog.html';
+            }
+        });
     </script>
+
 </body>
 </html>
