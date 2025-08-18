@@ -213,12 +213,17 @@
 
             try {
                 if (avatarFile) {
-                    const fileName = `public/${loggedUser.id}-${Date.now()}`;
+                    const fileName = `${loggedUser.id}-${Date.now()}`;
                     // CORREÇÃO APLICADA: Usando o bucket 'avatares'
-                    const { error: uploadError } = await supabaseClient.storage.from('avatares').upload(fileName, avatarFile);
+                    const { error: uploadError } = await supabaseClient.storage
+                        .from('avatares')
+                        .upload(fileName, avatarFile, {
+                            cacheControl: '3600',
+                            upsert: true // Sobrescreve se já existir
+                        });
                     if (uploadError) throw uploadError;
                     
-                    const { data: urlData } = supabaseClient.storage.from('avatares').getPublicUrl(fileName.replace('public/', ''));
+                    const { data: urlData } = supabaseClient.storage.from('avatares').getPublicUrl(fileName);
                     avatarUrl = urlData.publicUrl;
                 }
 
