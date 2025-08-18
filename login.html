@@ -21,7 +21,8 @@
             <p class="mt-2 text-gray-600">Bem-vindo de volta! Faça login para continuar.</p>
         </div>
 
-        <div id="message-div" class="hidden text-sm text-center p-3 rounded-md"></div>
+        <div id="message-div" class="hidden text-sm text-center p-3 rounded-md">
+        </div>
 
         <form id="login-form" class="space-y-6">
             <div class="rounded-md shadow-sm -space-y-px">
@@ -101,13 +102,11 @@
         }
 
         function clearMessages() {
-            if (messageDiv) {
-                messageDiv.textContent = '';
-                messageDiv.classList.add('hidden');
-            }
+            messageDiv.textContent = '';
+            messageDiv.classList.add('hidden');
         }
 
-        // --- LÓGICA DE LOGIN MANUAL (AJUSTADA PARA ADMIN) ---
+        // --- LÓGICA DE LOGIN MANUAL (Já funcionando) ---
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             clearMessages();
@@ -117,11 +116,7 @@
             loginButton.disabled = true;
             loginButton.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l-2.647z"></path></svg>`;
 
-            const { data: user, error } = await supabaseClient
-                .from('Cliente')
-                .select('*')
-                .eq('email', email)
-                .single();
+            const { data: user, error } = await supabaseClient.from('Cliente').select('*').eq('email', email).single();
 
             if (error || !user) {
                 showMessage('E-mail ou senha inválidos. Tente novamente.');
@@ -130,11 +125,9 @@
 
             if (user.senha === password) {
                 if (user.role === 'admin') {
-                    // É um admin! Salva como 'currentAdmin' e vai para o painel admin
                     localStorage.setItem('currentAdmin', JSON.stringify(user));
                     window.location.href = './admin.html';
                 } else {
-                    // É um cliente normal. Salva como 'currentUser' e vai para o catálogo
                     localStorage.setItem('currentUser', JSON.stringify(user));
                     window.location.href = './catalog.html';
                 }
@@ -143,10 +136,10 @@
             }
         });
 
-        // --- LÓGICA DE LOGIN COM GOOGLE (DO SEU JEITO) ---
+        // --- LÓGICA DE LOGIN COM GOOGLE (CORRIGIDA) ---
         async function handleGoogleCredentialResponse(googleResponse) {
             clearMessages();
-            showMessage('Login com Google bem-sucedido. Processando...', false);
+            showMessage('Login com Google bem-sucedido. Verificando dados...', false);
 
             const id_token = googleResponse.credential;
 
@@ -163,13 +156,22 @@
                      throw new Error("A função do Supabase não retornou os dados do cliente.");
                 }
 
-                // Login com Google sempre trata como cliente normal
-                localStorage.setItem('currentUser', JSON.stringify(cliente));
-                
-                showMessage('Autenticado com sucesso! Redirecionando...', false);
-                setTimeout(() => {
-                    window.location.href = './catalog.html';
-                }, 1000);
+                // **VERIFICAÇÃO DE PERMISSÃO ADICIONADA AQUI**
+                if (cliente.role === 'admin') {
+                    // É um admin!
+                    showMessage('Autenticado como Administrador! Redirecionando...', false);
+                    localStorage.setItem('currentAdmin', JSON.stringify(cliente));
+                    setTimeout(() => {
+                        window.location.href = './admin.html';
+                    }, 1000);
+                } else {
+                    // É um cliente normal
+                    showMessage('Autenticado com sucesso! Redirecionando...', false);
+                    localStorage.setItem('currentUser', JSON.stringify(cliente));
+                    setTimeout(() => {
+                        window.location.href = './catalog.html';
+                    }, 1000);
+                }
 
             } catch (error) {
                 showMessage(`Falha no login com Google: ${error.message}`);
