@@ -41,7 +41,10 @@
     <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <div class="max-w-2xl mx-auto">
-            <h1 class="text-4xl font-bold mb-10 text-gray-800">Editar Perfil</h1>
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Editar Perfil</h1>
+                <a href="./profile.html" class="text-sm text-yellow-600 hover:underline">‹ Voltar ao Perfil</a>
+            </div>
             <div class="bg-white p-8 rounded-lg shadow-md">
                 <div id="message-area" class="mb-6"></div>
                 <form id="edit-profile-form" class="space-y-6">
@@ -206,20 +209,19 @@
             const contact = document.getElementById('profile-contact').value;
             const avatarFile = document.getElementById('avatar-upload').files[0];
 
-            let avatarUrl = loggedUser.avatar_url; // Mantém a URL antiga por padrão
+            let avatarUrl = loggedUser.avatar_url; 
 
             try {
-                // Se um novo arquivo de avatar foi selecionado, faz o upload
                 if (avatarFile) {
-                    const fileName = `avatars/${loggedUser.id}-${Date.now()}`;
-                    const { error: uploadError } = await supabaseClient.storage.from('imagens-produtos').upload(fileName, avatarFile);
+                    const fileName = `public/${loggedUser.id}-${Date.now()}`;
+                    // CORREÇÃO APLICADA: Usando o bucket 'avatares'
+                    const { error: uploadError } = await supabaseClient.storage.from('avatares').upload(fileName, avatarFile);
                     if (uploadError) throw uploadError;
                     
-                    const { data: urlData } = supabaseClient.storage.from('imagens-produtos').getPublicUrl(fileName);
+                    const { data: urlData } = supabaseClient.storage.from('avatares').getPublicUrl(fileName.replace('public/', ''));
                     avatarUrl = urlData.publicUrl;
                 }
 
-                // Atualiza os dados no banco de dados
                 const { data: updatedUser, error: updateError } = await supabaseClient
                     .from('Cliente')
                     .update({
@@ -233,7 +235,6 @@
 
                 if (updateError) throw updateError;
 
-                // Atualiza o localStorage para refletir as mudanças imediatamente
                 const storageKey = loggedUser.role === 'admin' ? 'currentAdmin' : 'currentUser';
                 localStorage.setItem(storageKey, JSON.stringify(updatedUser));
 
