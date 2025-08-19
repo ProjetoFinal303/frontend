@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cozinha - Lanchô</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .column { min-height: 400px; }
+        .order-card { cursor: grab; }
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #f0f8ff;
+        }
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-200">
+
+    <header class="bg-white shadow-md">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-yellow-600">Lanchô - Painel da Cozinha</h1>
+            <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                Sair
+            </button>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <div class="bg-white rounded-lg shadow-lg">
+                <div class="bg-blue-500 text-white p-4 rounded-t-lg">
+                    <h2 class="text-xl font-bold">Novos Pedidos</h2>
+                </div>
+                <div id="new-orders" data-status="pendente" class="p-4 space-y-4 column">
+                    </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg">
+                <div class="bg-yellow-500 text-white p-4 rounded-t-lg">
+                    <h2 class="text-xl font-bold">Em Preparo</h2>
+                </div>
+                <div id="in-progress-orders" data-status="em preparo" class="p-4 space-y-4 column">
+                    </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg">
+                <div class="bg-green-500 text-white p-4 rounded-t-lg">
+                    <h2 class="text-xl font-bold">Prontos para Retirada</h2>
+                </div>
+                <div id="ready-orders" data-status="concluido" class="p-4 space-y-4 column">
+                    </div>
+            </div>
+        </div>
+    </main>
+    
+    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">&times;</button>
+            <h2 class="text-2xl font-bold mb-4">Detalhes do Pedido <span id="modal-order-id" class="text-blue-600"></span></h2>
+            <div class="space-y-3">
+                 <p><strong>Cliente:</strong> <span id="modal-client-name"></span></p>
+                <p><strong>Descrição:</strong> <span id="modal-order-description" class="block bg-gray-100 p-2 rounded"></span></p>
+                <p><strong>Valor Total:</strong> <span id="modal-order-value" class="font-semibold"></span></p>
+                <p><strong>Status:</strong> <span id="modal-order-status" class="font-semibold px-2 py-1 rounded text-white"></span></p>
+                <p><strong>Data:</strong> <span id="modal-order-date"></span></p>
+            </div>
+        </div>
+    </div>
+
+
+    <audio id="notification-sound" src="https://freesound.org/data/previews/415/415762_6142149-lq.mp3" preload="auto"></audio>
+
+    <script>
+        const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const columns = {
+            'pendente': document.getElementById('new-orders'),
+            'em preparo': document.getElementById('in-progress-orders'),
+            'concluido': document.getElementById('ready-orders')
+        };
+        const notificationSound = document.getElementById('notification-sound');
+
+        // --- VERIFICAÇÃO DE PERMISSÃO ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user || user.role !== 'cozinha') {
+                 alert('Acesso negado. Você não tem permissão para ver esta página.');
+                 window.location.href = './login.html';
+            } else {
+                await fetchAndRenderOrders();
+                setupRealtimeListener();
+                initializeDragAndDrop();
+            }
+        });
+        
+        // --- FUNÇÕES DE TEMPO E FORMATAÇÃO ---
+        function timeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " anos";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " meses";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " dias";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " horas";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " minutos";
+            return Math.floor(seconds) + " segundos";
+        }
+
+        // --- RENDERIZAÇÃO E DADOS ---
+        async function fetchAndRenderOrders() {
+            const { data: orders, error } = await supabaseClient
+                .from('Pedido')
+                .select(`*, Cliente (nome)`)
+                .in('status', ['pendente', 'em preparo', 'concluido'])
+                .order('data', { ascending: true });
+
+            if (error) {
+                console.error("Erro ao buscar pedidos:", error);
+                return;
+            }
+
+            Object.values(columns).forEach(col => col.innerHTML = '');
+
+            orders.forEach(order => {
+                if (columns[order.status]) {
+                    const card = createOrderCard(order);
+                    columns[order.status].appendChild(card);
+                }
+            });
+            updateAllTimers();
+        }
+
+        function createOrderCard(order) {
+            const card = document.createElement('div');
+            card.id = `order-${order.id}`;
+            card.dataset.id = order.id;
+            card.className = 'order-card bg-gray-50 border-l-4 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow';
+            card.style.borderLeftColor = getStatusColor(order.status);
+            
+            card.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-lg">Pedido #${order.id}</h3>
+                    <span class="text-xs text-gray-500" data-time="${order.data}">há ${timeAgo(order.data)}</span>
+                </div>
+                <p class="text-gray-700 truncate">${order.descricao}</p>
+                <p class="text-sm text-gray-600 mt-2">Cliente: ${order.Cliente.nome || 'Não identificado'}</p>
+            `;
+            
+            card.addEventListener('click', () => showOrderDetails(order.id));
+
+            return card;
+        }
+        
+        function updateAllTimers() {
+             document.querySelectorAll('[data-time]').forEach(el => {
+                el.textContent = `há ${timeAgo(el.dataset.time)}`;
+            });
+        }
+        setInterval(updateAllTimers, 30000); // Atualiza a cada 30 segundos
+
+        // --- ATUALIZAÇÕES EM TEMPO REAL ---
+        function setupRealtimeListener() {
+            supabaseClient.channel('public:Pedido')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'Pedido' }, payload => {
+                    console.log('Alteração recebida!', payload);
+
+                    if (payload.eventType === 'INSERT') {
+                        const newOrder = payload.new;
+                        if (columns[newOrder.status]) {
+                            notificationSound.play();
+                            fetchAndRenderOrders(); // Recarrega tudo para garantir consistência
+                        }
+                    } else {
+                        fetchAndRenderOrders();
+                    }
+                })
+                .subscribe();
+        }
+
+        // --- DRAG AND DROP ---
+        function initializeDragAndDrop() {
+            Object.values(columns).forEach(column => {
+                new Sortable(column, {
+                    group: 'orders',
+                    animation: 150,
+                    onEnd: async function (evt) {
+                        const orderId = evt.item.dataset.id;
+                        const newStatus = evt.to.dataset.status;
+                        
+                        evt.item.style.borderLeftColor = getStatusColor(newStatus);
+                        
+                        await updateOrderStatus(orderId, newStatus);
+                    }
+                });
+            });
+        }
+        
+        async function updateOrderStatus(orderId, newStatus) {
+            const { error } = await supabaseClient
+                .from('Pedido')
+                .update({ status: newStatus })
+                .eq('id', orderId);
+
+            if (error) {
+                console.error("Erro ao atualizar status:", error);
+                alert("Não foi possível atualizar o status do pedido.");
+            }
+        }
+        
+        // --- MODAL DE DETALHES ---
+        const modal = document.getElementById('order-modal');
+        
+        async function showOrderDetails(orderId) {
+             const { data: order, error } = await supabaseClient
+                .from('Pedido')
+                .select(`*, Cliente (nome)`)
+                .eq('id', orderId)
+                .single();
+
+            if (error) {
+                console.error("Erro ao buscar detalhes do pedido:", error);
+                return;
+            }
+            
+            document.getElementById('modal-order-id').textContent = `#${order.id}`;
+            document.getElementById('modal-client-name').textContent = order.Cliente.nome || 'Não identificado';
+            document.getElementById('modal-order-description').textContent = order.descricao;
+            document.getElementById('modal-order-value').textContent = `R$ ${parseFloat(order.valor).toFixed(2)}`;
+            const statusSpan = document.getElementById('modal-order-status');
+            statusSpan.textContent = order.status;
+            statusSpan.style.backgroundColor = getStatusColor(order.status);
+            document.getElementById('modal-order-date').textContent = new Date(order.data).toLocaleString('pt-BR');
+            
+            modal.classList.remove('hidden');
+        }
+
+        document.getElementById('close-modal').addEventListener('click', () => modal.classList.add('hidden'));
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.add('hidden');
+        });
+
+        // --- UTILITÁRIOS ---
+        function getStatusColor(status) {
+            switch (status) {
+                case 'pendente': return '#3B82F6'; // blue-500
+                case 'em preparo': return '#F59E0B'; // yellow-500
+                case 'concluido': return '#10B981'; // green-500
+                default: return '#6B7280'; // gray-500
+            }
+        }
+        
+        // --- LOGOUT ---
+        document.getElementById('logout-button').addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('currentAdmin');
+            window.location.href = './login.html';
+        });
+
+    </script>
+</body>
+</html>

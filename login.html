@@ -106,7 +106,7 @@
             messageDiv.classList.add('hidden');
         }
 
-        // --- LÓGICA DE LOGIN MANUAL (Já funcionando) ---
+        // --- LÓGICA DE LOGIN MANUAL ---
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             clearMessages();
@@ -127,6 +127,9 @@
                 if (user.role === 'admin') {
                     localStorage.setItem('currentAdmin', JSON.stringify(user));
                     window.location.href = './admin.html';
+                } else if (user.role === 'cozinha') { // ADICIONADO Bloco para cozinha
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    window.location.href = './kitchen.html';
                 } else {
                     localStorage.setItem('currentUser', JSON.stringify(user));
                     window.location.href = './catalog.html';
@@ -136,7 +139,7 @@
             }
         });
 
-        // --- LÓGICA DE LOGIN COM GOOGLE (CORRIGIDA) ---
+        // --- LÓGICA DE LOGIN COM GOOGLE ---
         async function handleGoogleCredentialResponse(googleResponse) {
             clearMessages();
             showMessage('Login com Google bem-sucedido. Verificando dados...', false);
@@ -156,16 +159,19 @@
                      throw new Error("A função do Supabase não retornou os dados do cliente.");
                 }
 
-                // **VERIFICAÇÃO DE PERMISSÃO ADICIONADA AQUI**
                 if (cliente.role === 'admin') {
-                    // É um admin!
                     showMessage('Autenticado como Administrador! Redirecionando...', false);
                     localStorage.setItem('currentAdmin', JSON.stringify(cliente));
                     setTimeout(() => {
                         window.location.href = './admin.html';
                     }, 1000);
+                } else if (cliente.role === 'cozinha') { // ADICIONADO Bloco para cozinha
+                    showMessage('Autenticado como Cozinha! Redirecionando...', false);
+                    localStorage.setItem('currentUser', JSON.stringify(cliente));
+                    setTimeout(() => {
+                        window.location.href = './kitchen.html';
+                    }, 1000);
                 } else {
-                    // É um cliente normal
                     showMessage('Autenticado com sucesso! Redirecionando...', false);
                     localStorage.setItem('currentUser', JSON.stringify(cliente));
                     setTimeout(() => {
