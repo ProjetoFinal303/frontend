@@ -16,7 +16,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header (Seu design) -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -40,7 +39,6 @@
         </nav>
     </header>
 
-    <!-- Conteúdo Principal (Seu design) -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <div class="max-w-6xl mx-auto">
             <div class="flex justify-between items-center mb-6">
@@ -58,13 +56,11 @@
         </div>
     </main>
     
-    <!-- Modal de Edição (Seu design) -->
     <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden opacity-0 modal">
         <div id="edit-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95 modal-content"></div>
     </div>
 
 
-    <!-- Footer (Seu design) -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -147,7 +143,7 @@
                                     <tr id="product-row-${p.id}">
                                         <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center"><div class="flex-shrink-0 h-10 w-10"><img class="h-10 w-10 rounded-full object-cover" src="${p.image_url || 'https://placehold.co/40x40/e2e8f0/a0aec0?text=L'}" alt=""></div><div class="ml-4"><div class="text-sm font-medium text-gray-900">${p.nome}</div></div></div></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${parseFloat(p.preco).toFixed(2)}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"><button onclick='openEditModal(${JSON.stringify(p)})' class="text-yellow-600 hover:text-yellow-900">Editar</button><button onclick="deleteProduct(${p.id}, '${p.stripe_product_id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-900">Excluir</button></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"><button onclick='openEditModal(${JSON.stringify(p)})' class="text-yellow-600 hover:text-yellow-900">Editar</button><button onclick="deleteProduct(${p.id}, '${p.stripe_price_id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-900">Excluir</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -226,20 +222,25 @@
             }
         }
 
-        async function deleteProduct(productId, stripeProductId, productName) {
+        async function deleteProduct(productId, stripePriceId, productName) {
             if (!confirm(`Tem certeza que quer excluir o produto "${productName}"? Esta ação não pode ser desfeita.`)) return;
+            
             try {
-                // Sua lógica original de chamar a função para deletar do Stripe
-                const { error: stripeError } = await supabaseClient.functions.invoke('delete-stripe-product', { body: { productId, stripeProductId } });
-                if (stripeError) throw stripeError;
+                // 1. Desativar o produto no Stripe primeiro
+                if (stripePriceId && stripePriceId !== 'null') { // Só chama a função se houver um ID do Stripe
+                    const { error: stripeError } = await supabaseClient.functions.invoke('delete-stripe-product', {
+                        body: { priceId: stripePriceId } // Envia o ID do preço corretamente
+                    });
+                    if (stripeError) throw stripeError;
+                }
 
-                // Deletando das outras tabelas
-                await supabaseClient.from('avaliacoes').delete().eq('produto_id', productId);
-                await supabaseClient.from('Estoque').delete().eq('id_produto', productId);
-                await supabaseClient.from('Produto').delete().eq('id', productId);
+                // 2. Deletar o produto do banco de dados (o 'ON DELETE CASCADE' fará o resto)
+                const { error: dbError } = await supabaseClient.from('Produto').delete().eq('id', productId);
+                if (dbError) throw dbError;
                 
                 alert(`Produto "${productName}" excluído com sucesso.`);
                 document.getElementById(`product-row-${productId}`).remove();
+
             } catch (error) {
                 console.error("Erro ao excluir produto:", error);
                 alert(`Ocorreu um erro ao excluir o produto: ${error.message}`);

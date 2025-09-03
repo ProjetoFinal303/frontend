@@ -10,26 +10,34 @@ serve(async (req) => {
   }
 
   try {
-    const { priceId } = await req.json()
+    const { priceId } = await req.json();
 
-    // CORREÇÃO: A função agora procura pela variável de ambiente 'STRIPE_API_KEY',
-    // que é o nome que você configurou no seu painel do Supabase.
+    if (!priceId) {
+      throw new Error('O ID do preço (priceId) é obrigatório.');
+    }
+
     const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY') as string, {
       apiVersion: '2022-11-15',
       httpClient: Stripe.createFetchHttpClient(),
-    })
+    });
 
     // Desativar um preço é a forma correta de o "remover" no Stripe.
-    const price = await stripe.prices.update(priceId, { active: false })
+    const price = await stripe.prices.update(priceId, { active: false });
 
-    return new Response(JSON.stringify({ message: `Price ${price.id} deactivated.` }), {
+    // Adicionalmente, desativar o produto para garantir
+    if (typeof price.product === 'string') {
+        await stripe.products.update(price.product, { active: false });
+    }
+
+    return new Response(JSON.stringify({ message: `Preço ${price.id} e produto associado desativados no Stripe.` }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    });
+
   } catch (e) {
-    console.error('Erro na função delete-stripe-product:', e)
+    console.error('Erro na função delete-stripe-product:', e);
     return new Response(JSON.stringify({ error: e.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    });
   }
-})
+});
