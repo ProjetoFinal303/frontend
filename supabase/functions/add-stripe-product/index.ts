@@ -10,19 +10,32 @@ serve(async (req) => {
   }
 
   try {
-    const { productName, unitAmount } = await req.json()
+    // --- CORREÇÃO APLICADA AQUI ---
+    // Agora recebemos o 'imageUrl' do frontend.
+    const { productName, unitAmount, imageUrl } = await req.json()
 
-    // CORREÇÃO: A função agora procura pela variável de ambiente 'STRIPE_API_KEY',
-    // que é o nome que você configurou no seu painel do Supabase.
+    // Validação básica
+    if (!productName || !unitAmount) {
+        throw new Error("O nome do produto e o preço são obrigatórios.");
+    }
+
     const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY') as string, {
       apiVersion: '2022-11-15',
       httpClient: Stripe.createFetchHttpClient(),
     })
 
-    // Cria o produto no Stripe
-    const product = await stripe.products.create({
-      name: productName,
-    })
+    // --- CORREÇÃO APLICADA AQUI ---
+    // Criamos um objeto de dados do produto e adicionamos o campo 'images' se o imageUrl existir.
+    const productData: Stripe.ProductCreateParams = {
+        name: productName,
+    };
+
+    if (imageUrl) {
+        productData.images = [imageUrl];
+    }
+
+    // Cria o produto no Stripe com os dados (e a imagem, se disponível)
+    const product = await stripe.products.create(productData);
 
     // Cria o preço para o produto
     const price = await stripe.prices.create({

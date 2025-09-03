@@ -14,7 +14,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header (Seu design) -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -38,7 +37,6 @@
         </nav>
     </header>
 
-    <!-- Conteúdo Principal (Seu design) -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
             <div class="flex justify-between items-center mb-6">
@@ -73,7 +71,7 @@
 
                 <div>
                     <button type="submit" id="submit-button" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-full hover:bg-red-700 transition-colors flex justify-center items-center">
-                        Upload
+                        Adicionar Produto
                     </button>
                     <p id="form-message" class="text-sm text-center mt-4"></p>
                 </div>
@@ -81,7 +79,6 @@
         </div>
     </main>
 
-    <!-- Footer (Seu design) -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -157,7 +154,6 @@
                 if (!imageFile) throw new Error("A imagem do produto é obrigatória.");
 
                 const fileName = `${Date.now()}-${imageFile.name}`;
-                // CORREÇÃO APLICADA: Usando o bucket 'produtos' que você já tem
                 const { data: uploadData, error: uploadError } = await supabaseClient.storage
                     .from('produtos')
                     .upload(fileName, imageFile);
@@ -166,8 +162,14 @@
                 const { data: { publicUrl } } = supabaseClient.storage.from('produtos').getPublicUrl(fileName);
                 const imageUrl = publicUrl;
 
+                // --- CORREÇÃO APLICADA AQUI ---
+                // Agora enviamos o 'imageUrl' para a Edge Function.
                 const { data: stripeData, error: stripeError } = await supabaseClient.functions.invoke('add-stripe-product', {
-                    body: { productName: nome, unitAmount: Math.round(preco * 100) },
+                    body: { 
+                        productName: nome, 
+                        unitAmount: Math.round(preco * 100),
+                        imageUrl: imageUrl // Enviando o URL da imagem
+                    },
                 });
                 if (stripeError) throw stripeError;
                 if (stripeData.error) throw new Error(stripeData.error);
@@ -197,7 +199,7 @@
                 formMessage.className = 'text-sm text-center mt-4 text-red-600';
             } finally {
                 submitButton.disabled = false;
-                submitButton.textContent = 'Upload';
+                submitButton.textContent = 'Adicionar Produto';
             }
         });
 
