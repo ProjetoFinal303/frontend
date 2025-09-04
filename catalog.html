@@ -4,47 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardápio - Lanchô</title>
+    <!-- Tailwind CSS para estilização rápida e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca do Supabase para interagir com o backend -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Fonts para uma tipografia mais agradável -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .modal, #cart-overlay { transition: opacity 0.3s ease; }
+        /* Estilos Globais e Utilitários */
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f2937; display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* Transições para Modals e Painéis Laterais */
+        .modal, .modal-backdrop, #cart-overlay { transition: opacity 0.3s ease; }
         .modal-content, #cart-panel { transition: transform 0.3s ease; }
         #cart-panel { transform: translateX(100%); }
-        body.cart-open #cart-panel { transform: translateX(0); }
         .product-card { display: flex; flex-direction: column; }
         .product-card-content { flex-grow: 1; display: flex; flex-direction: column; }
         .product-card-description { flex-grow: 1; }
-        .star-rating-display { color: #f59e0b; }
-        .star-rating { border: none; }
-        .star-rating input { display: none; }
-        .star-rating label { font-size: 2.5rem; color: #d1d5db; cursor: pointer; float: right; transition: color 0.2s; }
-        .star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: #f59e0b; }
+        
+        /* Estilos para o Toast de Notificação */
         #toast-notification {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
+            position: fixed; bottom: 20px; left: 50%;
             transform: translateX(-50%) translateY(200%);
-            background-color: #2d3748;
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 9999px;
+            background-color: #1f2937; color: white;
+            padding: 1rem 1.5rem; border-radius: 9999px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transition: transform 0.5s ease-in-out;
-            z-index: 100;
-            display: flex;
-            align-items: center;
+            transition: transform 0.5s ease-in-out; z-index: 100; display: flex; align-items: center;
         }
-        #toast-notification.show {
-            transform: translateX(-50%) translateY(0);
+        #toast-notification.show { transform: translateX(-50%) translateY(0); }
+
+        /* Estilos Exuberantes para o Modal de Personalização */
+        .ingredient-option {
+            transition: all 0.2s ease-in-out;
+            border: 2px solid #e5e7eb;
+        }
+        .ingredient-option:hover {
+            border-color: #f59e0b; /* Amarelo Lanchô */
+            transform: translateY(-2px);
+        }
+        .ingredient-option.selected {
+            border-color: #d97706; /* Amarelo mais escuro */
+            background-color: #fef9c3; /* Amarelo bem claro */
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+        }
+        .ingredient-option input[type="checkbox"] { display: none; }
+        .checkmark-circle {
+            transition: all 0.2s ease-in-out;
+        }
+        .ingredient-option.selected .checkmark-circle {
+            background-color: #d97706;
+            border-color: #d97706;
         }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
+    <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -72,21 +90,25 @@
         </nav>
     </header>
 
+    <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <h1 class="text-4xl font-bold text-center mb-10 text-gray-800">Nosso Cardápio</h1>
-        
         <div id="menu-container" class="space-y-16">
             <p id="loading-message" class="col-span-full text-center text-gray-500 text-lg">
-                <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                 <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 A carregar o cardápio...
             </p>
         </div>
     </main>
 
-    <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden opacity-0 modal">
-        <div id="modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transform scale-95 modal-content"></div>
+    <!-- Modal de Personalização -->
+    <div id="customization-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 hidden opacity-0 modal-backdrop">
+        <div id="customization-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform scale-95 modal-content">
+            <!-- Conteúdo do modal é gerado dinamicamente -->
+        </div>
     </div>
 
+    <!-- Painel do Carrinho -->
     <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-40 hidden opacity-0"></div>
     <div id="cart-panel" class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col" style="transform: translateX(100%);">
         <div class="flex justify-between items-center p-4 border-b">
@@ -105,6 +127,7 @@
         </div>
     </div>
 
+    <!-- Footer -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -146,23 +169,26 @@
         </div>
     </footer>
 
+    <!-- Elemento da Notificação (Toast) -->
     <div id="toast-notification">
         <i class="fas fa-check-circle mr-3 text-green-400"></i>
         <span id="toast-message"></span>
     </div>
 
     <script>
+        // Bloco de Configuração Inicial e Variáveis Globais
+        // =========================================================
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
         let loggedUser = null; 
         let cart = [];
 
+        // Mapeamento dos elementos do DOM
         const menuContainer = document.getElementById('menu-container');
         const loadingMessage = document.getElementById('loading-message');
-        const modal = document.getElementById('product-modal');
-        const modalContent = document.getElementById('modal-content');
+        const customizationModal = document.getElementById('customization-modal');
+        const customizationModalContent = document.getElementById('customization-modal-content');
         const cartButton = document.getElementById('cart-button');
         const closeCartButton = document.getElementById('close-cart-button');
         const cartOverlay = document.getElementById('cart-overlay');
@@ -175,11 +201,13 @@
         const toastMessage = document.getElementById('toast-message');
         let toastTimeout;
 
+        // Funções de UI (Toast, Carrinho, etc.)
+        // =========================================================
+        
         function showToast(message, isError = false) {
             clearTimeout(toastTimeout);
             toastMessage.textContent = message;
-            const icon = toastNotification.querySelector('i');
-            icon.className = isError 
+            toastNotification.querySelector('i').className = isError 
                 ? 'fas fa-exclamation-circle mr-3 text-red-400' 
                 : 'fas fa-check-circle mr-3 text-green-400';
             toastNotification.classList.add('show');
@@ -202,40 +230,53 @@
                 document.body.classList.remove('overflow-hidden');
             }
         }
-
+        
         cartButton.addEventListener('click', toggleCart);
         closeCartButton.addEventListener('click', toggleCart);
         cartOverlay.addEventListener('click', toggleCart);
 
-        function saveCart() { localStorage.setItem('shoppingCart', JSON.stringify(cart)); }
+        // Funções de Gerenciamento do Carrinho
+        // =========================================================
+
+        function saveCart() { 
+            localStorage.setItem('shoppingCart', JSON.stringify(cart)); 
+        }
+
         function loadCart() {
             const savedCart = localStorage.getItem('shoppingCart');
-            if (savedCart) { cart = JSON.parse(savedCart); }
+            if (savedCart) {
+                try {
+                    let parsedCart = JSON.parse(savedCart);
+                    // **CORREÇÃO IMPORTANTE**: Filtra itens inválidos do carrinho antigo
+                    cart = parsedCart.filter(item => item && item.product && typeof item.product.preco !== 'undefined');
+                } catch (e) {
+                    console.error("Erro ao carregar carrinho, limpando dados corrompidos.", e);
+                    cart = [];
+                    localStorage.removeItem('shoppingCart');
+                }
+            }
             updateCartUI();
         }
 
-        function addToCart(product) {
-            if (!product.stripe_price_id) {
-                showToast(`"${product.nome}" não está disponível para compra.`, true);
-                return;
-            }
-            const existingItem = cart.find(item => item.id === product.id);
+        function addToCart(product, selectedIngredients = []) {
+            const cartItem = {
+                id: `${product.id}-${selectedIngredients.map(i => i.id).sort().join('-')}`,
+                product: product,
+                ingredients: selectedIngredients,
+                quantity: 1
+            };
+
+            const existingItem = cart.find(item => item.id === cartItem.id);
             if (existingItem) {
                 existingItem.quantity++;
             } else {
-                const cartItem = {
-                    id: product.id,
-                    nome: product.nome,
-                    preco: product.preco,
-                    image_url: product.image_url,
-                    stripe_price_id: product.stripe_price_id,
-                    quantity: 1
-                };
                 cart.push(cartItem);
             }
+
             saveCart();
             updateCartUI();
             showToast(`${product.nome} foi adicionado ao carrinho!`);
+            closeCustomizationModal();
         }
 
         function updateCartUI() {
@@ -246,9 +287,34 @@
                 cartItemsContainer.innerHTML = '<p class="text-center text-gray-500 py-10">Seu carrinho está vazio.</p>';
             } else {
                 cart.forEach(item => {
-                    total += item.preco * item.quantity;
+                    const itemBasePrice = item.product.preco || 0;
+                    const ingredientsPrice = item.ingredients.reduce((sum, ing) => sum + (ing.preco || 0), 0);
+                    const singleItemPrice = itemBasePrice + ingredientsPrice;
+                    const itemTotal = singleItemPrice * item.quantity;
+                    total += itemTotal;
                     count += item.quantity;
-                    cartItemsContainer.innerHTML += `<div class="flex items-center justify-between py-4 border-b"><div class="flex items-center"><img src="${item.image_url || 'https://placehold.co/64x64'}" class="w-16 h-16 rounded-md object-cover mr-4"><div><p class="font-semibold">${item.nome}</p><p class="text-sm text-gray-600">R$ ${parseFloat(item.preco).toFixed(2)}</p></div></div><div class="flex items-center space-x-3"><button onclick="changeQuantity(${item.id}, -1)" class="w-6 h-6 rounded-full bg-gray-200">-</button><span>${item.quantity}</span><button onclick="changeQuantity(${item.id}, 1)" class="w-6 h-6 rounded-full bg-gray-200">+</button><button onclick="removeFromCart(${item.id})" class="text-red-500 hover:text-red-700 text-xl">&times;</button></div></div>`;
+                    
+                    const ingredientsHtml = item.ingredients.map(ing => 
+                        `<li class="text-xs text-gray-500 ml-5">+ ${ing.nome} (R$ ${parseFloat(ing.preco).toFixed(2)})</li>`
+                    ).join('');
+
+                    cartItemsContainer.innerHTML += `
+                        <div class="flex items-center justify-between py-4 border-b">
+                            <div class="flex items-start">
+                                <img src="${item.product.image_url || 'https://placehold.co/64x64'}" class="w-16 h-16 rounded-md object-cover mr-4">
+                                <div>
+                                    <p class="font-semibold">${item.product.nome}</p>
+                                    <ul class="mt-1">${ingredientsHtml}</ul>
+                                    <p class="text-sm text-gray-600 mt-2 font-bold">Total do item: R$ ${itemTotal.toFixed(2)}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <button onclick="changeQuantity('${item.id}', -1)" class="w-6 h-6 rounded-full bg-gray-200">-</button>
+                                <span>${item.quantity}</span>
+                                <button onclick="changeQuantity('${item.id}', 1)" class="w-6 h-6 rounded-full bg-gray-200">+</button>
+                                <button onclick="removeFromCart('${item.id}')" class="text-red-500 hover:text-red-700 text-xl">&times;</button>
+                            </div>
+                        </div>`;
                 });
             }
             cartCount.textContent = count;
@@ -256,21 +322,23 @@
             checkoutButton.disabled = cart.length === 0;
         }
 
-        function changeQuantity(productId, amount) {
-            const item = cart.find(i => i.id === productId);
+        function changeQuantity(cartItemId, amount) {
+            const item = cart.find(i => i.id === cartItemId);
             if (item) {
                 item.quantity += amount;
-                if (item.quantity <= 0) { removeFromCart(productId); } 
+                if (item.quantity <= 0) { removeFromCart(cartItemId); } 
                 else { saveCart(); updateCartUI(); }
             }
         }
 
-        function removeFromCart(productId) {
-            cart = cart.filter(item => item.id !== productId);
+        function removeFromCart(cartItemId) {
+            cart = cart.filter(item => item.id !== cartItemId);
             saveCart();
             updateCartUI();
         }
 
+        // Funções de Checkout
+        // =========================================================
         checkoutButton.addEventListener('click', async () => {
             if (!loggedUser) {
                 alert('Você precisa fazer login para finalizar a compra!');
@@ -282,33 +350,32 @@
             checkoutButton.textContent = 'A processar...';
 
             try {
-                const line_items = cart.map(item => {
-                    if (!item.stripe_price_id || typeof item.stripe_price_id !== 'string') {
-                        throw new Error(`O produto "${item.nome}" está com um problema de configuração. Por favor, remova-o do carrinho para continuar.`);
-                    }
-                    return { price: item.stripe_price_id, quantity: item.quantity };
+                const line_items = [];
+                cart.forEach(item => {
+                    if (!item.product.stripe_price_id) throw new Error(`O produto "${item.product.nome}" não está configurado para venda.`);
+                    line_items.push({ price: item.product.stripe_price_id, quantity: item.quantity });
+
+                    item.ingredients.forEach(ing => {
+                        if (ing.preco > 0) {
+                            if (!ing.stripe_price_id) throw new Error(`O ingrediente "${ing.nome}" não está configurado para venda.`);
+                            line_items.push({ price: ing.stripe_price_id, quantity: item.quantity });
+                        }
+                    });
                 });
 
-                if (line_items.length === 0) {
-                    throw new Error("O seu carrinho está vazio.");
+                if (line_items.length === 0 && cart.length > 0) {
+                     throw new Error("Os produtos no seu carrinho são gratuitos e não podem ser processados.");
+                } else if (line_items.length === 0) {
+                     throw new Error("Seu carrinho está vazio.");
                 }
 
                 const { data, error } = await supabaseClient.functions.invoke('create-cart-checkout', { 
-                    body: { 
-                        line_items, 
-                        clienteId: loggedUser.id, 
-                        customerEmail: loggedUser.email 
-                    }, 
+                    body: { line_items, clienteId: loggedUser.id, customerEmail: loggedUser.email }, 
                 });
-                
+
                 if (error) {
                     const errorBody = await error.context.json();
-                    const userMessage = errorBody.error || 'A função de checkout retornou um erro.';
-                    throw new Error(userMessage);
-                }
-                
-                if (data && data.error) {
-                    throw new Error(data.error);
+                    throw new Error(errorBody.error || 'A função de checkout retornou um erro.');
                 }
                 
                 cart = [];
@@ -323,32 +390,35 @@
             }
         });
 
-        function getStarRatingDisplay(rating) {
-            let html = '<div class="star-rating-display flex items-center space-x-1">';
-            const full = Math.floor(rating), half = rating % 1 >= 0.4, empty = 5 - full - (half ? 1 : 0);
-            for (let i = 0; i < full; i++) html += '<i class="bi bi-star-fill"></i>';
-            if (half) html += '<i class="bi bi-star-half"></i>';
-            for (let i = 0; i < empty; i++) html += '<i class="bi bi-star"></i>';
-            return html + '</div>';
-        }
+        // Funções de Carregamento de Produtos e Categorias
+        // =========================================================
 
-        async function loadProducts() {
+        async function loadProductsAndIngredients() {
             try {
-                const { data: products, error } = await supabaseClient.from('Produto').select('*').order('nome', { ascending: true });
+                const { data: products, error } = await supabaseClient
+                    .from('Produto')
+                    .select(`
+                        *,
+                        Produto_Ingrediente (
+                            Ingrediente (*)
+                        )
+                    `);
+
                 if (error) throw error;
                 
                 loadingMessage.style.display = 'none';
-
                 if (!products || products.length === 0) {
                     menuContainer.innerHTML = '<p class="text-center text-gray-500">Nenhum produto disponível.</p>';
                     return;
                 }
+                
+                products.forEach(p => {
+                    p.ingredients = p.Produto_Ingrediente.map(pi => pi.Ingrediente).filter(Boolean);
+                });
 
                 const productsByCategory = products.reduce((acc, product) => {
                     const category = product.categoria || 'Outros';
-                    if (!acc[category]) {
-                        acc[category] = [];
-                    }
+                    if (!acc[category]) acc[category] = [];
                     acc[category].push(product);
                     return acc;
                 }, {});
@@ -356,108 +426,152 @@
                 const categoryOrder = ['Mais Vendidos', 'Sanduíches', 'Combos', 'Acompanhamentos', 'Sobremesas', 'Bebidas', 'Outros'];
                 
                 menuContainer.innerHTML = '';
-
-                for (const category of categoryOrder) {
+                
+                categoryOrder.forEach(category => {
                     if (productsByCategory[category]) {
                         const section = document.createElement('section');
                         section.innerHTML = `
                             <h2 class="text-3xl font-bold text-gray-800 mb-8">${category}</h2>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                ${productsByCategory[category].map(p => `
+                                ${productsByCategory[category].map(p => {
+                                    const hasCustomization = p.ingredients && p.ingredients.length > 0;
+                                    const buttonText = hasCustomization ? 'Personalizar' : 'Adicionar';
+                                    const buttonIcon = hasCustomization ? 'fa-wand-magic-sparkles' : 'fa-cart-plus';
+
+                                    return `
                                     <div class="bg-white rounded-lg shadow-lg overflow-hidden product-card hover:shadow-xl transition-shadow duration-300">
-                                        <img src="${p.image_url || './images/lanchoxburger.jpg'}" alt="Foto de ${p.nome}" class="w-full h-56 object-cover cursor-pointer product-image">
+                                        <img src="${p.image_url || './images/lanchoxburger.jpg'}" alt="Foto de ${p.nome}" class="w-full h-56 object-cover">
                                         <div class="p-6 product-card-content">
                                             <div class="product-card-description">
                                                 <div class="flex justify-between items-baseline mb-2">
-                                                    <h3 class="text-2xl font-semibold cursor-pointer hover:text-yellow-600 product-title">${p.nome}</h3>
+                                                    <h3 class="text-2xl font-semibold">${p.nome}</h3>
                                                     <p class="text-xl font-bold text-green-600">R$${parseFloat(p.preco).toFixed(2).replace('.', ',')}</p>
-                                                </div>
-                                                <div class="flex items-center mb-3">
-                                                    ${getStarRatingDisplay(p.media_avaliacoes)}
-                                                    <span class="text-xs text-gray-500 ml-2">(${p.total_avaliacoes} ${p.total_avaliacoes === 1 ? 'avaliação' : 'avaliações'})</span>
                                                 </div>
                                                 <p class="text-gray-600 mb-4">${p.descricao}</p>
                                             </div>
-                                            <button class="mt-auto block w-full text-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-full transition-colors add-to-cart-button">Adicionar</button>
+                                            <button class="mt-auto block w-full text-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-full transition-colors action-button" data-product='${JSON.stringify(p)}'>
+                                                <i class="fas ${buttonIcon} mr-2"></i>${buttonText}
+                                            </button>
                                         </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `;
+                                    </div>`;
+                                }).join('')}
+                            </div>`;
                         menuContainer.appendChild(section);
-
-                        section.querySelectorAll('.product-image, .product-title').forEach((el, index) => {
-                            el.addEventListener('click', () => openProductModal(productsByCategory[category][index]));
-                        });
-                        section.querySelectorAll('.add-to-cart-button').forEach((el, index) => {
-                            el.addEventListener('click', () => addToCart(productsByCategory[category][index]));
-                        });
                     }
-                }
+                });
+
+                document.querySelectorAll('.action-button').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        const product = JSON.parse(e.currentTarget.dataset.product);
+                        if (product.ingredients && product.ingredients.length > 0) {
+                            openCustomizationModal(product);
+                        } else {
+                            addToCart(product);
+                        }
+                    });
+                });
 
             } catch (error) {
                 console.error('Erro ao carregar produtos:', error);
-                loadingMessage.textContent = 'Falha ao carregar o cardápio. Tente recarregar a página.';
+                loadingMessage.textContent = `Falha ao carregar o cardápio: ${error.message}`;
             }
         }
 
-        async function fetchReviews(productId) {
-            const { data, error } = await supabaseClient.from('avaliacoes').select('*, Cliente!inner(id, nome, avatar_url)').eq('produto_id', productId).order('created_at', { ascending: false });
-            if (error) { console.error('Erro ao buscar avaliações:', error); return []; }
-            return data;
-        }
+        // Funções do Modal de Personalização
+        // =========================================================
 
-        async function openProductModal(product) {
-            modal.classList.remove('hidden');
+        function openCustomizationModal(product) {
+            customizationModal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); }, 10);
-            modalContent.innerHTML = `<div class="p-8 text-center"><svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto" ...></svg></div>`;
-            const reviews = await fetchReviews(product.id);
-            modalContent.innerHTML = `<div class="flex justify-between items-center p-4 border-b"><h3 class="text-2xl font-bold">${product.nome}</h3><button id="close-modal" class="p-2 rounded-full text-gray-500 hover:bg-gray-200 text-2xl">&times;</button></div><div class="p-6 overflow-y-auto"><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><img src="${product.image_url || './images/lanchoxburger.jpg'}" class="w-full h-auto rounded-lg shadow-md"><div><p class="text-gray-600 mb-4">${product.descricao || 'Sem descrição.'}</p><p class="text-3xl font-bold text-green-600 mb-4">R$${parseFloat(product.preco).toFixed(2).replace('.', ',')}</p><div class="flex items-center mb-6">${getStarRatingDisplay(product.media_avaliacoes)}<span class="ml-3 text-gray-600">${Number(product.media_avaliacoes).toFixed(1)} de 5</span></div></div></div><hr class="my-6"><h4 class="text-xl font-bold mb-4">Avaliações</h4><div class="bg-gray-50 rounded-lg p-4 mb-6"><h5 class="font-semibold mb-2">Deixe sua avaliação</h5><fieldset class="star-rating mb-2 flex flex-row-reverse justify-end"><input type="radio" id="star5" name="rating" value="5" /><label for="star5">&#9733;</label><input type="radio" id="star4" name="rating" value="4" /><label for="star4">&#9733;</label><input type="radio" id="star3" name="rating" value="3" /><label for="star3">&#9733;</label><input type="radio" id="star2" name="rating" value="2" /><label for="star2">&#9733;</label><input type="radio" id="star1" name="rating" value="1" /><label for="star1">&#9733;</label></fieldset><textarea id="review-comment" class="w-full mt-2 p-2 border rounded-md" rows="3" placeholder="Escreva seu comentário..."></textarea><button id="submit-review" class="mt-3 w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700">Enviar</button><p id="review-message" class="text-sm text-center mt-2"></p></div><div id="reviews-list" class="space-y-6">${reviews.length > 0 ? reviews.map(r => `<div class="flex"><img src="${r.Cliente.avatar_url || `https://ui-avatars.com/api/?name=${r.Cliente.nome}`}" class="w-12 h-12 rounded-full mr-4"><div class="w-full"><div class="flex items-center justify-between"><p class="font-semibold">${r.Cliente.nome}</p>${getStarRatingDisplay(r.nota)}</div><p class="text-xs text-gray-500 mb-1">${new Date(r.created_at).toLocaleDateString('pt-BR')}</p><p class="text-gray-700">${r.comentario || ''}</p></div></div>`).join('<hr>') : '<p class="text-gray-500 text-center">Seja o primeiro a avaliar!</p>'}</div></div>`;
-            document.getElementById('close-modal').onclick = closeEditModal;
-            document.getElementById('submit-review').onclick = () => submitReview(product.id);
+            setTimeout(() => { 
+                customizationModal.classList.remove('opacity-0'); 
+                customizationModalContent.classList.remove('scale-95'); 
+            }, 10);
+
+            let currentTotal = product.preco;
+
+            customizationModalContent.innerHTML = `
+                <div class="flex justify-between items-start p-6 border-b">
+                    <div>
+                        <h2 class="text-3xl font-bold">${product.nome}</h2>
+                        <p class="text-gray-500">Personalize seu pedido</p>
+                    </div>
+                    <button id="close-customization-modal" class="p-2 -mt-2 -mr-2 rounded-full text-gray-400 hover:bg-gray-200 text-2xl">&times;</button>
+                </div>
+                <div class="p-6 flex-grow overflow-y-auto">
+                    <h3 class="font-semibold text-lg mb-4">Adicione seus ingredientes preferidos:</h3>
+                    <div id="ingredients-options-list" class="space-y-3">
+                        ${product.ingredients.map(ing => `
+                            <label class="ingredient-option flex items-center p-4 rounded-lg cursor-pointer">
+                                <input type="checkbox" data-price="${ing.preco}" data-id="${ing.id}" class="hidden">
+                                <img src="${ing.image_url || 'https://placehold.co/40x40'}" class="w-10 h-10 rounded-full object-cover mr-4">
+                                <span class="flex-grow font-medium text-gray-800">${ing.nome}</span>
+                                <span class="font-semibold text-green-600">+ R$ ${parseFloat(ing.preco).toFixed(2)}</span>
+                                <div class="w-8 h-8 flex items-center justify-center ml-4 border-2 border-gray-300 rounded-full checkmark-circle">
+                                    <i class="fas fa-check text-white"></i>
+                                </div>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="p-6 border-t bg-gray-50 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total do Item</p>
+                        <p id="customization-total" class="text-3xl font-bold">R$ ${currentTotal.toFixed(2)}</p>
+                    </div>
+                    <button id="add-customized-to-cart" class="bg-red-600 text-white font-bold py-3 px-6 rounded-full text-lg hover:bg-red-700 transition-transform hover:scale-105">
+                        Adicionar ao Carrinho
+                    </button>
+                </div>
+            `;
+            
+            const totalElement = document.getElementById('customization-total');
+            const options = document.querySelectorAll('.ingredient-option');
+            
+            options.forEach(option => {
+                option.addEventListener('click', () => {
+                    const checkbox = option.querySelector('input');
+                    checkbox.checked = !checkbox.checked;
+                    option.classList.toggle('selected', checkbox.checked);
+                    
+                    let newTotal = product.preco;
+                    document.querySelectorAll('#ingredients-options-list input:checked').forEach(checked => {
+                        newTotal += parseFloat(checked.dataset.price);
+                    });
+                    totalElement.textContent = `R$ ${newTotal.toFixed(2)}`;
+                });
+            });
+
+            document.getElementById('add-customized-to-cart').onclick = () => {
+                const selectedIngredients = [];
+                document.querySelectorAll('#ingredients-options-list input:checked').forEach(checkbox => {
+                    const id = parseInt(checkbox.dataset.id);
+                    const ingredientData = product.ingredients.find(ing => ing.id === id);
+                    if(ingredientData) selectedIngredients.push(ingredientData);
+                });
+                addToCart(product, selectedIngredients);
+            };
+
+            document.getElementById('close-customization-modal').onclick = closeCustomizationModal;
         }
 
-        function closeEditModal() {
-            modal.classList.add('opacity-0');
-            modalContent.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }, 300);
+        function closeCustomizationModal() {
+            customizationModal.classList.add('opacity-0');
+            customizationModalContent.classList.add('scale-95');
+            setTimeout(() => { 
+                customizationModal.classList.add('hidden'); 
+                document.body.classList.remove('overflow-hidden'); 
+            }, 300);
         }
-
-        modal.addEventListener('click', e => { if (e.target === modal) closeEditModal(); });
         
-        async function submitReview(productId) {
-            const ratingInput = document.querySelector('#product-modal input[name="rating"]:checked');
-            const commentInput = document.getElementById('review-comment');
-            const messageP = document.getElementById('review-message');
-            const submitButton = document.getElementById('submit-review');
-            if (!loggedUser) { messageP.textContent = 'Você precisa estar logado para avaliar.'; messageP.className = 'text-sm text-center mt-2 text-red-600'; return; }
-            if (!ratingInput) { messageP.textContent = 'Por favor, selecione uma nota de 1 a 5 estrelas.'; messageP.className = 'text-sm text-center mt-2 text-red-600'; return; }
-            submitButton.disabled = true;
-            submitButton.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto" ...></svg> Enviando...`;
-            const { error } = await supabaseClient.from('avaliacoes').insert({ produto_id: productId, cliente_id: loggedUser.id, nota: parseInt(ratingInput.value), comentario: commentInput.value.trim() });
-            submitButton.disabled = false;
-            submitButton.textContent = 'Enviar Avaliação';
-            if (error) {
-                console.error('Erro ao enviar avaliação:', error);
-                messageP.textContent = `Erro: ${error.message.includes('duplicate key') ? 'Você já avaliou este produto.' : error.message}`;
-                messageP.className = 'text-sm text-center mt-2 text-red-600';
-            } else {
-                messageP.textContent = 'Avaliação enviada com sucesso!';
-                messageP.className = 'text-sm text-center mt-2 text-green-600';
-                setTimeout(async () => {
-                    loadProducts();
-                    const { data: p } = await supabaseClient.from('Produto').select('*').eq('id', productId).single();
-                    if(p) await openProductModal(p);
-                }, 1500);
-            }
-        }
+        // Funções de Autenticação e UI do Header
+        // =========================================================
 
         async function fetchUserStats(userId) {
             try {
                 const { data, error } = await supabaseClient.rpc('get_user_stats', { p_user_id: userId });
                 if (error) throw error;
-                return data;
+                return data || { totalPedidos: 0, dinheiroGasto: 0.00 };
             } catch (error) {
                 console.error("Erro ao buscar estatísticas:", error);
                 return { totalPedidos: 0, dinheiroGasto: 0.00 };
@@ -479,10 +593,10 @@
             await updateNavUI(loggedUser);
 
             window.addEventListener('click', (event) => {
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuDropdown.contains(event.target) && !mainMenuButton.contains(event.target)) {
+                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
                     mainMenuDropdown.classList.add('hidden');
                 }
+                const userMenuDropdown = document.getElementById('user-menu-dropdown');
                 if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
                     userMenuDropdown.classList.add('hidden');
                 }
@@ -496,7 +610,7 @@
             if (user) {
                 loginButton.classList.add('hidden');
                 userMenuContainer.classList.remove('hidden');
-                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
+                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
                 const stats = await fetchUserStats(user.id);
 
                 let adminLink = '';
@@ -514,10 +628,6 @@
                                     <p class="text-md font-semibold text-gray-800">${user.nome || 'Cliente'}</p>
                                     <p class="text-xs text-gray-500">${user.email}</p>
                                 </div>
-                            </div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 text-center">
-                                <div><p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p><p class="text-xs text-gray-500">Pedidos</p></div>
-                                <div><p class="text-sm font-semibold text-gray-800">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs text-gray-500">Gasto Total</p></div>
                             </div>
                         </div>
                         <div class="py-2">
@@ -545,11 +655,14 @@
             }
         }
         
+        // Ponto de Entrada da Página
+        // =========================================================
         document.addEventListener('DOMContentLoaded', async () => {
             await setupMenusAndAuth();
             loadCart();
-            loadProducts(); 
+            loadProductsAndIngredients();
         });
     </script>
 </body>
 </html>
+

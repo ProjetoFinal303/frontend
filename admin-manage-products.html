@@ -88,6 +88,97 @@
             color: #ca8a04; /* Amarelo escuro */
             background-color: #fef9c3; /* Amarelo mais claro ainda */
         }
+
+        /* Estilos para o Contador de Quantidade "Exuberante" */
+        .quantity-stepper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* space-x-2 */
+        }
+        .quantity-btn {
+            width: 2rem; /* w-8 */
+            height: 2rem; /* h-8 */
+            border-radius: 9999px; /* rounded-full */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .quantity-btn:active {
+            transform: scale(0.95);
+        }
+        .quantity-minus {
+            background-color: #ef4444; /* bg-red-500 */
+        }
+        .quantity-minus:hover {
+            background-color: #dc2626; /* hover:bg-red-600 */
+        }
+        .quantity-plus {
+            background-color: #22c55e; /* bg-green-500 */
+        }
+        .quantity-plus:hover {
+            background-color: #16a34a; /* hover:bg-green-600 */
+        }
+        .quantity-input {
+            width: 3rem; /* w-12 */
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.25rem;
+        }
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .quantity-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* Estilos para o Toggle Switch "Exuberante" */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 28px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #22c55e; /* green-500 */
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
@@ -198,20 +289,13 @@
         // =========================================================
         async function loadProducts() {
             try {
-                const { data: produtos, error } = await supabaseClient
-                    .from('Produto')
-                    .select('*')
-                    .order('nome', { ascending: true });
-
+                const { data: produtos, error } = await supabaseClient.from('Produto').select('*').order('nome', { ascending: true });
                 if (error) throw error;
-                
                 loadingProducts.style.display = 'none';
-
                 if (!produtos || produtos.length === 0) {
                     productListContainer.innerHTML = '<p class="text-center text-gray-500 p-10">Nenhum produto cadastrado.</p>';
                     return;
                 }
-
                 productListContainer.innerHTML = `
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200">
@@ -225,22 +309,9 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 ${produtos.map(p => `
                                     <tr id="product-row-${p.id}">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="flex items-center">
-                                                <div class="flex-shrink-0 h-10 w-10">
-                                                    <img class="h-10 w-10 rounded-full object-cover" src="${p.image_url || 'https://placehold.co/40x40/e2e8f0/a0aec0?text=L'}" alt="Imagem de ${p.nome}">
-                                                </div>
-                                                <div class="ml-4">
-                                                    <div class="text-sm font-medium text-gray-900">${p.nome}</div>
-                                                    <div class="text-xs text-gray-500">${p.categoria || 'Sem categoria'}</div>
-                                                </div>
-                                            </div>
-                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center"><div class="flex-shrink-0 h-10 w-10"><img class="h-10 w-10 rounded-full object-cover" src="${p.image_url || 'https://placehold.co/40x40/e2e8f0/a0aec0?text=L'}" alt="Imagem de ${p.nome}"></div><div class="ml-4"><div class="text-sm font-medium text-gray-900">${p.nome}</div><div class="text-xs text-gray-500">${p.categoria || 'Sem categoria'}</div></div></div></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${parseFloat(p.preco).toFixed(2)}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                            <button onclick='openEditModal(${JSON.stringify(p)})' class="text-yellow-600 hover:text-yellow-900">Editar</button>
-                                            <button onclick="deleteProduct(${p.id}, '${p.stripe_price_id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-900">Excluir</button>
-                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"><button onclick='openEditModal(${JSON.stringify(p)})' class="text-yellow-600 hover:text-yellow-900">Editar</button><button onclick="deleteProduct(${p.id}, '${p.stripe_price_id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-900">Excluir</button></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -255,28 +326,23 @@
 
         // Funções de Gerenciamento do Modal de Edição
         // =========================================================
-
         async function openEditModal(product) {
             editModal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
-            setTimeout(() => { 
-                editModal.classList.remove('opacity-0'); 
-                editModalContent.classList.remove('scale-95'); 
-            }, 10);
-            
+            setTimeout(() => { editModal.classList.remove('opacity-0'); editModalContent.classList.remove('scale-95'); }, 10);
             editModalContent.innerHTML = `<div class="p-8 text-center"><svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
 
             try {
                 const [allIngredientsRes, associatedIngredientsRes] = await Promise.all([
-                    supabaseClient.from('Ingrediente').select('id, nome'),
-                    supabaseClient.from('Produto_Ingrediente').select('ingrediente_id').eq('produto_id', product.id)
+                    supabaseClient.from('Ingrediente').select('id, nome, image_url'),
+                    supabaseClient.from('Produto_Ingrediente').select('ingrediente_id, quantidade_padrao, is_customizable').eq('produto_id', product.id)
                 ]);
 
                 if (allIngredientsRes.error) throw allIngredientsRes.error;
                 if (associatedIngredientsRes.error) throw associatedIngredientsRes.error;
                 
                 const allIngredients = allIngredientsRes.data;
-                const associatedIds = new Set(associatedIngredientsRes.data.map(item => item.ingrediente_id));
+                const associatedMap = new Map(associatedIngredientsRes.data.map(item => [item.ingrediente_id, { qty: item.quantidade_padrao, custom: item.is_customizable }]));
                 
                 const categories = [
                     { value: 'Mais Vendidos', icon: 'fas fa-star' },
@@ -295,10 +361,9 @@
                     </div>
                     <div class="p-6 overflow-y-auto">
                         <form id="edit-product-form" class="space-y-6">
-                            <div><label for="edit-nome" class="block text-sm font-medium text-gray-700">Nome</label><input type="text" id="edit-nome" value="${product.nome}" required class="mt-1 block w-full px-3 py-2 border rounded-md"></div>
-                            <div><label for="edit-descricao" class="block text-sm font-medium text-gray-700">Descrição</label><textarea id="edit-descricao" rows="3" required class="mt-1 block w-full px-3 py-2 border rounded-md">${product.descricao}</textarea></div>
-                            <div><label for="edit-preco" class="block text-sm font-medium text-gray-700">Preço</label><input type="number" step="0.01" id="edit-preco" value="${product.preco}" required class="mt-1 block w-full px-3 py-2 border rounded-md"></div>
-                            
+                            <div><label for="edit-nome" class="block text-sm font-medium text-gray-700">Nome do Produto</label><input type="text" id="edit-nome" value="${product.nome}" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"></div>
+                            <div><label for="edit-descricao" class="block text-sm font-medium text-gray-700">Descrição</label><textarea id="edit-descricao" rows="3" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">${product.descricao}</textarea></div>
+                            <div><label for="edit-preco" class="block text-sm font-medium text-gray-700">Preço Base</label><input type="number" step="0.01" id="edit-preco" value="${product.preco}" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"></div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
                                 <div class="custom-select-container">
@@ -320,28 +385,61 @@
                                     <input type="hidden" id="edit-categoria" value="${product.categoria || ''}">
                                 </div>
                             </div>
+                            <div><label class="block text-sm font-medium text-gray-700">Imagem</label><div class="mt-1 flex items-center space-x-4"><img id="edit-image-preview" src="${product.image_url || 'https://placehold.co/100x100'}" class="w-24 h-24 rounded-md object-cover"><label for="edit-image-upload" class="cursor-pointer bg-yellow-500 text-white font-bold py-2 px-4 rounded-full hover:bg-yellow-600"><span>Alterar Imagem</span><input id="edit-image-upload" type="file" class="sr-only" accept="image/png, image/jpeg"></label></div></div>
                             
                             <div class="border-t pt-6">
-                                <label class="block text-lg font-bold text-gray-800 mb-2">Ingredientes Adicionais</label>
-                                <p class="text-sm text-gray-500 mb-4">Selecione os ingredientes que podem ser adicionados a este produto.</p>
-                                <div id="ingredients-checklist" class="grid grid-cols-2 gap-4 max-h-48 overflow-y-auto p-2 bg-gray-50 rounded-md">
-                                    ${allIngredients.length > 0 ? allIngredients.map(ing => `
-                                        <label class="flex items-center space-x-3 cursor-pointer">
-                                            <input type="checkbox" value="${ing.id}" ${associatedIds.has(ing.id) ? 'checked' : ''} class="h-5 w-5 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500">
-                                            <span class="text-gray-700">${ing.nome}</span>
-                                        </label>
-                                    `).join('') : '<p class="col-span-2 text-gray-500 text-center">Nenhum ingrediente cadastrado.</p>'}
+                                <label class="block text-lg font-bold text-gray-800 mb-2">Receita e Adicionais</label>
+                                <p class="text-sm text-gray-500 mb-4">Defina a quantidade padrão de cada ingrediente e se o cliente pode personalizá-lo.</p>
+                                <div id="ingredients-checklist" class="space-y-4 max-h-64 overflow-y-auto p-2">
+                                    ${allIngredients.length > 0 ? allIngredients.map(ing => {
+                                        const assoc = associatedMap.get(ing.id) || { qty: 0, custom: true };
+                                        return `
+                                        <div class="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
+                                            <div class="flex items-center">
+                                                <img src="${ing.image_url || 'https://placehold.co/40x40'}" class="w-10 h-10 rounded-full object-cover mr-4">
+                                                <div class="flex flex-col">
+                                                    <span class="text-gray-800 font-medium">${ing.nome}</span>
+                                                    <div class="flex items-center mt-1">
+                                                        <label class="toggle-switch mr-2">
+                                                            <input type="checkbox" class="toggle-input" data-ingredient-id="${ing.id}" ${assoc.custom ? 'checked' : ''}>
+                                                            <span class="toggle-slider"></span>
+                                                        </label>
+                                                        <span class="text-xs text-gray-500">Personalizável</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="quantity-stepper">
+                                                <button type="button" class="quantity-btn quantity-minus">-</button>
+                                                <input type="number" value="${assoc.qty}" min="0" class="quantity-input" data-ingredient-id="${ing.id}">
+                                                <button type="button" class="quantity-btn quantity-plus">+</button>
+                                            </div>
+                                        </div>
+                                    `}).join('') : '<p class="text-gray-500 text-center">Nenhum ingrediente cadastrado. <a href="./admin-manage-ingredients.html" class="text-yellow-600 underline">Adicionar agora</a>.</p>'}
                                 </div>
                             </div>
-
-                            <div><label class="block text-sm font-medium text-gray-700">Imagem</label><div class="mt-1 flex items-center space-x-4"><img id="edit-image-preview" src="${product.image_url || 'https://placehold.co/100x100'}" class="w-24 h-24 rounded-md object-cover"><label for="edit-image-upload" class="cursor-pointer bg-yellow-500 text-white font-bold py-2 px-4 rounded-full hover:bg-yellow-600"><span>Alterar Imagem</span><input id="edit-image-upload" type="file" class="sr-only" accept="image/png, image/jpeg"></label></div></div>
-                            <div class="pt-4 flex justify-end space-x-3"><button type="button" onclick="closeEditModal()" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full hover:bg-gray-300">Cancelar</button><button type="submit" class="bg-red-600 text-white font-bold py-2 px-4 rounded-full hover:bg-red-700">Salvar Alterações</button></div>
+                            
+                            <div class="pt-4 flex justify-end space-x-3">
+                                <button type="button" onclick="closeEditModal()" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full hover:bg-gray-300">Cancelar</button>
+                                <button type="submit" class="bg-red-600 text-white font-bold py-2 px-4 rounded-full hover:bg-red-700">Salvar Alterações</button>
+                            </div>
                             <p id="edit-form-message" class="text-sm text-center mt-4"></p>
                         </form>
                     </div>
                 `;
 
                 setupCustomSelect();
+
+                document.querySelectorAll('.quantity-btn').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const input = button.parentElement.querySelector('.quantity-input');
+                        let currentValue = parseInt(input.value);
+                        if (button.classList.contains('quantity-plus')) {
+                            input.value = currentValue + 1;
+                        } else if (button.classList.contains('quantity-minus') && currentValue > 0) {
+                            input.value = currentValue - 1;
+                        }
+                    });
+                });
 
                 document.getElementById('edit-image-upload').addEventListener('change', (e) => {
                     const file = e.target.files[0];
@@ -352,6 +450,7 @@
                     e.preventDefault();
                     saveProductChanges(product.id);
                 });
+
             } catch (error) {
                 editModalContent.innerHTML = `<div class="p-8 text-red-500">Erro ao carregar dados: ${error.message}</div>`;
             }
@@ -419,22 +518,36 @@
             try {
                 if (imageFile) {
                     const fileName = `${productId}-${Date.now()}-${imageFile.name}`;
-                    await supabaseClient.storage.from('produtos').remove([`public/${fileName}`]);
+                    const { data: listData, error: listError } = await supabaseClient.storage.from('produtos').list();
+                    if (listError) throw listError;
+                    const oldFile = listData.find(file => file.name.startsWith(`${productId}-`));
+                    if(oldFile) await supabaseClient.storage.from('produtos').remove([oldFile.name]);
+
                     const { error: uploadError } = await supabaseClient.storage.from('produtos').upload(fileName, imageFile);
                     if (uploadError) throw uploadError;
                     imageUrl = supabaseClient.storage.from('produtos').getPublicUrl(fileName).data.publicUrl;
                 }
 
-                await supabaseClient.from('Produto').update({ nome, descricao, preco, image_url: imageUrl, categoria }).eq('id', productId);
+                await supabaseClient.from('Produto').update({ nome, descricao, preco, categoria, image_url: imageUrl }).eq('id', productId);
                 await supabaseClient.from('Produto_Ingrediente').delete().eq('produto_id', productId);
-                
-                const checkedIngredients = document.querySelectorAll('#ingredients-checklist input:checked');
-                if (checkedIngredients.length > 0) {
-                    const newAssociations = Array.from(checkedIngredients).map(checkbox => ({
+
+                const ingredientRows = document.querySelectorAll('#ingredients-checklist .flex.items-center.justify-between');
+                const newAssociations = [];
+                ingredientRows.forEach(row => {
+                    const input = row.querySelector('.quantity-input');
+                    const toggle = row.querySelector('.toggle-input');
+                    
+                    newAssociations.push({
                         produto_id: productId,
-                        ingrediente_id: parseInt(checkbox.value)
-                    }));
-                    await supabaseClient.from('Produto_Ingrediente').insert(newAssociations);
+                        ingrediente_id: parseInt(input.dataset.ingredientId),
+                        quantidade_padrao: parseInt(input.value),
+                        is_customizable: toggle.checked
+                    });
+                });
+
+                if (newAssociations.length > 0) {
+                    const { error: insertError } = await supabaseClient.from('Produto_Ingrediente').insert(newAssociations);
+                    if (insertError) throw insertError;
                 }
 
                 formMessage.textContent = 'Produto atualizado com sucesso!';
@@ -449,7 +562,7 @@
         }
         
         async function deleteProduct(productId, stripePriceId, productName) {
-            if (!confirm(`Tem certeza que quer excluir o produto "${productName}"? Esta ação não pode ser desfeita.`)) return;
+            if (!confirm(`Tem certeza que quer excluir o produto "${productName}"?`)) return;
             try {
                 if (stripePriceId && stripePriceId !== 'null') {
                     await supabaseClient.functions.invoke('delete-stripe-product', { body: { priceId: stripePriceId } });
@@ -457,10 +570,10 @@
                 const { error: dbError } = await supabaseClient.from('Produto').delete().eq('id', productId);
                 if (dbError) throw dbError;
                 alert(`Produto "${productName}" excluído com sucesso.`);
-                document.getElementById(`product-row-${productId}`).remove();
+                loadProducts();
             } catch (error) {
                 console.error("Erro ao excluir produto:", error);
-                alert(`Ocorreu um erro ao excluir o produto: ${error.message}`);
+                alert(`Ocorreu um erro: ${error.message}`);
             }
         }
         
@@ -503,12 +616,12 @@
             await updateNavUI(loggedUser);
 
             window.addEventListener('click', (event) => {
+                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
+                    mainMenuDropdown.classList.add('hidden');
+                }
                 const userMenuDropdown = document.getElementById('user-menu-dropdown');
                 if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
                     userMenuDropdown.classList.add('hidden');
-                }
-                 if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
-                    mainMenuDropdown.classList.add('hidden');
                 }
             });
         }
