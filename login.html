@@ -106,7 +106,6 @@
             messageDiv.classList.add('hidden');
         }
 
-        // --- LÓGICA DE LOGIN MANUAL ---
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             clearMessages();
@@ -124,22 +123,12 @@
             }
 
             if (user.senha === password) {
-                if (user.role === 'admin') {
-                    localStorage.setItem('currentAdmin', JSON.stringify(user));
-                    window.location.href = './admin.html';
-                } else if (user.role === 'cozinha') { // ADICIONADO Bloco para cozinha
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    window.location.href = './kitchen.html';
-                } else {
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    window.location.href = './catalog.html';
-                }
+                handleLoginSuccess(user);
             } else {
                 showMessage('E-mail ou senha inválidos. Tente novamente.');
             }
         });
-
-        // --- LÓGICA DE LOGIN COM GOOGLE ---
+        
         async function handleGoogleCredentialResponse(googleResponse) {
             clearMessages();
             showMessage('Login com Google bem-sucedido. Verificando dados...', false);
@@ -151,37 +140,37 @@
                     body: { id_token: id_token },
                 });
 
-                if (functionError) {
-                    throw new Error(`Erro da função Supabase: ${functionError.message}`);
-                }
-                
-                if (!cliente) {
-                     throw new Error("A função do Supabase não retornou os dados do cliente.");
-                }
+                if (functionError) throw new Error(`Erro da função Supabase: ${functionError.message}`);
+                if (!cliente) throw new Error("A função do Supabase não retornou os dados do cliente.");
 
-                if (cliente.role === 'admin') {
-                    showMessage('Autenticado como Administrador! Redirecionando...', false);
-                    localStorage.setItem('currentAdmin', JSON.stringify(cliente));
-                    setTimeout(() => {
-                        window.location.href = './admin.html';
-                    }, 1000);
-                } else if (cliente.role === 'cozinha') { // ADICIONADO Bloco para cozinha
-                    showMessage('Autenticado como Cozinha! Redirecionando...', false);
-                    localStorage.setItem('currentUser', JSON.stringify(cliente));
-                    setTimeout(() => {
-                        window.location.href = './kitchen.html';
-                    }, 1000);
-                } else {
-                    showMessage('Autenticado com sucesso! Redirecionando...', false);
-                    localStorage.setItem('currentUser', JSON.stringify(cliente));
-                    setTimeout(() => {
-                        window.location.href = './catalog.html';
-                    }, 1000);
-                }
+                handleLoginSuccess(cliente);
 
             } catch (error) {
                 showMessage(`Falha no login com Google: ${error.message}`);
             }
+        }
+
+        function handleLoginSuccess(user) {
+            let message = 'Autenticado com sucesso! Redirecionando...';
+            let redirectUrl = './catalog.html';
+            let storageKey = 'currentUser';
+
+            if (user.role === 'admin') {
+                message = 'Autenticado como Administrador! Redirecionando...';
+                redirectUrl = './admin.html';
+                storageKey = 'currentAdmin';
+            } else if (user.role === 'cozinha') {
+                message = 'Autenticado como Cozinha! Redirecionando...';
+                redirectUrl = './kitchen.html';
+                storageKey = 'currentUser'; // Cozinha pode usar o mesmo que o user normal
+            }
+
+            showMessage(message, false);
+            localStorage.setItem(storageKey, JSON.stringify(user));
+            
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 1000);
         }
     </script>
 </body>

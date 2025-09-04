@@ -4,14 +4,6 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@11.1.0'
 import { corsHeaders } from '../_shared/cors.ts'
 
-/**
- * NOTA IMPORTANTE:
- * Certifique-se de que esta função tem os "Secrets" configurados no seu
- * painel do Supabase, tal como fizemos com as outras:
- * - STRIPE_API_KEY: A sua chave secreta do Stripe.
- * - SITE_URL: O URL completo do seu site (ex: https://seu-site.vercel.app)
- */
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -20,12 +12,21 @@ serve(async (req) => {
   try {
     const { line_items, clienteId, customerEmail } = await req.json()
 
-    // Validação dos dados recebidos
+    // --- VALIDAÇÃO MELHORADA APLICADA AQUI ---
     if (!line_items || !Array.isArray(line_items) || line_items.length === 0) {
       throw new Error('A lista de produtos (line_items) é inválida ou está vazia.')
     }
     if (!customerEmail) {
       throw new Error('O email do cliente é obrigatório.')
+    }
+    // Verifica se todos os itens têm um 'price' válido
+    for (const item of line_items) {
+        if (!item.price || typeof item.price !== 'string') {
+            throw new Error(`Item inválido no carrinho. Falta o ID do preço (price).`);
+        }
+        if (!item.quantity || typeof item.quantity !== 'number' || item.quantity <= 0) {
+            throw new Error(`Item inválido no carrinho. A quantidade do produto ${item.price} é inválida.`);
+        }
     }
 
     const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY') as string, {
@@ -33,10 +34,9 @@ serve(async (req) => {
       httpClient: Stripe.createFetchHttpClient(),
     })
 
-    // Cria a sessão de checkout no Stripe com múltiplos itens
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      line_items: line_items, // A lista de produtos vem diretamente do frontend
+      line_items: line_items,
       mode: 'payment',
       success_url: `${Deno.env.get('SITE_URL')}/success.html`,
       cancel_url: `${Deno.env.get('SITE_URL')}/catalog.html`,
@@ -52,7 +52,8 @@ serve(async (req) => {
 
   } catch (e) {
     console.error('Erro na função create-cart-checkout:', e)
-    return new Response(JSON.stringify({ error: e.message }), {
+    // Retorna uma mensagem de erro mais clara
+    return new Response(JSON.stringify({ error: `Falha no Servidor: ${e.message}` }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

@@ -7,63 +7,69 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .column { min-height: 400px; }
         .order-card { cursor: grab; }
-        .sortable-ghost {
-            opacity: 0.4;
-            background: #f0f8ff;
-        }
-        .modal {
-            transition: opacity 0.3s ease;
-        }
+        .sortable-ghost { opacity: 0.4; background: #f0f8ff; }
+        .modal { transition: opacity 0.3s ease; }
     </style>
 </head>
-<body class="bg-gray-200">
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <header class="bg-white shadow-md">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-3xl font-bold text-yellow-600">Lanchô - Painel da Cozinha</h1>
-            <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                Sair
-            </button>
-        </div>
+    <header class="bg-white shadow-sm sticky top-0 z-20">
+        <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
+            <div class="relative">
+                <button id="main-menu-button" class="p-2 rounded-full text-gray-600 hover:bg-gray-200">
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                </button>
+                <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden z-30">
+                    <a href="./index.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-home w-6 mr-2"></i>Home</a>
+                    <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
+                    <a href="./ofertas.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
+                    <a href="./sobre.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
+                </div>
+            </div>
+            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div id="user-menu-container" class="relative"></div>
+            </div>
+        </nav>
     </header>
 
-    <main class="container mx-auto p-6">
+    <main class="container mx-auto p-6 flex-grow">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Painel da Cozinha</h1>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
             <div class="bg-white rounded-lg shadow-lg">
                 <div class="bg-blue-500 text-white p-4 rounded-t-lg">
                     <h2 class="text-xl font-bold">Novos Pedidos</h2>
                 </div>
-                <div id="new-orders" data-status="pendente" class="p-4 space-y-4 column">
-                    </div>
+                <div id="new-orders" data-status="pendente" class="p-4 space-y-4 column"></div>
             </div>
 
             <div class="bg-white rounded-lg shadow-lg">
                 <div class="bg-yellow-500 text-white p-4 rounded-t-lg">
                     <h2 class="text-xl font-bold">Em Preparo</h2>
                 </div>
-                <div id="in-progress-orders" data-status="em preparo" class="p-4 space-y-4 column">
-                    </div>
+                <div id="in-progress-orders" data-status="em preparo" class="p-4 space-y-4 column"></div>
             </div>
 
             <div class="bg-white rounded-lg shadow-lg">
                 <div class="bg-green-500 text-white p-4 rounded-t-lg">
                     <h2 class="text-xl font-bold">Prontos para Retirada</h2>
                 </div>
-                <div id="ready-orders" data-status="concluido" class="p-4 space-y-4 column">
-                    </div>
+                <div id="ready-orders" data-status="concluido" class="p-4 space-y-4 column"></div>
             </div>
         </div>
     </main>
     
     <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
-            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">&times;</button>
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
             <h2 class="text-2xl font-bold mb-4">Detalhes do Pedido <span id="modal-order-id" class="text-blue-600"></span></h2>
             <div class="space-y-3">
                  <p><strong>Cliente:</strong> <span id="modal-client-name"></span></p>
@@ -75,6 +81,41 @@
         </div>
     </div>
 
+    <footer class="bg-gray-800 text-white mt-auto">
+        <div class="container mx-auto px-4 md:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
+                <div>
+                    <h3 class="text-lg font-bold text-yellow-500 mb-4">Lanchô</h3>
+                    <p class="text-gray-400">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Links Rápidos</h3>
+                    <ul class="space-y-2">
+                        <li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Contato</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>Rua Mariz e Barros, 273, Rio de Janeiro</li>
+                        <li>(21) 96810-5812</li>
+                        <li>contato@lancho.com.br</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
+                    <div class="flex justify-center md:justify-start space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500">
+                <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
 
     <audio id="notification-sound" src="https://freesound.org/data/previews/415/415762_6142149-lq.mp3" preload="auto"></audio>
 
@@ -89,21 +130,29 @@
             'concluido': document.getElementById('ready-orders')
         };
         const notificationSound = document.getElementById('notification-sound');
+        let loggedUser = null;
 
-        // --- VERIFICAÇÃO DE PERMISSÃO ---
         document.addEventListener('DOMContentLoaded', async () => {
-            const user = JSON.parse(localStorage.getItem('currentUser'));
-            if (!user || user.role !== 'cozinha') {
+            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
+            if (userString) {
+                loggedUser = JSON.parse(userString);
+                if (loggedUser.role !== 'cozinha' && loggedUser.role !== 'admin') {
+                     alert('Acesso negado. Você não tem permissão para ver esta página.');
+                     window.location.href = './login.html';
+                     return;
+                }
+            } else {
                  alert('Acesso negado. Você não tem permissão para ver esta página.');
                  window.location.href = './login.html';
-            } else {
-                await fetchAndRenderOrders();
-                setupRealtimeListener();
-                initializeDragAndDrop();
+                 return;
             }
+
+            await setupMenusAndAuth();
+            await fetchAndRenderOrders();
+            setupRealtimeListener();
+            initializeDragAndDrop();
         });
         
-        // --- FUNÇÕES DE TEMPO E FORMATAÇÃO ---
         function timeAgo(dateString) {
             const date = new Date(dateString);
             const now = new Date();
@@ -121,7 +170,6 @@
             return Math.floor(seconds) + " segundos";
         }
 
-        // --- RENDERIZAÇÃO E DADOS ---
         async function fetchAndRenderOrders() {
             const { data: orders, error } = await supabaseClient
                 .from('Pedido')
@@ -158,7 +206,7 @@
                     <span class="text-xs text-gray-500" data-time="${order.data}">há ${timeAgo(order.data)}</span>
                 </div>
                 <p class="text-gray-700 truncate">${order.descricao}</p>
-                <p class="text-sm text-gray-600 mt-2">Cliente: ${order.Cliente.nome || 'Não identificado'}</p>
+                <p class="text-sm text-gray-600 mt-2">Cliente: ${order.Cliente ? order.Cliente.nome : 'Não identificado'}</p>
             `;
             
             card.addEventListener('click', () => showOrderDetails(order.id));
@@ -171,28 +219,20 @@
                 el.textContent = `há ${timeAgo(el.dataset.time)}`;
             });
         }
-        setInterval(updateAllTimers, 30000); // Atualiza a cada 30 segundos
+        setInterval(updateAllTimers, 30000); 
 
-        // --- ATUALIZAÇÕES EM TEMPO REAL ---
         function setupRealtimeListener() {
             supabaseClient.channel('public:Pedido')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'Pedido' }, payload => {
                     console.log('Alteração recebida!', payload);
-
-                    if (payload.eventType === 'INSERT') {
-                        const newOrder = payload.new;
-                        if (columns[newOrder.status]) {
-                            notificationSound.play();
-                            fetchAndRenderOrders(); // Recarrega tudo para garantir consistência
-                        }
-                    } else {
-                        fetchAndRenderOrders();
+                    if (payload.eventType === 'INSERT' && payload.new.status === 'pendente') {
+                        notificationSound.play();
                     }
+                    fetchAndRenderOrders();
                 })
                 .subscribe();
         }
 
-        // --- DRAG AND DROP ---
         function initializeDragAndDrop() {
             Object.values(columns).forEach(column => {
                 new Sortable(column, {
@@ -219,10 +259,10 @@
             if (error) {
                 console.error("Erro ao atualizar status:", error);
                 alert("Não foi possível atualizar o status do pedido.");
+                fetchAndRenderOrders(); // Reverte a UI se a atualização falhar
             }
         }
         
-        // --- MODAL DE DETALHES ---
         const modal = document.getElementById('order-modal');
         
         async function showOrderDetails(orderId) {
@@ -238,7 +278,7 @@
             }
             
             document.getElementById('modal-order-id').textContent = `#${order.id}`;
-            document.getElementById('modal-client-name').textContent = order.Cliente.nome || 'Não identificado';
+            document.getElementById('modal-client-name').textContent = order.Cliente ? order.Cliente.nome : 'Não identificado';
             document.getElementById('modal-order-description').textContent = order.descricao;
             document.getElementById('modal-order-value').textContent = `R$ ${parseFloat(order.valor).toFixed(2)}`;
             const statusSpan = document.getElementById('modal-order-status');
@@ -254,24 +294,82 @@
             if (e.target === modal) modal.classList.add('hidden');
         });
 
-        // --- UTILITÁRIOS ---
         function getStatusColor(status) {
             switch (status) {
-                case 'pendente': return '#3B82F6'; // blue-500
-                case 'em preparo': return '#F59E0B'; // yellow-500
-                case 'concluido': return '#10B981'; // green-500
-                default: return '#6B7280'; // gray-500
+                case 'pendente': return '#3B82F6'; 
+                case 'em preparo': return '#F59E0B'; 
+                case 'concluido': return '#10B981';
+                default: return '#6B7280';
             }
         }
-        
-        // --- LOGOUT ---
-        document.getElementById('logout-button').addEventListener('click', async () => {
-            await supabaseClient.auth.signOut();
-            localStorage.removeItem('currentUser');
-            localStorage.removeItem('currentAdmin');
-            window.location.href = './login.html';
-        });
 
+        async function fetchUserStats(userId) {
+            try {
+                const { data, error } = await supabaseClient.rpc('get_user_stats', { p_user_id: userId });
+                if (error) throw error;
+                return data || { totalPedidos: 0, dinheiroGasto: 0.00 };
+            } catch (error) {
+                console.error("Erro ao buscar estatísticas:", error);
+                return { totalPedidos: 0, dinheiroGasto: 0.00 };
+            }
+        }
+
+        async function setupMenusAndAuth() {
+            const mainMenuButton = document.getElementById('main-menu-button');
+            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+            mainMenuButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                mainMenuDropdown.classList.toggle('hidden');
+            });
+
+            await updateNavUI(loggedUser);
+
+            window.addEventListener('click', (event) => {
+                const userMenuDropdown = document.getElementById('user-menu-dropdown');
+                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuDropdown.contains(event.target) && !mainMenuButton.contains(event.target)) {
+                    mainMenuDropdown.classList.add('hidden');
+                }
+                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
+                    userMenuDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        async function updateNavUI(user) {
+            const userMenuContainer = document.getElementById('user-menu-container');
+            if (!user) return;
+
+            userMenuContainer.classList.remove('hidden');
+            const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
+            const stats = await fetchUserStats(user.id);
+
+            userMenuContainer.innerHTML = `
+                <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
+                <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
+                    <div class="p-4 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
+                            <div class="ml-4">
+                                <p class="text-md font-semibold text-gray-800">${user.nome || 'Cozinha'}</p>
+                                <p class="text-xs text-gray-500">${user.email}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
+                </div>`;
+
+            const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
+            const userMenuDropdown = userMenuContainer.querySelector('#user-menu-dropdown');
+            userMenuButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                userMenuDropdown.classList.toggle('hidden');
+            });
+            userMenuContainer.querySelector('#logout-button').onclick = () => { 
+                localStorage.removeItem('currentUser'); 
+                localStorage.removeItem('currentAdmin'); 
+                window.location.href = './login.html'; 
+            };
+        }
     </script>
 </body>
 </html>
