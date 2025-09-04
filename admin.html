@@ -52,8 +52,15 @@
                 <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
                     <i class="fas fa-edit text-yellow-500 text-3xl mb-4"></i>
                     <h2 class="text-xl font-bold mb-2">Gerenciar Produtos</h2>
-                    <p class="text-gray-600 mb-4">Edite preços, estoque, imagens e exclua produtos.</p>
+                    <p class="text-gray-600 mb-4">Edite preços, imagens e associe ingredientes extras.</p>
                     <a href="./admin-manage-products.html" class="font-semibold text-red-600 hover:text-red-800">Gerenciar ›</a>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
+                    <i class="fas fa-pepper-hot text-yellow-500 text-3xl mb-4"></i>
+                    <h2 class="text-xl font-bold mb-2">Gerenciar Ingredientes</h2>
+                    <p class="text-gray-600 mb-4">Crie e edite os ingredientes adicionais para os produtos.</p>
+                    <a href="./admin-manage-ingredients.html" class="font-semibold text-red-600 hover:text-red-800">Gerenciar ›</a>
                 </div>
 
                 <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
@@ -138,46 +145,6 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            // --- 1. LÓGICA DE SEGURANÇA ---
-            const userString = localStorage.getItem('currentAdmin');
-            let currentAdmin = null;
-
-            if (userString) {
-                currentAdmin = JSON.parse(userString);
-                if (currentAdmin.role !== 'admin') {
-                    alert('Acesso negado. Você não tem permissão de administrador.');
-                    localStorage.removeItem('currentAdmin');
-                    window.location.href = './index.html';
-                    return;
-                }
-            } else {
-                alert('Você precisa estar logado como administrador para acessar esta página.');
-                window.location.href = './login.html';
-                return;
-            }
-
-            // --- 2. LÓGICA DO MENU E UI (DO SEU JEITO) ---
-            const mainMenuButton = document.getElementById('main-menu-button');
-            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
-            mainMenuButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                mainMenuDropdown.classList.toggle('hidden');
-            });
-            
-            await updateNavUI(currentAdmin);
-
-            window.addEventListener('click', (event) => {
-                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target)) {
-                    mainMenuDropdown.classList.add('hidden');
-                }
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target)) {
-                    userMenuDropdown.classList.add('hidden');
-                }
-            });
-        });
-
         async function updateNavUI(user) {
             const userMenuContainer = document.getElementById('user-menu-container');
             const loginButton = document.getElementById('login-button-main');
@@ -198,10 +165,6 @@
                                     <p class="text-md font-semibold text-gray-800">${user.nome || 'Admin'}</p>
                                     <p class="text-xs text-gray-500">${user.email}</p>
                                 </div>
-                            </div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 text-center">
-                                <div><p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p><p class="text-xs text-gray-500">Pedidos</p></div>
-                                <div><p class="text-sm font-semibold text-gray-800">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs text-gray-500">Gasto Total</p></div>
                             </div>
                         </div>
                         <div class="py-2">
@@ -226,6 +189,44 @@
                 userMenuContainer.classList.add('hidden');
             }
         }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userString = localStorage.getItem('currentAdmin');
+            let currentAdmin = null;
+
+            if (userString) {
+                currentAdmin = JSON.parse(userString);
+                if (currentAdmin.role !== 'admin') {
+                    alert('Acesso negado. Você não tem permissão de administrador.');
+                    localStorage.removeItem('currentAdmin');
+                    window.location.href = './index.html';
+                    return;
+                }
+            } else {
+                alert('Você precisa estar logado como administrador para acessar esta página.');
+                window.location.href = './login.html';
+                return;
+            }
+
+            const mainMenuButton = document.getElementById('main-menu-button');
+            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+            mainMenuButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                mainMenuDropdown.classList.toggle('hidden');
+            });
+            
+            await updateNavUI(currentAdmin);
+
+            window.addEventListener('click', (event) => {
+                 if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target)) {
+                    mainMenuDropdown.classList.add('hidden');
+                }
+                const userMenuDropdown = document.getElementById('user-menu-dropdown');
+                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !userMenuDropdown.contains(event.target)) {
+                    userMenuDropdown.classList.add('hidden');
+                }
+            });
+        });
     </script>
 </body>
 </html>

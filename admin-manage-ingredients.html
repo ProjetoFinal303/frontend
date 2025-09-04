@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adicionar Produto - Admin Lanchô</title>
+    <title>Gerenciar Ingredientes - Admin Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -14,6 +14,7 @@
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
+    <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -37,62 +38,48 @@
         </nav>
     </header>
 
+    <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <div class="max-w-4xl mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-800">Adicionar Novo Produto</h1>
+                <h1 class="text-3xl font-bold text-gray-800">Gerenciar Ingredientes</h1>
                 <a href="./admin.html" class="text-sm text-yellow-600 hover:underline">‹ Voltar ao Painel</a>
             </div>
 
-            <form id="add-product-form" class="space-y-6">
-                <div>
-                    <label for="nome" class="block text-sm font-medium text-gray-700">Nome do Produto</label>
-                    <input type="text" id="nome" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
-                </div>
-                <div>
-                    <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
-                    <textarea id="descricao" rows="3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"></textarea>
-                </div>
-                <div>
-                    <label for="preco" class="block text-sm font-medium text-gray-700">Preço (ex: 19.99)</label>
-                    <input type="number" step="0.01" id="preco" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
-                </div>
-                
-                <div>
-                    <label for="categoria" class="block text-sm font-medium text-gray-700">Categoria</label>
-                    <select id="categoria" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
-                        <option value="Sanduíches">Sanduíches</option>
-                        <option value="Combos">Combos</option>
-                        <option value="Acompanhamentos">Acompanhamentos</option>
-                        <option value="Sobremesas">Sobremesas</option>
-                        <option value="Bebidas">Bebidas</option>
-                         <option value="Mais Vendidos">Mais Vendidos</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Imagem do Produto</label>
-                    <div class="mt-1 flex items-center space-x-4">
-                        <img id="image-preview" src="https://placehold.co/100x100/e2e8f0/a0aec0?text=Imagem" alt="Pré-visualização" class="w-24 h-24 rounded-md object-cover bg-gray-100">
-                        <label for="image-upload" class="cursor-pointer bg-yellow-500 text-white font-bold py-2 px-4 rounded-full hover:bg-yellow-600 transition-colors">
-                            <span>Escolher Ficheiro</span>
-                            <input id="image-upload" name="image-upload" type="file" class="sr-only" accept="image/png, image/jpeg">
-                        </label>
+            <!-- Formulário para adicionar novo ingrediente -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h2 class="text-xl font-bold mb-4">Adicionar Novo Ingrediente</h2>
+                <form id="add-ingredient-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label for="nome" class="block text-sm font-medium text-gray-700">Nome do Ingrediente</label>
+                        <input type="text" id="nome" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                    </div>
+                    <div>
+                        <label for="preco" class="block text-sm font-medium text-gray-700">Preço (deixe 0 se for gratuito)</label>
+                        <input type="number" step="0.01" id="preco" value="0.00" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                    </div>
+                    <button type="submit" id="submit-button" class="w-full bg-red-600 text-white font-bold py-2 px-4 rounded-full hover:bg-red-700 transition-colors flex justify-center items-center">
+                        <i class="fas fa-plus mr-2"></i> Adicionar
+                    </button>
+                </form>
+                <p id="form-message" class="text-sm text-center mt-4"></p>
+            </div>
+
+            <!-- Lista de ingredientes existentes -->
+            <div class="bg-white rounded-lg shadow-md">
+                <div id="ingredient-list-container">
+                    <div id="loading-ingredients" class="text-center text-gray-500 p-10">
+                        <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        A carregar ingredientes...
                     </div>
                 </div>
-
-                <div>
-                    <button type="submit" id="submit-button" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-full hover:bg-red-700 transition-colors flex justify-center items-center">
-                        Adicionar Produto
-                    </button>
-                    <p id="form-message" class="text-sm text-center mt-4"></p>
-                </div>
-            </form>
+            </div>
         </div>
     </main>
 
+    <!-- Footer -->
     <footer class="bg-gray-800 text-white mt-auto">
-        <div class="container mx-auto px-4 md:px-8 py-12">
+       <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
                 <div>
                     <h3 class="text-lg font-bold text-yellow-500 mb-4">Lanchô</h3>
@@ -138,81 +125,113 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let loggedUser = null;
 
-        const addProductForm = document.getElementById('add-product-form');
+        const addIngredientForm = document.getElementById('add-ingredient-form');
         const submitButton = document.getElementById('submit-button');
         const formMessage = document.getElementById('form-message');
-        const imageUploadInput = document.getElementById('image-upload');
-        const imagePreview = document.getElementById('image-preview');
+        const ingredientListContainer = document.getElementById('ingredient-list-container');
+        const loadingIngredients = document.getElementById('loading-ingredients');
 
-        imageUploadInput.addEventListener('change', () => {
-            const file = imageUploadInput.files[0];
-            if (file) {
-                imagePreview.src = URL.createObjectURL(file);
+        async function loadIngredients() {
+            try {
+                const { data: ingredients, error } = await supabaseClient.from('Ingrediente').select('*').order('nome');
+                if (error) throw error;
+                
+                loadingIngredients.style.display = 'none';
+
+                if (!ingredients || ingredients.length === 0) {
+                    ingredientListContainer.innerHTML = '<div class="p-4"><p class="text-center text-gray-500 p-10">Nenhum ingrediente cadastrado.</p></div>';
+                    return;
+                }
+
+                ingredientListContainer.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ingrediente</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${ingredients.map(ing => `
+                                    <tr id="ingredient-row-${ing.id}">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${ing.nome}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${parseFloat(ing.preco).toFixed(2)}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                                            <button onclick="deleteIngredient(${ing.id}, '${ing.stripe_price_id}', '${ing.nome.replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-900">Excluir</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                console.error("Erro ao carregar ingredientes:", error);
+                loadingIngredients.innerHTML = `<p class="text-center text-red-500 p-10">Ocorreu um erro ao buscar os ingredientes.</p>`;
             }
-        });
+        }
 
-        addProductForm.addEventListener('submit', async (event) => {
+        addIngredientForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             formMessage.textContent = '';
             submitButton.disabled = true;
-            submitButton.innerHTML = `<svg class="animate-spin h-5 w-5 -ml-1 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processando...`;
+            submitButton.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto" ...></svg>`;
 
             const nome = document.getElementById('nome').value;
-            const descricao = document.getElementById('descricao').value;
             const preco = parseFloat(document.getElementById('preco').value);
-            const categoria = document.getElementById('categoria').value;
-            const imageFile = imageUploadInput.files[0];
-            
+            let stripe_price_id = null;
+
             try {
-                if (!imageFile) throw new Error("A imagem do produto é obrigatória.");
+                if (preco > 0) {
+                    const { data: stripeData, error: stripeError } = await supabaseClient.functions.invoke('add-stripe-product', {
+                        body: { productName: `Adicional: ${nome}`, unitAmount: Math.round(preco * 100) },
+                    });
+                    if (stripeError) throw stripeError;
+                    if (stripeData.error) throw new Error(stripeData.error);
+                    stripe_price_id = stripeData.priceId;
+                }
 
-                const fileName = `${Date.now()}-${imageFile.name}`;
-                const { data: uploadData, error: uploadError } = await supabaseClient.storage
-                    .from('produtos')
-                    .upload(fileName, imageFile);
-                if (uploadError) throw uploadError;
+                const { error: insertError } = await supabaseClient.from('Ingrediente').insert({ nome, preco, stripe_price_id });
+                if (insertError) throw insertError;
 
-                const { data: { publicUrl } } = supabaseClient.storage.from('produtos').getPublicUrl(fileName);
-                const imageUrl = publicUrl;
-
-                const { data: stripeData, error: stripeError } = await supabaseClient.functions.invoke('add-stripe-product', {
-                    body: { 
-                        productName: nome, 
-                        unitAmount: Math.round(preco * 100),
-                        imageUrl: imageUrl
-                    },
-                });
-                if (stripeError) throw stripeError;
-                if (stripeData.error) throw new Error(stripeData.error);
-                
-                const stripe_price_id = stripeData.priceId;
-
-                const { data: produtoData, error: produtoError } = await supabaseClient
-                    .from('Produto')
-                    .insert({ nome, descricao, preco, image_url: imageUrl, stripe_price_id, categoria })
-                    .select()
-                    .single();
-                if (produtoError) throw produtoError;
-
-                const { error: estoqueError } = await supabaseClient
-                    .from('Estoque')
-                    .insert({ id_produto: produtoData.id, quantidade: 0 });
-                if (estoqueError) throw estoqueError;
-
-                formMessage.textContent = 'Produto adicionado com sucesso!';
+                formMessage.textContent = 'Ingrediente adicionado com sucesso!';
                 formMessage.className = 'text-sm text-center mt-4 text-green-600';
-                addProductForm.reset();
-                imagePreview.src = 'https://placehold.co/100x100/e2e8f0/a0aec0?text=Imagem';
+                addIngredientForm.reset();
+                loadIngredients();
 
             } catch (error) {
-                console.error("Erro ao adicionar produto:", error);
+                console.error("Erro ao adicionar ingrediente:", error);
                 formMessage.textContent = `Erro: ${error.message}`;
                 formMessage.className = 'text-sm text-center mt-4 text-red-600';
             } finally {
                 submitButton.disabled = false;
-                submitButton.textContent = 'Adicionar Produto';
+                submitButton.innerHTML = `<i class="fas fa-plus mr-2"></i> Adicionar`;
             }
         });
+
+        async function deleteIngredient(ingredientId, stripePriceId, ingredientName) {
+            if (!confirm(`Tem certeza que quer excluir o ingrediente "${ingredientName}"? Ele será removido de todos os produtos.`)) return;
+
+            try {
+                if (stripePriceId) {
+                    await supabaseClient.functions.invoke('delete-stripe-product', {
+                        body: { priceId: stripePriceId }
+                    });
+                }
+                
+                const { error } = await supabaseClient.from('Ingrediente').delete().eq('id', ingredientId);
+                if (error) throw error;
+
+                alert(`Ingrediente "${ingredientName}" excluído com sucesso.`);
+                document.getElementById(`ingredient-row-${ingredientId}`).remove();
+
+            } catch (error) {
+                console.error("Erro ao excluir ingrediente:", error);
+                alert(`Ocorreu um erro ao excluir o ingrediente: ${error.message}`);
+            }
+        }
 
         async function fetchUserStats(userId) {
             try {
@@ -251,9 +270,6 @@
 
             window.addEventListener('click', (event) => {
                 const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuDropdown.contains(event.target) && !mainMenuButton.contains(event.target)) {
-                    mainMenuDropdown.classList.add('hidden');
-                }
                 if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
                     userMenuDropdown.classList.add('hidden');
                 }
@@ -281,10 +297,6 @@
                                     <p class="text-xs text-gray-500">${user.email}</p>
                                 </div>
                             </div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 text-center">
-                                <div><p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p><p class="text-xs text-gray-500">Pedidos</p></div>
-                                <div><p class="text-sm font-semibold text-gray-800">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs text-gray-500">Gasto Total</p></div>
-                            </div>
                         </div>
                         <div class="py-2">
                             <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
@@ -305,6 +317,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await setupMenusAndAuth();
+            await loadIngredients();
         });
     </script>
 </body>
