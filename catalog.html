@@ -58,6 +58,26 @@
             background-color: #d97706;
             border-color: #d97706;
         }
+
+        /* Estilos para o Contador de Quantidade "Exuberante" */
+        .quantity-stepper { display: flex; align-items: center; gap: 0.5rem; }
+        .quantity-btn {
+            width: 2rem; height: 2rem; border-radius: 9999px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: white; cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .quantity-btn:active { transform: scale(0.95); }
+        .quantity-minus { background-color: #ef4444; } /* bg-red-500 */
+        .quantity-minus:hover { background-color: #dc2626; } /* hover:bg-red-600 */
+        .quantity-plus { background-color: #22c55e; } /* bg-green-500 */
+        .quantity-plus:hover { background-color: #16a34a; } /* hover:bg-green-600 */
+        .quantity-input {
+            width: 3rem; text-align: center; font-weight: 600;
+            border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.25rem;
+        }
+        .quantity-input::-webkit-outer-spin-button, .quantity-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .quantity-input[type=number] { -moz-appearance: textfield; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
@@ -244,33 +264,56 @@
 
         function loadCart() {
             const savedCart = localStorage.getItem('shoppingCart');
+            let tempCart = [];
             if (savedCart) {
                 try {
-                    let parsedCart = JSON.parse(savedCart);
-                    // **CORREÇÃO IMPORTANTE**: Filtra itens inválidos do carrinho antigo
-                    cart = parsedCart.filter(item => item && item.product && typeof item.product.preco !== 'undefined');
+                    const parsedCart = JSON.parse(savedCart);
+                    if (Array.isArray(parsedCart)) {
+                        tempCart = parsedCart.filter(item => {
+                            if (item && item.product && typeof item.product.preco !== 'undefined' && Array.isArray(item.customizations)) {
+                                return true;
+                            }
+                            if (item && typeof item.preco !== 'undefined' && !item.product) {
+                                return true; 
+                            }
+                            return false;
+                        }).map(item => {
+                            if (!item.product) {
+                                return {
+                                    id: `${item.id}-`,
+                                    product: item,
+                                    customizations: [],
+                                    quantity: item.quantity || 1
+                                };
+                            }
+                            return item;
+                        });
+                    }
                 } catch (e) {
                     console.error("Erro ao carregar carrinho, limpando dados corrompidos.", e);
-                    cart = [];
+                    tempCart = [];
                     localStorage.removeItem('shoppingCart');
                 }
             }
+            cart = tempCart;
+            saveCart();
             updateCartUI();
         }
 
-        function addToCart(product, selectedIngredients = []) {
-            const cartItem = {
-                id: `${product.id}-${selectedIngredients.map(i => i.id).sort().join('-')}`,
-                product: product,
-                ingredients: selectedIngredients,
-                quantity: 1
-            };
+        function addToCart(product, customizations) {
+            const customId = customizations.map(c => `${c.id}:${c.quantity}`).sort().join('|');
+            const cartItemId = `${product.id}-${customId}`;
 
-            const existingItem = cart.find(item => item.id === cartItem.id);
+            const existingItem = cart.find(item => item.id === cartItemId);
             if (existingItem) {
                 existingItem.quantity++;
             } else {
-                cart.push(cartItem);
+                cart.push({
+                    id: cartItemId,
+                    product: product,
+                    customizations: customizations,
+                    quantity: 1
+                });
             }
 
             saveCart();
@@ -288,15 +331,19 @@
             } else {
                 cart.forEach(item => {
                     const itemBasePrice = item.product.preco || 0;
-                    const ingredientsPrice = item.ingredients.reduce((sum, ing) => sum + (ing.preco || 0), 0);
-                    const singleItemPrice = itemBasePrice + ingredientsPrice;
+                    const customizationPrice = item.customizations.reduce((sum, cust) => sum + (cust.price * cust.quantity), 0);
+                    const singleItemPrice = itemBasePrice + customizationPrice;
                     const itemTotal = singleItemPrice * item.quantity;
                     total += itemTotal;
                     count += item.quantity;
                     
-                    const ingredientsHtml = item.ingredients.map(ing => 
-                        `<li class="text-xs text-gray-500 ml-5">+ ${ing.nome} (R$ ${parseFloat(ing.preco).toFixed(2)})</li>`
-                    ).join('');
+                    const customizationsHtml = item.customizations
+                        .filter(cust => cust.quantity !== 0)
+                        .map(cust => {
+                            if (cust.quantity > 0) return `<li class="text-xs text-green-600 ml-5">+ ${cust.quantity}x ${cust.name}</li>`;
+                            if (cust.quantity < 0) return `<li class="text-xs text-red-600 ml-5">Sem ${cust.name}</li>`;
+                            return '';
+                        }).join('');
 
                     cartItemsContainer.innerHTML += `
                         <div class="flex items-center justify-between py-4 border-b">
@@ -304,7 +351,7 @@
                                 <img src="${item.product.image_url || 'https://placehold.co/64x64'}" class="w-16 h-16 rounded-md object-cover mr-4">
                                 <div>
                                     <p class="font-semibold">${item.product.nome}</p>
-                                    <ul class="mt-1">${ingredientsHtml}</ul>
+                                    <ul class="mt-1">${customizationsHtml}</ul>
                                     <p class="text-sm text-gray-600 mt-2 font-bold">Total do item: R$ ${itemTotal.toFixed(2)}</p>
                                 </div>
                             </div>
@@ -352,24 +399,39 @@
             try {
                 const line_items = [];
                 cart.forEach(item => {
-                    if (!item.product.stripe_price_id) throw new Error(`O produto "${item.product.nome}" não está configurado para venda.`);
-                    line_items.push({ price: item.product.stripe_price_id, quantity: item.quantity });
+                    const itemBasePrice = item.product.preco || 0;
+                    const customizationPrice = item.customizations.reduce((sum, cust) => sum + (cust.price * cust.quantity), 0);
+                    const finalPrice = itemBasePrice + customizationPrice;
+                    
+                    if (finalPrice < 0.50 && line_items.length === cart.length - 1 && cart.length > 0) return; // Stripe minimum is 0.50
+                    
+                    const customizationsText = item.customizations
+                        .filter(c => c.quantity !== 0)
+                        .map(c => {
+                            if (c.quantity > 0) return `+${c.quantity} ${c.name}`;
+                            if (c.quantity < 0) return `Sem ${c.name}`;
+                            return null;
+                        }).filter(Boolean).join(', ');
 
-                    item.ingredients.forEach(ing => {
-                        if (ing.preco > 0) {
-                            if (!ing.stripe_price_id) throw new Error(`O ingrediente "${ing.nome}" não está configurado para venda.`);
-                            line_items.push({ price: ing.stripe_price_id, quantity: item.quantity });
-                        }
+                    const description = customizationsText ? `(${customizationsText})` : null;
+
+                    line_items.push({
+                        price_data: {
+                            currency: 'brl',
+                            product_data: {
+                                name: item.product.nome,
+                                description: description,
+                                images: [item.product.image_url]
+                            },
+                            unit_amount: Math.round(finalPrice * 100),
+                        },
+                        quantity: item.quantity,
                     });
                 });
+                
+                if (line_items.length === 0) throw new Error("Seu carrinho está vazio ou os itens não têm preço.");
 
-                if (line_items.length === 0 && cart.length > 0) {
-                     throw new Error("Os produtos no seu carrinho são gratuitos e não podem ser processados.");
-                } else if (line_items.length === 0) {
-                     throw new Error("Seu carrinho está vazio.");
-                }
-
-                const { data, error } = await supabaseClient.functions.invoke('create-cart-checkout', { 
+                const { data, error } = await supabaseClient.functions.invoke('create-checkout-session', { 
                     body: { line_items, clienteId: loggedUser.id, customerEmail: loggedUser.email }, 
                 });
 
@@ -400,6 +462,8 @@
                     .select(`
                         *,
                         Produto_Ingrediente (
+                            quantidade_padrao,
+                            is_customizable,
                             Ingrediente (*)
                         )
                     `);
@@ -413,7 +477,11 @@
                 }
                 
                 products.forEach(p => {
-                    p.ingredients = p.Produto_Ingrediente.map(pi => pi.Ingrediente).filter(Boolean);
+                    p.ingredients = p.Produto_Ingrediente.map(pi => ({
+                        ...pi.Ingrediente,
+                        quantidade_padrao: pi.quantidade_padrao,
+                        is_customizable: pi.is_customizable,
+                    })).filter(ing => ing.id);
                 });
 
                 const productsByCategory = products.reduce((acc, product) => {
@@ -434,7 +502,7 @@
                             <h2 class="text-3xl font-bold text-gray-800 mb-8">${category}</h2>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 ${productsByCategory[category].map(p => {
-                                    const hasCustomization = p.ingredients && p.ingredients.length > 0;
+                                    const hasCustomization = p.ingredients.some(i => i.is_customizable);
                                     const buttonText = hasCustomization ? 'Personalizar' : 'Adicionar';
                                     const buttonIcon = hasCustomization ? 'fa-wand-magic-sparkles' : 'fa-cart-plus';
 
@@ -459,18 +527,6 @@
                         menuContainer.appendChild(section);
                     }
                 });
-
-                document.querySelectorAll('.action-button').forEach(el => {
-                    el.addEventListener('click', (e) => {
-                        const product = JSON.parse(e.currentTarget.dataset.product);
-                        if (product.ingredients && product.ingredients.length > 0) {
-                            openCustomizationModal(product);
-                        } else {
-                            addToCart(product);
-                        }
-                    });
-                });
-
             } catch (error) {
                 console.error('Erro ao carregar produtos:', error);
                 loadingMessage.textContent = `Falha ao carregar o cardápio: ${error.message}`;
@@ -499,18 +555,22 @@
                     <button id="close-customization-modal" class="p-2 -mt-2 -mr-2 rounded-full text-gray-400 hover:bg-gray-200 text-2xl">&times;</button>
                 </div>
                 <div class="p-6 flex-grow overflow-y-auto">
-                    <h3 class="font-semibold text-lg mb-4">Adicione seus ingredientes preferidos:</h3>
                     <div id="ingredients-options-list" class="space-y-3">
-                        ${product.ingredients.map(ing => `
-                            <label class="ingredient-option flex items-center p-4 rounded-lg cursor-pointer">
-                                <input type="checkbox" data-price="${ing.preco}" data-id="${ing.id}" class="hidden">
-                                <img src="${ing.image_url || 'https://placehold.co/40x40'}" class="w-10 h-10 rounded-full object-cover mr-4">
-                                <span class="flex-grow font-medium text-gray-800">${ing.nome}</span>
-                                <span class="font-semibold text-green-600">+ R$ ${parseFloat(ing.preco).toFixed(2)}</span>
-                                <div class="w-8 h-8 flex items-center justify-center ml-4 border-2 border-gray-300 rounded-full checkmark-circle">
-                                    <i class="fas fa-check text-white"></i>
+                        ${product.ingredients.filter(i => i.is_customizable).map(ing => `
+                            <div class="flex items-center justify-between p-2 rounded-lg">
+                                <div class="flex items-center">
+                                    <img src="${ing.image_url || 'https://placehold.co/40x40'}" class="w-10 h-10 rounded-full object-cover mr-4">
+                                    <div>
+                                        <p class="font-medium text-gray-800">${ing.nome}</p>
+                                        <p class="text-sm text-green-600">+ R$ ${parseFloat(ing.preco).toFixed(2)}</p>
+                                    </div>
                                 </div>
-                            </label>
+                                <div class="quantity-stepper">
+                                    <button type="button" class="quantity-btn quantity-minus">-</button>
+                                    <input type="number" value="${ing.quantidade_padrao}" min="0" class="quantity-input" data-price="${ing.preco}" data-id="${ing.id}" data-name="${ing.nome}" data-base-qty="${ing.quantidade_padrao}">
+                                    <button type="button" class="quantity-btn quantity-plus">+</button>
+                                </div>
+                            </div>
                         `).join('')}
                     </div>
                 </div>
@@ -526,30 +586,52 @@
             `;
             
             const totalElement = document.getElementById('customization-total');
-            const options = document.querySelectorAll('.ingredient-option');
-            
-            options.forEach(option => {
-                option.addEventListener('click', () => {
-                    const checkbox = option.querySelector('input');
-                    checkbox.checked = !checkbox.checked;
-                    option.classList.toggle('selected', checkbox.checked);
-                    
-                    let newTotal = product.preco;
-                    document.querySelectorAll('#ingredients-options-list input:checked').forEach(checked => {
-                        newTotal += parseFloat(checked.dataset.price);
-                    });
-                    totalElement.textContent = `R$ ${newTotal.toFixed(2)}`;
+            const ingredientInputs = document.querySelectorAll('.quantity-input');
+
+            function updateTotal() {
+                let newTotal = product.preco;
+                ingredientInputs.forEach(input => {
+                    const quantity = parseInt(input.value);
+                    const baseQuantity = parseInt(input.dataset.baseQty);
+                    const price = parseFloat(input.dataset.price);
+                    if (quantity > baseQuantity) {
+                        newTotal += (quantity - baseQuantity) * price;
+                    }
+                });
+                totalElement.textContent = `R$ ${newTotal.toFixed(2)}`;
+            }
+            updateTotal();
+
+            document.querySelectorAll('.quantity-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const input = e.currentTarget.parentElement.querySelector('.quantity-input');
+                    let currentValue = parseInt(input.value);
+                    if (button.classList.contains('quantity-plus')) {
+                        input.value = currentValue + 1;
+                    } else if (button.classList.contains('quantity-minus') && currentValue > 0) {
+                        input.value = currentValue - 1;
+                    }
+                    updateTotal();
                 });
             });
 
+            ingredientInputs.forEach(input => input.addEventListener('change', updateTotal));
+
             document.getElementById('add-customized-to-cart').onclick = () => {
-                const selectedIngredients = [];
-                document.querySelectorAll('#ingredients-options-list input:checked').forEach(checkbox => {
-                    const id = parseInt(checkbox.dataset.id);
-                    const ingredientData = product.ingredients.find(ing => ing.id === id);
-                    if(ingredientData) selectedIngredients.push(ingredientData);
+                const customizations = [];
+                ingredientInputs.forEach(input => {
+                    const quantity = parseInt(input.value);
+                    const baseQuantity = parseInt(input.dataset.baseQty);
+                    if (quantity !== baseQuantity) {
+                        customizations.push({
+                            id: parseInt(input.dataset.id),
+                            name: input.dataset.name,
+                            price: parseFloat(input.dataset.price),
+                            quantity: quantity - baseQuantity,
+                        });
+                    }
                 });
-                addToCart(product, selectedIngredients);
+                addToCart(product, customizations);
             };
 
             document.getElementById('close-customization-modal').onclick = closeCustomizationModal;
@@ -660,7 +742,24 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await setupMenusAndAuth();
             loadCart();
-            loadProductsAndIngredients();
+            await loadProductsAndIngredients();
+
+            // *** CORREÇÃO FINAL: EVENT DELEGATION ***
+            // Este listener é adicionado ao container principal e "ouve" os cliques que acontecem dentro dele.
+            // Isto garante que os botões funcionem mesmo que sejam adicionados à página depois de ela carregar.
+            menuContainer.addEventListener('click', (event) => {
+                const button = event.target.closest('.action-button');
+                if (button) {
+                    const product = JSON.parse(button.dataset.product);
+                    const hasCustomization = product.ingredients && product.ingredients.some(i => i.is_customizable);
+                    if (hasCustomization) {
+                        openCustomizationModal(product);
+                    } else {
+                        // Se não há ingredientes personalizáveis, adiciona diretamente ao carrinho sem customizações.
+                        addToCart(product, []);
+                    }
+                }
+            });
         });
     </script>
 </body>
