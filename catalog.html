@@ -4,13 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cardápio - Lanchô</title>
-    <!-- Tailwind CSS para estilização rápida e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca do Supabase para interagir com o backend -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Google Fonts para uma tipografia mais agradável -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    <!-- Font Awesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -78,7 +74,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -106,7 +101,6 @@
         </nav>
     </header>
 
-    <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <h1 class="text-4xl font-bold text-center mb-10 text-gray-800">Nosso Cardápio</h1>
         <div id="menu-container" class="space-y-16">
@@ -117,21 +111,16 @@
         </div>
     </main>
 
-    <!-- Modal de Personalização -->
     <div id="customization-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 hidden opacity-0 modal-backdrop">
         <div id="customization-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform scale-95 modal-content">
-            <!-- Conteúdo do modal de personalização é gerado dinamicamente -->
-        </div>
+            </div>
     </div>
 
-    <!-- Modal de Detalhes do Produto e Avaliações -->
     <div id="product-details-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 hidden opacity-0 modal-backdrop">
         <div id="product-details-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transform scale-95 modal-content">
-            <!-- Conteúdo do modal de detalhes é gerado dinamicamente -->
-        </div>
+            </div>
     </div>
     
-    <!-- Painel do Carrinho -->
     <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-40 hidden opacity-0"></div>
     <div id="cart-panel" class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col" style="transform: translateX(100%);">
         <div class="flex justify-between items-center p-4 border-b">
@@ -150,7 +139,6 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -192,7 +180,6 @@
         </div>
     </footer>
 
-    <!-- Elemento da Notificação (Toast) -->
     <div id="toast-notification">
         <i class="fas fa-check-circle mr-3 text-green-400"></i>
         <span id="toast-message"></span>
@@ -530,7 +517,7 @@
                 </div>
             </div>`;
         }
-
+        
         // Funções dos Modais (Personalização e Detalhes)
         // =========================================================
 
@@ -645,30 +632,44 @@
             
             productDetailsModalContent.innerHTML = `<div class="p-8 text-center"><svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
             
-            // ==================== INÍCIO DA MUDANÇA ====================
-            // Trocamos a chamada .from().select() pela chamada .rpc()
             const { data: reviews, error } = await supabaseClient
-                .rpc('get_reviews_for_product', { product_id_param: productId });
-            // ===================== FIM DA MUDANÇA ======================
+                .from('avaliacoes')
+                .select(`
+                    id, nota, comentario, created_at, cliente_id,
+                    cliente:Cliente ( nome, avatar_url )
+                `)
+                .eq('produto_id', productId)
+                .order('created_at', { ascending: false });
 
             if(error) {
-                console.error("Erro ao buscar avaliações via RPC:", error);
+                console.error("Erro ao buscar avaliações:", error);
                 showToast('Erro ao carregar avaliações: ' + error.message, true);
             }
             
             const reviewsHtml = reviews && reviews.length > 0
                 ? reviews.map(review => {
-                    // Ajustamos os nomes dos campos para corresponder ao que a função RPC retorna
-                    const avatar = review.cliente_avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.cliente_nome)}&background=fde68a&color=c2410c`;
+                    const avatar = (review.cliente && review.cliente.avatar_url) ? review.cliente.avatar_url : `https://ui-avatars.com/api/?name=${encodeURIComponent(review.cliente ? review.cliente.nome : 'U')}&background=fde68a&color=c2410c`;
                     let starsHtml = Array.from({length: 5}, (_, i) => `<i class="star ${i < review.nota ? 'filled' : ''} fa-solid fa-star text-sm"></i>`).join('');
+                    
+                    const actionButtons = loggedUser && loggedUser.id === review.cliente_id ? `
+                        <div class="ml-auto space-x-3">
+                            <button onclick="editReview(${review.id}, ${productId})" class="text-xs text-blue-600 hover:underline font-semibold">Editar</button>
+                            <button onclick="deleteReview(${review.id}, ${productId})" class="text-xs text-red-600 hover:underline font-semibold">Excluir</button>
+                        </div>
+                    ` : '';
+
                     return `
-                    <div class="py-4 border-b">
+                    <div id="review-${review.id}" class="py-4 border-b last:border-b-0">
                         <div class="flex items-center mb-2">
                             <img src="${avatar}" class="w-10 h-10 rounded-full object-cover mr-3">
-                            <div><p class="font-semibold">${review.cliente_nome}</p><p class="text-xs text-gray-500">${new Date(review.created_at).toLocaleDateString('pt-BR')}</p></div>
-                            <div class="star-rating ml-auto">${starsHtml}</div>
+                            <div>
+                                <p class="font-semibold">${review.cliente ? review.cliente.nome : 'Anônimo'}</p>
+                                <p class="text-xs text-gray-500">${new Date(review.created_at).toLocaleDateString('pt-BR')}</p>
+                            </div>
+                            <div class="star-rating ml-4">${starsHtml}</div>
+                            ${actionButtons}
                         </div>
-                        <p class="text-gray-700">${review.comentario || ''}</p>
+                        <p class="text-gray-700 pl-12">${review.comentario || ''}</p>
                     </div>`;
                 }).join('')
                 : '<p class="text-center text-gray-500 py-6">Este produto ainda não tem avaliações. Seja o primeiro!</p>';
@@ -713,9 +714,11 @@
 
                     if (insertError) { showToast('Erro ao enviar avaliação: ' + insertError.message, true); return; }
                     
-                    const newTotalReviews = (reviews?.length || 0) + 1;
-                    const newTotalScore = (reviews?.reduce((sum, r) => sum + r.nota, 0) || 0) + parseInt(nota);
-                    const newAverage = newTotalScore / newTotalReviews;
+                    const { data: allReviews, error: refetchError } = await supabaseClient.from('avaliacoes').select('nota').eq('produto_id', productId);
+                    if(refetchError) { showToast('Erro ao recalcular a média: ' + refetchError.message, true); return; }
+
+                    const newTotalReviews = allReviews.length;
+                    const newAverage = allReviews.reduce((sum, r) => sum + r.nota, 0) / newTotalReviews;
 
                     await supabaseClient.from('Produto').update({ total_avaliacoes: newTotalReviews, media_avaliacoes: newAverage.toFixed(2) }).eq('id', productId);
                     
@@ -734,7 +737,7 @@
                 document.body.classList.remove('overflow-hidden'); 
             }, 300);
         }
-        
+
         // Funções de Autenticação e UI do Header
         // =========================================================
         async function setupMenusAndAuth() {
@@ -779,6 +782,82 @@
             }
         }
         
+        // --- NOVAS FUNÇÕES PARA EDITAR E EXCLUIR AVALIAÇÕES ---
+        
+        async function deleteReview(reviewId, productId) {
+            if (!confirm('Tem certeza que deseja excluir sua avaliação?')) return;
+            try {
+                const { error: deleteError } = await supabaseClient.from('avaliacoes').delete().eq('id', reviewId);
+                if (deleteError) throw deleteError;
+                
+                const { data: remainingReviews, error: remainingError } = await supabaseClient.from('avaliacoes').select('nota').eq('produto_id', productId);
+                if (remainingError) throw remainingError;
+
+                const totalReviews = remainingReviews.length;
+                const averageRating = totalReviews > 0 ? remainingReviews.reduce((sum, r) => sum + r.nota, 0) / totalReviews : 0;
+
+                await supabaseClient.from('Produto').update({ total_avaliacoes: totalReviews, media_avaliacoes: averageRating.toFixed(2) }).eq('id', productId);
+                
+                showToast('Avaliação excluída com sucesso!');
+                await openProductDetailsModal(productId);
+                await loadProductsAndIngredients();
+            } catch (error) {
+                console.error('Erro ao excluir avaliação:', error);
+                showToast(`Erro ao excluir avaliação: ${error.message}`, true);
+            }
+        }
+
+        function editReview(reviewId, productId) {
+            const reviewElement = document.getElementById(`review-${reviewId}`);
+            if (!reviewElement) return;
+
+            const currentComment = reviewElement.querySelector('p.text-gray-700').textContent;
+            const currentRating = reviewElement.querySelectorAll('.star.filled').length;
+
+            reviewElement.innerHTML = `
+                <div class="bg-blue-50 p-4 rounded-md border border-blue-200">
+                    <h4 class="font-bold mb-2">Editando sua avaliação</h4>
+                    <div class="review-stars-input mb-2">
+                        <input type="radio" id="edit-star5" name="edit-rating" value="5" ${currentRating === 5 ? 'checked' : ''} required/><label for="edit-star5" title="5 estrelas">★</label>
+                        <input type="radio" id="edit-star4" name="edit-rating" value="4" ${currentRating === 4 ? 'checked' : ''}/><label for="edit-star4" title="4 estrelas">★</label>
+                        <input type="radio" id="edit-star3" name="edit-rating" value="3" ${currentRating === 3 ? 'checked' : ''}/><label for="edit-star3" title="3 estrelas">★</label>
+                        <input type="radio" id="edit-star2" name="edit-rating" value="2" ${currentRating === 2 ? 'checked' : ''}/><label for="edit-star2" title="2 estrelas">★</label>
+                        <input type="radio" id="edit-star1" name="edit-rating" value="1" ${currentRating === 1 ? 'checked' : ''}/><label for="edit-star1" title="1 estrela">★</label>
+                    </div>
+                    <textarea id="edit-review-comment" class="w-full border rounded-md p-2" rows="3">${currentComment}</textarea>
+                    <div class="mt-2 flex justify-end space-x-2">
+                        <button onclick="openProductDetailsModal(${productId})" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-1 px-3 rounded-full">Cancelar</button>
+                        <button onclick="saveReview(${reviewId}, ${productId})" class="text-sm bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-full">Salvar</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function saveReview(reviewId, productId) {
+            const newNota = document.querySelector('input[name="edit-rating"]:checked').value;
+            const newComentario = document.getElementById('edit-review-comment').value;
+
+            try {
+                const { error: updateReviewError } = await supabaseClient.from('avaliacoes').update({ nota: newNota, comentario: newComentario }).eq('id', reviewId);
+                if (updateReviewError) throw updateReviewError;
+
+                const { data: allReviews, error: fetchReviewsError } = await supabaseClient.from('avaliacoes').select('nota').eq('produto_id', productId);
+                if (fetchReviewsError) throw fetchReviewsError;
+
+                const totalReviews = allReviews.length;
+                const averageRating = totalReviews > 0 ? allReviews.reduce((sum, r) => sum + r.nota, 0) / totalReviews : 0;
+
+                await supabaseClient.from('Produto').update({ total_avaliacoes: totalReviews, media_avaliacoes: averageRating.toFixed(2) }).eq('id', productId);
+
+                showToast('Avaliação atualizada com sucesso!');
+                await openProductDetailsModal(productId);
+                await loadProductsAndIngredients();
+            } catch (error) {
+                console.error('Erro ao salvar avaliação:', error);
+                showToast(`Erro ao salvar avaliação: ${error.message}`, true);
+            }
+        }
+        
         // Ponto de Entrada da Página
         // =========================================================
         document.addEventListener('DOMContentLoaded', async () => {
@@ -813,4 +892,3 @@
     </script>
 </body>
 </html>
-
