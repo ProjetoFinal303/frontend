@@ -433,9 +433,8 @@
 
         async function loadProductsAndIngredients() {
             try {
-                // ALTERAÇÃO AQUI: de 'Produto' para 'produtos'
                 const { data: products, error } = await supabaseClient
-                    .from('produtos')
+                    .from('Produto')
                     .select(`*, Produto_Ingrediente (quantidade_padrao, is_customizable, Ingrediente (*))`);
 
                 if (error) throw error;
@@ -721,8 +720,7 @@
                     const newTotalReviews = allReviews.length;
                     const newAverage = allReviews.reduce((sum, r) => sum + r.nota, 0) / newTotalReviews;
 
-                    // ALTERAÇÃO AQUI: de 'Produto' para 'produtos'
-                    await supabaseClient.from('produtos').update({ total_avaliacoes: newTotalReviews, media_avaliacoes: newAverage.toFixed(2) }).eq('id', productId);
+                    await supabaseClient.from('Produto').update({ total_avaliacoes: newTotalReviews, media_avaliacoes: newAverage.toFixed(2) }).eq('id', productId);
                     
                     showToast('Avaliação enviada com sucesso!');
                     await openProductDetailsModal(productId);
@@ -798,8 +796,7 @@
                 const totalReviews = remainingReviews.length;
                 const averageRating = totalReviews > 0 ? remainingReviews.reduce((sum, r) => sum + r.nota, 0) / totalReviews : 0;
 
-                // ALTERAÇÃO AQUI: de 'Produto' para 'produtos'
-                await supabaseClient.from('produtos').update({ total_avaliacoes: totalReviews, media_avaliacoes: averageRating.toFixed(2) }).eq('id', productId);
+                await supabaseClient.from('Produto').update({ total_avaliacoes: totalReviews, media_avaliacoes: averageRating.toFixed(2) }).eq('id', productId);
                 
                 showToast('Avaliação excluída com sucesso!');
                 await openProductDetailsModal(productId);
@@ -850,8 +847,7 @@
                 const totalReviews = allReviews.length;
                 const averageRating = totalReviews > 0 ? allReviews.reduce((sum, r) => sum + r.nota, 0) / totalReviews : 0;
 
-                // ALTERAÇÃO AQUI: de 'Produto' para 'produtos'
-                await supabaseClient.from('produtos').update({ total_avaliacoes: totalReviews, media_avaliacoes: averageRating.toFixed(2) }).eq('id', productId);
+                await supabaseClient.from('Produto').update({ total_avaliacoes: totalReviews, media_avaliacoes: averageRating.toFixed(2) }).eq('id', productId);
 
                 showToast('Avaliação atualizada com sucesso!');
                 await openProductDetailsModal(productId);
