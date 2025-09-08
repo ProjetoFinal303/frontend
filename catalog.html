@@ -70,6 +70,39 @@
             color: #f59e0b;
         }
         .review-stars-input label:hover { transform: scale(1.1); }
+
+        /* Estilos para a Confirmação Exuberante de Avaliação */
+        .review-confirmation-container {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            animation: fadeInScaleUp 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+        }
+        @keyframes fadeInScaleUp {
+            from { opacity: 0; transform: scale(0.85); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .review-confirmation-icon {
+            font-size: 4rem;
+            line-height: 1;
+            color: #22c55e; /* green-500 */
+            animation: iconPop 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes iconPop {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .review-confirmation-title {
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 900; /* font-black */
+            margin-top: 1rem;
+            color: #1f2937; /* gray-800 */
+        }
+        .review-confirmation-message {
+            color: #4b5563; /* gray-600 */
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
@@ -361,8 +394,8 @@
         // =========================================================
         checkoutButton.addEventListener('click', async () => {
             if (!loggedUser) {
-                alert('Você precisa fazer login para finalizar a compra!');
-                window.location.href = './login.html';
+                showToast('Você precisa fazer login para finalizar a compra!', true);
+                setTimeout(() => { window.location.href = './login.html'; }, 1500);
                 return;
             }
             
@@ -619,6 +652,20 @@
             }, 300);
         }
 
+        // NOVA FUNÇÃO PARA CONFIRMAÇÃO EXUBERANTE
+        function showExuberantConfirmation(container, title, message) {
+             container.innerHTML = `
+                <div class="review-confirmation-container">
+                    <div class="review-confirmation-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="review-confirmation-title">${title}</h3>
+                    <p class="review-confirmation-message">${message}</p>
+                </div>
+            `;
+        }
+
+
         async function openProductDetailsModal(productId) {
             const product = allProducts.find(p => p.id === productId);
             if (!product) return;
@@ -675,7 +722,7 @@
                 : '<p class="text-center text-gray-500 py-6">Este produto ainda não tem avaliações. Seja o primeiro!</p>';
             
             const addReviewHtml = loggedUser
-                ? `<div class="bg-yellow-50 p-4 rounded-lg">
+                ? `<div id="review-box" class="bg-yellow-50 p-4 rounded-lg">
                        <h4 class="font-bold text-lg mb-2">Deixe sua avaliação</h4>
                        <form id="review-form">
                            <div class="review-stars-input mb-2">
@@ -686,7 +733,7 @@
                                <input type="radio" id="star1" name="rating" value="1"/><label for="star1" title="1 estrela">★</label>
                            </div>
                            <textarea id="review-comment" class="w-full border rounded-md p-2" rows="3" placeholder="Escreva seu comentário..."></textarea>
-                           <button type="submit" class="mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full">Enviar Avaliação</button>
+                           <button type="submit" class="mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full transition-transform hover:scale-105">Enviar Avaliação</button>
                        </form>
                    </div>`
                 : `<p class="text-center text-gray-500 py-4 bg-gray-100 rounded-md">Você precisa <a href="./login.html" class="text-yellow-600 font-semibold">fazer login</a> para deixar uma avaliação.</p>`;
@@ -707,9 +754,15 @@
                 reviewForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     
+                    const submitButton = reviewForm.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = `<svg class="animate-spin h-5 w-5 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+
                     const notaRadio = reviewForm.querySelector('input[name="rating"]:checked');
                     if (!notaRadio) {
                         showToast('Por favor, selecione uma nota de 1 a 5 estrelas.', true);
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Enviar Avaliação';
                         return;
                     }
                     const nota = parseInt(notaRadio.value);
@@ -720,14 +773,22 @@
                     if (insertError) { 
                         showToast('Erro ao enviar avaliação: ' + insertError.message, true); 
                         console.error("Erro ao inserir avaliação:", insertError);
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Enviar Avaliação';
                         return; 
                     }
                     
-                    // A LÓGICA DE RECALCULAR FOI REMOVIDA DAQUI, POIS O BANCO DE DADOS FARÁ ISSO
-                    
-                    showToast('Avaliação enviada com sucesso!');
-                    await loadProductsAndIngredients(); // Atualiza a listagem principal de produtos (com a nova média)
-                    await openProductDetailsModal(productId); // Atualiza o modal com a nova avaliação
+                    const reviewBox = document.getElementById('review-box');
+                    showExuberantConfirmation(
+                        reviewBox,
+                        'Avaliação Recebida!',
+                        'Sua opinião é o nosso ingrediente secreto. Obrigado por contribuir!'
+                    );
+
+                    setTimeout(async () => {
+                         await loadProductsAndIngredients();
+                         await openProductDetailsModal(productId);
+                    }, 3500);
                 });
             }
         }
@@ -785,23 +846,36 @@
             }
         }
         
-        // --- NOVAS FUNÇÕES PARA EDITAR E EXCLUIR AVALIAÇÕES ---
+        // --- FUNÇÕES PARA EDITAR E EXCLUIR AVALIAÇÕES ---
         
-        async function deleteReview(reviewId, productId) {
-            if (!confirm('Tem certeza que deseja excluir sua avaliação?')) return;
-            try {
-                const { error: deleteError } = await supabaseClient.from('avaliacoes').delete().eq('id', reviewId);
-                if (deleteError) throw deleteError;
-                
-                // A lógica de recalcular foi removida daqui, pois o banco de dados fará isso via trigger
-                
-                showToast('Avaliação excluída com sucesso!');
-                await loadProductsAndIngredients();
-                await openProductDetailsModal(productId);
-            } catch (error) {
-                console.error('Erro ao excluir avaliação:', error);
-                showToast(`Erro ao excluir avaliação: ${error.message}`, true);
-            }
+        function deleteReview(reviewId, productId) {
+             const reviewElement = document.getElementById(`review-${reviewId}`);
+             if (!reviewElement) return;
+
+             reviewElement.innerHTML = `
+                <div class="bg-red-50 p-4 rounded-lg border border-red-200 text-center">
+                    <p class="font-bold text-red-800">Tem certeza que deseja excluir esta avaliação?</p>
+                    <p class="text-sm text-red-700 mt-1">Esta ação não pode ser desfeita.</p>
+                    <div class="mt-4 flex justify-center space-x-3">
+                         <button onclick="openProductDetailsModal(${productId})" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-1 px-4 rounded-full">Cancelar</button>
+                         <button id="confirm-delete-${reviewId}" class="text-sm bg-red-600 hover:bg-red-700 text-white font-semibold py-1 px-4 rounded-full">Excluir</button>
+                    </div>
+                </div>
+             `;
+             
+             document.getElementById(`confirm-delete-${reviewId}`).addEventListener('click', async () => {
+                 try {
+                    const { error: deleteError } = await supabaseClient.from('avaliacoes').delete().eq('id', reviewId);
+                    if (deleteError) throw deleteError;
+                    
+                    showToast('Avaliação excluída com sucesso!');
+                    await loadProductsAndIngredients();
+                    await openProductDetailsModal(productId);
+                } catch (error) {
+                    console.error('Erro ao excluir avaliação:', error);
+                    showToast(`Erro ao excluir avaliação: ${error.message}`, true);
+                }
+             });
         }
 
         function editReview(reviewId, productId) {
@@ -842,8 +916,6 @@
             try {
                 const { error: updateReviewError } = await supabaseClient.from('avaliacoes').update({ nota: newNota, comentario: newComentario }).eq('id', reviewId);
                 if (updateReviewError) throw updateReviewError;
-
-                // A lógica de recalcular foi removida daqui, pois o banco de dados fará isso via trigger
 
                 showToast('Avaliação atualizada com sucesso!');
                 await loadProductsAndIngredients();
