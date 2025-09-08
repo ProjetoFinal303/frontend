@@ -106,7 +106,7 @@
         <div id="menu-container" class="space-y-16">
             <p id="loading-message" class="col-span-full text-center text-gray-500 text-lg">
                  <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                A carregar o cardápio...
+                 A carregar o cardápio...
             </p>
         </div>
     </main>
@@ -257,20 +257,20 @@
 
         function loadCart() {
              const savedCart = localStorage.getItem('shoppingCart');
-            if (savedCart) {
-                try {
-                    const parsedCart = JSON.parse(savedCart);
-                    if (Array.isArray(parsedCart)) {
-                        cart = parsedCart;
-                    } else {
-                        cart = [];
-                    }
-                } catch (e) {
-                    cart = [];
-                    localStorage.removeItem('shoppingCart');
-                }
-            }
-            updateCartUI();
+             if (savedCart) {
+                 try {
+                     const parsedCart = JSON.parse(savedCart);
+                     if (Array.isArray(parsedCart)) {
+                         cart = parsedCart;
+                     } else {
+                         cart = [];
+                     }
+                 } catch (e) {
+                     cart = [];
+                     localStorage.removeItem('shoppingCart');
+                 }
+             }
+             updateCartUI();
         }
         
         function addToCart(product, customizations) {
@@ -706,25 +706,28 @@
             if (reviewForm) {
                 reviewForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    const formData = new FormData(reviewForm);
-                    const nota = formData.get('rating');
+                    
+                    const notaRadio = reviewForm.querySelector('input[name="rating"]:checked');
+                    if (!notaRadio) {
+                        showToast('Por favor, selecione uma nota de 1 a 5 estrelas.', true);
+                        return;
+                    }
+                    const nota = parseInt(notaRadio.value);
                     const comentario = document.getElementById('review-comment').value;
                     
-                    const { error: insertError } = await supabaseClient.from('avaliacoes').insert({ produto_id: productId, cliente_id: loggedUser.id, nota, comentario });
+                    const { error: insertError } = await supabaseClient.from('avaliacoes').insert({ produto_id: productId, cliente_id: loggedUser.id, nota: nota, comentario: comentario });
 
-                    if (insertError) { showToast('Erro ao enviar avaliação: ' + insertError.message, true); return; }
+                    if (insertError) { 
+                        showToast('Erro ao enviar avaliação: ' + insertError.message, true); 
+                        console.error("Erro ao inserir avaliação:", insertError);
+                        return; 
+                    }
                     
-                    const { data: allReviews, error: refetchError } = await supabaseClient.from('avaliacoes').select('nota').eq('produto_id', productId);
-                    if(refetchError) { showToast('Erro ao recalcular a média: ' + refetchError.message, true); return; }
-
-                    const newTotalReviews = allReviews.length;
-                    const newAverage = allReviews.reduce((sum, r) => sum + r.nota, 0) / newTotalReviews;
-
-                    await supabaseClient.from('Produto').update({ total_avaliacoes: newTotalReviews, media_avaliacoes: newAverage.toFixed(2) }).eq('id', productId);
+                    // A LÓGICA DE RECALCULAR FOI REMOVIDA DAQUI, POIS O BANCO DE DADOS FARÁ ISSO
                     
                     showToast('Avaliação enviada com sucesso!');
-                    await openProductDetailsModal(productId);
-                    await loadProductsAndIngredients();
+                    await loadProductsAndIngredients(); // Atualiza a listagem principal de produtos (com a nova média)
+                    await openProductDetailsModal(productId); // Atualiza o modal com a nova avaliação
                 });
             }
         }
@@ -790,17 +793,11 @@
                 const { error: deleteError } = await supabaseClient.from('avaliacoes').delete().eq('id', reviewId);
                 if (deleteError) throw deleteError;
                 
-                const { data: remainingReviews, error: remainingError } = await supabaseClient.from('avaliacoes').select('nota').eq('produto_id', productId);
-                if (remainingError) throw remainingError;
-
-                const totalReviews = remainingReviews.length;
-                const averageRating = totalReviews > 0 ? remainingReviews.reduce((sum, r) => sum + r.nota, 0) / totalReviews : 0;
-
-                await supabaseClient.from('Produto').update({ total_avaliacoes: totalReviews, media_avaliacoes: averageRating.toFixed(2) }).eq('id', productId);
+                // A lógica de recalcular foi removida daqui, pois o banco de dados fará isso via trigger
                 
                 showToast('Avaliação excluída com sucesso!');
-                await openProductDetailsModal(productId);
                 await loadProductsAndIngredients();
+                await openProductDetailsModal(productId);
             } catch (error) {
                 console.error('Erro ao excluir avaliação:', error);
                 showToast(`Erro ao excluir avaliação: ${error.message}`, true);
@@ -834,24 +831,23 @@
         }
         
         async function saveReview(reviewId, productId) {
-            const newNota = document.querySelector('input[name="edit-rating"]:checked').value;
+            const notaRadio = document.querySelector('input[name="edit-rating"]:checked');
+            if(!notaRadio) {
+                showToast('Por favor, selecione uma nota.', true);
+                return;
+            }
+            const newNota = parseInt(notaRadio.value);
             const newComentario = document.getElementById('edit-review-comment').value;
 
             try {
                 const { error: updateReviewError } = await supabaseClient.from('avaliacoes').update({ nota: newNota, comentario: newComentario }).eq('id', reviewId);
                 if (updateReviewError) throw updateReviewError;
 
-                const { data: allReviews, error: fetchReviewsError } = await supabaseClient.from('avaliacoes').select('nota').eq('produto_id', productId);
-                if (fetchReviewsError) throw fetchReviewsError;
-
-                const totalReviews = allReviews.length;
-                const averageRating = totalReviews > 0 ? allReviews.reduce((sum, r) => sum + r.nota, 0) / totalReviews : 0;
-
-                await supabaseClient.from('Produto').update({ total_avaliacoes: totalReviews, media_avaliacoes: averageRating.toFixed(2) }).eq('id', productId);
+                // A lógica de recalcular foi removida daqui, pois o banco de dados fará isso via trigger
 
                 showToast('Avaliação atualizada com sucesso!');
-                await openProductDetailsModal(productId);
                 await loadProductsAndIngredients();
+                await openProductDetailsModal(productId);
             } catch (error) {
                 console.error('Erro ao salvar avaliação:', error);
                 showToast(`Erro ao salvar avaliação: ${error.message}`, true);
@@ -892,3 +888,4 @@
     </script>
 </body>
 </html>
+
