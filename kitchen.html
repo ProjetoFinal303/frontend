@@ -1,23 +1,32 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cozinha - Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .column { min-height: 400px; }
-        .order-card { cursor: grab; }
-        .sortable-ghost { opacity: 0.4; background: #f0f8ff; }
-        .modal { transition: opacity 0.3s ease; }
+        .order-card {
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .order-card.completed {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        .new-order-flash {
+            animation: flash-border 1.5s 2;
+        }
+        @keyframes flash-border {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.7); } /* Amarelo */
+            50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.7); }  /* Vermelho */
+        }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
@@ -42,44 +51,14 @@
     </header>
 
     <main class="container mx-auto p-6 flex-grow">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Painel da Cozinha</h1>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white rounded-lg shadow-lg">
-                <div class="bg-blue-500 text-white p-4 rounded-t-lg">
-                    <h2 class="text-xl font-bold">Novos Pedidos</h2>
-                </div>
-                <div id="new-orders" data-status="pendente" class="p-4 space-y-4 column"></div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-lg">
-                <div class="bg-yellow-500 text-white p-4 rounded-t-lg">
-                    <h2 class="text-xl font-bold">Em Preparo</h2>
-                </div>
-                <div id="in-progress-orders" data-status="em preparo" class="p-4 space-y-4 column"></div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-lg">
-                <div class="bg-green-500 text-white p-4 rounded-t-lg">
-                    <h2 class="text-xl font-bold">Prontos para Retirada</h2>
-                </div>
-                <div id="ready-orders" data-status="concluido" class="p-4 space-y-4 column"></div>
-            </div>
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Painel da Cozinha</h1>
+            <div id="active-orders-count" class="text-lg font-semibold text-gray-600"></div>
+        </div>
+        <div id="orders-list" class="space-y-6">
+            <!-- As comandas dos pedidos serão inseridas aqui -->
         </div>
     </main>
-    
-    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
-            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-            <h2 class="text-2xl font-bold mb-4">Detalhes do Pedido <span id="modal-order-id" class="text-blue-600"></span></h2>
-            <div class="space-y-3">
-                 <p><strong>Cliente:</strong> <span id="modal-client-name"></span></p>
-                <p><strong>Descrição:</strong> <span id="modal-order-description" class="block bg-gray-100 p-2 rounded"></span></p>
-                <p><strong>Valor Total:</strong> <span id="modal-order-value" class="font-semibold"></span></p>
-                <p><strong>Status:</strong> <span id="modal-order-status" class="font-semibold px-2 py-1 rounded text-white"></span></p>
-                <p><strong>Data:</strong> <span id="modal-order-date"></span></p>
-            </div>
-        </div>
-    </div>
 
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
@@ -124,132 +103,140 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const columns = {
-            'pendente': document.getElementById('new-orders'),
-            'em preparo': document.getElementById('in-progress-orders'),
-            'concluido': document.getElementById('ready-orders')
-        };
+        const ordersList = document.getElementById('orders-list');
+        const activeOrdersCount = document.getElementById('active-orders-count');
         const notificationSound = document.getElementById('notification-sound');
-        let loggedUser = null;
+        const userMenuContainer = document.getElementById('user-menu-container');
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
-            if (userString) {
-                loggedUser = JSON.parse(userString);
-                if (loggedUser.role !== 'cozinha' && loggedUser.role !== 'admin') {
-                     alert('Acesso negado. Você não tem permissão para ver esta página.');
-                     window.location.href = './login.html';
-                     return;
-                }
-            } else {
-                 alert('Acesso negado. Você não tem permissão para ver esta página.');
-                 window.location.href = './login.html';
-                 return;
+        const statusConfig = {
+            'pendente': {
+                borderColor: 'border-yellow-400',
+                buttonClass: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-blue-500/50',
+                buttonIcon: 'fa-play',
+                buttonText: 'Iniciar Preparo',
+                nextStatus: 'em preparo'
+            },
+            'em preparo': {
+                borderColor: 'border-blue-400',
+                buttonClass: 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-green-500/50',
+                buttonIcon: 'fa-check',
+                buttonText: 'Pronto p/ Entrega',
+                nextStatus: 'saiu para entrega'
+            },
+            'saiu para entrega': {
+                borderColor: 'border-green-400',
+                buttonClass: 'bg-gray-400 cursor-not-allowed',
+                buttonIcon: 'fa-check-double',
+                buttonText: 'Aguardando Entrega',
+                nextStatus: null
             }
+        };
 
-            await setupMenusAndAuth();
-            await fetchAndRenderOrders();
-            setupRealtimeListener();
-            initializeDragAndDrop();
-        });
-        
         function timeAgo(dateString) {
             const date = new Date(dateString);
             const now = new Date();
             const seconds = Math.floor((now - date) / 1000);
-            let interval = seconds / 31536000;
-            if (interval > 1) return Math.floor(interval) + " anos";
-            interval = seconds / 2592000;
-            if (interval > 1) return Math.floor(interval) + " meses";
-            interval = seconds / 86400;
-            if (interval > 1) return Math.floor(interval) + " dias";
-            interval = seconds / 3600;
-            if (interval > 1) return Math.floor(interval) + " horas";
-            interval = seconds / 60;
-            if (interval > 1) return Math.floor(interval) + " minutos";
-            return Math.floor(seconds) + " segundos";
+            let interval = Math.floor(seconds / 60);
+            if (interval < 1) return "agora";
+            if (interval < 60) return `${interval} min atrás`;
+            interval = Math.floor(seconds / 3600);
+            if (interval < 24) return `${interval}h atrás`;
+            interval = Math.floor(seconds / 86400);
+            return `${interval}d atrás`;
         }
+        
+        function parseDescription(description) {
+            const items = description.split(/(?=\d+x)/);
+            return items.map(item => item.trim()).filter(Boolean);
+        }
+
+        function renderOrderCard(order) {
+            const config = statusConfig[order.status.toLowerCase()] || {};
+            
+            const parsedItems = parseDescription(order.descricao);
+            const itemsHtml = parsedItems.map(itemString => {
+                const match = itemString.match(/(\d+x\s)?([^()]+)(\(.*\))?/);
+                if (!match) return `<p>${itemString}</p>`;
+
+                const quantity = match[1] || '1x ';
+                const productName = match[2].trim();
+                const customizations = match[3] ? match[3].replace(/[()]/g, '').split(',').map(c => {
+                    const trimmed = c.trim();
+                    if (trimmed.startsWith('+')) return `<li class="text-green-600">${trimmed}</li>`;
+                    if (trimmed.startsWith('sem')) return `<li class="text-red-600">${trimmed}</li>`;
+                    return `<li>${trimmed}</li>`;
+                }).join('') : '<li class="text-gray-400 italic">Item padrão</li>';
+
+                return `
+                <div class="mt-2">
+                    <p class="font-semibold text-gray-800">${quantity}${productName}</p>
+                    <ul class="text-xs ml-5 list-disc">${customizations}</ul>
+                </div>`;
+            }).join('');
+
+            return `
+            <div id="order-card-${order.id}" class="bg-white rounded-lg shadow-md p-5 order-card border-l-8 ${config.borderColor}">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="font-black text-xl text-gray-800">Pedido #${String(order.id).padStart(4, '0')}</h3>
+                        <p class="text-sm text-gray-500">${order.Cliente ? order.Cliente.nome : 'Não identificado'}</p>
+                    </div>
+                    <span class="text-sm font-semibold text-red-600" data-time="${order.data}">${timeAgo(order.data)}</span>
+                </div>
+                <div class="space-y-2 my-4 border-t border-b py-4">${itemsHtml}</div>
+                <div class="mt-4">
+                    <button ${config.nextStatus ? `onclick="updateOrderStatus(${order.id}, '${config.nextStatus}')"` : 'disabled'} 
+                            class="w-full text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md ${config.buttonClass}">
+                        <i class="fas ${config.buttonIcon} mr-2"></i> ${config.buttonText}
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        function updateAllTimers() {
+            document.querySelectorAll('[data-time]').forEach(el => {
+                el.textContent = `${timeAgo(el.dataset.time)}`;
+            });
+        }
+        setInterval(updateAllTimers, 30000);
 
         async function fetchAndRenderOrders() {
             const { data: orders, error } = await supabaseClient
                 .from('Pedido')
                 .select(`*, Cliente (nome)`)
-                .in('status', ['pendente', 'em preparo', 'concluido'])
+                .in('status', ['pendente', 'em preparo', 'saiu para entrega'])
                 .order('data', { ascending: true });
 
-            if (error) {
-                console.error("Erro ao buscar pedidos:", error);
+            if (error) { console.error("Erro ao buscar pedidos:", error); return; }
+
+            activeOrdersCount.textContent = `${orders.length} Pedido(s) Ativo(s)`;
+            
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<p class="text-center text-gray-500 text-lg mt-10">Nenhum pedido na cozinha. Hora de um cafezinho!</p>';
                 return;
             }
 
-            Object.values(columns).forEach(col => col.innerHTML = '');
-
-            orders.forEach(order => {
-                if (columns[order.status]) {
-                    const card = createOrderCard(order);
-                    columns[order.status].appendChild(card);
-                }
-            });
+            ordersList.innerHTML = orders.map(renderOrderCard).join('');
             updateAllTimers();
         }
-
-        function createOrderCard(order) {
-            const card = document.createElement('div');
-            card.id = `order-${order.id}`;
-            card.dataset.id = order.id;
-            card.className = 'order-card bg-gray-50 border-l-4 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow';
-            card.style.borderLeftColor = getStatusColor(order.status);
-            
-            card.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-bold text-lg">Pedido #${order.id}</h3>
-                    <span class="text-xs text-gray-500" data-time="${order.data}">há ${timeAgo(order.data)}</span>
-                </div>
-                <p class="text-gray-700 truncate">${order.descricao}</p>
-                <p class="text-sm text-gray-600 mt-2">Cliente: ${order.Cliente ? order.Cliente.nome : 'Não identificado'}</p>
-            `;
-            
-            card.addEventListener('click', () => showOrderDetails(order.id));
-
-            return card;
-        }
-        
-        function updateAllTimers() {
-             document.querySelectorAll('[data-time]').forEach(el => {
-                el.textContent = `há ${timeAgo(el.dataset.time)}`;
-            });
-        }
-        setInterval(updateAllTimers, 30000); 
 
         function setupRealtimeListener() {
             supabaseClient.channel('public:Pedido')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'Pedido' }, payload => {
-                    console.log('Alteração recebida!', payload);
-                    if (payload.eventType === 'INSERT' && payload.new.status === 'pendente') {
-                        notificationSound.play();
+                    const isNewOrder = payload.eventType === 'INSERT' && payload.new.status.toLowerCase() === 'pendente';
+                    if (isNewOrder) {
+                        notificationSound.play().catch(e => console.error("Erro ao tocar som:", e));
                     }
-                    fetchAndRenderOrders();
-                })
-                .subscribe();
+                    
+                    fetchAndRenderOrders().then(() => {
+                        if (isNewOrder) {
+                             const newCard = document.getElementById(`order-card-${payload.new.id}`);
+                             if (newCard) newCard.classList.add('new-order-flash');
+                        }
+                    });
+                }).subscribe();
         }
 
-        function initializeDragAndDrop() {
-            Object.values(columns).forEach(column => {
-                new Sortable(column, {
-                    group: 'orders',
-                    animation: 150,
-                    onEnd: async function (evt) {
-                        const orderId = evt.item.dataset.id;
-                        const newStatus = evt.to.dataset.status;
-                        
-                        evt.item.style.borderLeftColor = getStatusColor(newStatus);
-                        
-                        await updateOrderStatus(orderId, newStatus);
-                    }
-                });
-            });
-        }
-        
         async function updateOrderStatus(orderId, newStatus) {
             const { error } = await supabaseClient
                 .from('Pedido')
@@ -259,110 +246,39 @@
             if (error) {
                 console.error("Erro ao atualizar status:", error);
                 alert("Não foi possível atualizar o status do pedido.");
-                fetchAndRenderOrders(); // Reverte a UI se a atualização falhar
             }
         }
         
-        const modal = document.getElementById('order-modal');
+        async function setupAuthAndInitialize() {
+            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
+            if (userString) {
+                const loggedUser = JSON.parse(userString);
+                if (loggedUser.role !== 'cozinha' && loggedUser.role !== 'admin') {
+                    alert('Acesso negado. Você não tem permissão para ver esta página.');
+                    window.location.href = './login.html';
+                    return;
+                }
+                await updateNavUI(loggedUser);
+                await fetchAndRenderOrders();
+                setupRealtimeListener();
+            } else {
+                alert('Acesso negado. Você precisa estar logado para ver esta página.');
+                window.location.href = './login.html';
+            }
+        }
         
-        async function showOrderDetails(orderId) {
-             const { data: order, error } = await supabaseClient
-                .from('Pedido')
-                .select(`*, Cliente (nome)`)
-                .eq('id', orderId)
-                .single();
-
-            if (error) {
-                console.error("Erro ao buscar detalhes do pedido:", error);
-                return;
-            }
-            
-            document.getElementById('modal-order-id').textContent = `#${order.id}`;
-            document.getElementById('modal-client-name').textContent = order.Cliente ? order.Cliente.nome : 'Não identificado';
-            document.getElementById('modal-order-description').textContent = order.descricao;
-            document.getElementById('modal-order-value').textContent = `R$ ${parseFloat(order.valor).toFixed(2)}`;
-            const statusSpan = document.getElementById('modal-order-status');
-            statusSpan.textContent = order.status;
-            statusSpan.style.backgroundColor = getStatusColor(order.status);
-            document.getElementById('modal-order-date').textContent = new Date(order.data).toLocaleString('pt-BR');
-            
-            modal.classList.remove('hidden');
-        }
-
-        document.getElementById('close-modal').addEventListener('click', () => modal.classList.add('hidden'));
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.classList.add('hidden');
-        });
-
-        function getStatusColor(status) {
-            switch (status) {
-                case 'pendente': return '#3B82F6'; 
-                case 'em preparo': return '#F59E0B'; 
-                case 'concluido': return '#10B981';
-                default: return '#6B7280';
-            }
-        }
-
-        async function fetchUserStats(userId) {
-            try {
-                const { data, error } = await supabaseClient.rpc('get_user_stats', { p_user_id: userId });
-                if (error) throw error;
-                return data || { totalPedidos: 0, dinheiroGasto: 0.00 };
-            } catch (error) {
-                console.error("Erro ao buscar estatísticas:", error);
-                return { totalPedidos: 0, dinheiroGasto: 0.00 };
-            }
-        }
-
-        async function setupMenusAndAuth() {
-            const mainMenuButton = document.getElementById('main-menu-button');
-            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
-            mainMenuButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                mainMenuDropdown.classList.toggle('hidden');
-            });
-
-            await updateNavUI(loggedUser);
-
-            window.addEventListener('click', (event) => {
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuDropdown.contains(event.target) && !mainMenuButton.contains(event.target)) {
-                    mainMenuDropdown.classList.add('hidden');
-                }
-                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
-                    userMenuDropdown.classList.add('hidden');
-                }
-            });
-        }
-
         async function updateNavUI(user) {
-            const userMenuContainer = document.getElementById('user-menu-container');
-            if (!user) return;
-
-            userMenuContainer.classList.remove('hidden');
-            const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
-            const stats = await fetchUserStats(user.id);
-
+            const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
             userMenuContainer.innerHTML = `
                 <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
                 <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                    <div class="p-4 border-b border-gray-200">
-                        <div class="flex items-center">
-                            <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
-                            <div class="ml-4">
-                                <p class="text-md font-semibold text-gray-800">${user.nome || 'Cozinha'}</p>
-                                <p class="text-xs text-gray-500">${user.email}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
+                    <div class="p-4 border-b"><div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover"><div class="ml-4"><p class="font-semibold">${user.nome}</p><p class="text-xs text-gray-500">${user.email}</p></div></div></div>
+                    <div class="p-2 border-t"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                 </div>`;
-
-            const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
-            const userMenuDropdown = userMenuContainer.querySelector('#user-menu-dropdown');
-            userMenuButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                userMenuDropdown.classList.toggle('hidden');
+            
+            userMenuContainer.querySelector('#user-menu-button').addEventListener('click', (e) => { 
+                e.stopPropagation();
+                userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden');
             });
             userMenuContainer.querySelector('#logout-button').onclick = () => { 
                 localStorage.removeItem('currentUser'); 
@@ -370,6 +286,24 @@
                 window.location.href = './login.html'; 
             };
         }
+
+        const mainMenuButton = document.getElementById('main-menu-button');
+        const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+        mainMenuButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            mainMenuDropdown.classList.toggle('hidden');
+        });
+        window.addEventListener('click', (event) => {
+            if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
+                mainMenuDropdown.classList.add('hidden');
+            }
+            const userMenuDropdown = document.getElementById('user-menu-dropdown');
+            if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
+                userMenuDropdown.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', setupAuthAndInitialize);
     </script>
 </body>
 </html>
