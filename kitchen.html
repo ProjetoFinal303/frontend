@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
+        /* Estilos Originais */
         body { font-family: 'Inter', sans-serif; }
         .order-card {
             transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -24,10 +25,99 @@
             0%, 100% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.7); } /* Amarelo */
             50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.7); }  /* Vermelho */
         }
+        
+        /* Estilos do Painel Kanban */
+        .kanban-container {
+            display: flex;
+            gap: 1.5rem;
+            min-height: calc(100vh - 350px);
+        }
+
+        .kanban-column {
+            flex: 1 1 320px;
+            min-width: 320px;
+            background-color: #f1f5f9; /* Tailwind gray-100 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 300px);
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb; /* Tailwind gray-200 */
+            margin-bottom: 1rem;
+        }
+        
+        .column-title {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 700; /* font-bold */
+            color: #1f2937; /* gray-800 */
+            margin-left: 0.5rem;
+        }
+
+        .order-count {
+            background-color: #4b5563; /* gray-600 */
+            color: white;
+            border-radius: 9999px; /* rounded-full */
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-left: auto;
+        }
+        
+        .column-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        /* Estilo dos Cards de Pedido (Adaptado para Tailwind) */
+        .order-card-kanban {
+            background-color: white;
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 1.25rem; /* p-5 */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
+            margin-bottom: 1rem; /* space-y-4 */
+            border-left-width: 8px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .order-card-kanban:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); /* shadow-lg */
+        }
+        
+        .action-btn {
+            width: 100%;
+            color: white;
+            font-weight: 700; /* font-bold */
+            padding: 0.75rem 1rem; /* py-3 px-4 */
+            border-radius: 0.5rem; /* rounded-lg */
+            transition: all 0.3s;
+            transform: scale(1);
+        }
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Cores das bordas dos cards por status */
+        .status-pendente { border-color: #f59e0b; } /* amber-500 */
+        .status-em-preparo { border-color: #3b82f6; } /* blue-500 */
+        .status-saiu-para-entrega { border-color: #16a34a; } /* green-600 */
+        .status-concluido { border-color: #6b7280; } /* gray-500 */
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
 
+    <!-- CABEÇALHO ORIGINAL -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -50,16 +140,51 @@
         </nav>
     </header>
 
+    <!-- CONTEÚDO KANBAN -->
     <main class="container mx-auto p-6 flex-grow">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Painel da Cozinha</h1>
-            <div id="active-orders-count" class="text-lg font-semibold text-gray-600"></div>
-        </div>
-        <div id="orders-list" class="space-y-6">
-            <!-- As comandas dos pedidos serão inseridas aqui -->
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Painel da Cozinha</h1>
+        <div id="loading-indicator" class="text-center text-gray-500 text-lg mt-10">Verificando permissões...</div>
+        
+        <div class="kanban-container" id="kanban-container" style="display: none;">
+            <!-- Coluna Pendente -->
+            <div id="column-pendente" class="kanban-column">
+                <div class="column-header">
+                    <h2 class="column-title">Pendente</h2>
+                    <span id="count-pendente" class="order-count">0</span>
+                </div>
+                <div id="orders-pendente" class="column-body"></div>
+            </div>
+
+            <!-- Coluna Em Preparo -->
+            <div id="column-em-preparo" class="kanban-column">
+                <div class="column-header">
+                    <h2 class="column-title">Em Preparo</h2>
+                    <span id="count-em-preparo" class="order-count">0</span>
+                </div>
+                <div id="orders-em-preparo" class="column-body"></div>
+            </div>
+            
+            <!-- Coluna Pronto para Entrega -->
+            <div id="column-saiu-para-entrega" class="kanban-column">
+                 <div class="column-header">
+                    <h2 class="column-title">Pronto p/ Entrega</h2>
+                    <span id="count-saiu-para-entrega" class="order-count">0</span>
+                </div>
+                <div id="orders-saiu-para-entrega" class="column-body"></div>
+            </div>
+
+            <!-- Coluna Concluído -->
+            <div id="column-concluido" class="kanban-column">
+                <div class="column-header">
+                    <h2 class="column-title">Concluído</h2>
+                    <span id="count-concluido" class="order-count">0</span>
+                </div>
+                <div id="orders-concluido" class="column-body"></div>
+            </div>
         </div>
     </main>
 
+    <!-- RODAPÉ ORIGINAL -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -103,35 +228,50 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const ordersList = document.getElementById('orders-list');
-        const activeOrdersCount = document.getElementById('active-orders-count');
-        const notificationSound = document.getElementById('notification-sound');
         const userMenuContainer = document.getElementById('user-menu-container');
+        const notificationSound = document.getElementById('notification-sound');
 
-        const statusConfig = {
+        // Mapa de status adaptado para o fluxo da cozinha e classes do Tailwind
+        const statusMap = {
             'pendente': {
-                borderColor: 'border-yellow-400',
+                next: 'em preparo',
+                columnId: 'orders-pendente',
+                countId: 'count-pendente',
+                className: 'status-pendente',
                 buttonClass: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-blue-500/50',
                 buttonIcon: 'fa-play',
-                buttonText: 'Iniciar Preparo',
-                nextStatus: 'em preparo'
+                buttonText: 'Iniciar Preparo'
             },
             'em preparo': {
-                borderColor: 'border-blue-400',
+                next: 'saiu para entrega',
+                columnId: 'orders-em-preparo',
+                countId: 'count-em-preparo',
+                className: 'status-em-preparo',
                 buttonClass: 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-green-500/50',
                 buttonIcon: 'fa-check',
-                buttonText: 'Pronto p/ Entrega',
-                nextStatus: 'saiu para entrega'
+                buttonText: 'Pronto p/ Entrega'
             },
             'saiu para entrega': {
-                borderColor: 'border-green-400',
-                buttonClass: 'bg-gray-400 cursor-not-allowed',
+                next: 'concluido',
+                columnId: 'orders-saiu-para-entrega',
+                countId: 'count-saiu-para-entrega',
+                className: 'status-saiu-para-entrega',
+                buttonClass: 'bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 shadow-lg hover:shadow-gray-500/50',
                 buttonIcon: 'fa-check-double',
-                buttonText: 'Aguardando Entrega',
-                nextStatus: null
+                buttonText: 'Finalizar Pedido'
+            },
+             'concluido': {
+                next: null,
+                columnId: 'orders-concluido',
+                countId: 'count-concluido',
+                className: 'status-concluido',
+                buttonClass: 'bg-gray-400 cursor-not-allowed',
+                buttonIcon: 'fa-flag-checkered',
+                buttonText: 'Finalizado'
             }
         };
-
+        
+        // Funções do layout original
         function timeAgo(dateString) {
             const date = new Date(dateString);
             const now = new Date();
@@ -144,20 +284,23 @@
             interval = Math.floor(seconds / 86400);
             return `${interval}d atrás`;
         }
-        
+
         function parseDescription(description) {
             const items = description.split(/(?=\d+x)/);
             return items.map(item => item.trim()).filter(Boolean);
         }
 
-        function renderOrderCard(order) {
-            const config = statusConfig[order.status.toLowerCase()] || {};
-            
+        // Nova função para renderizar os cards no KANBAN
+        function createOrderCard(order) {
+            const card = document.createElement('div');
+            const config = statusMap[order.status.toLowerCase()] || {};
+            card.className = `order-card-kanban ${config.className || ''}`;
+            card.id = `order-${order.id}`;
+
             const parsedItems = parseDescription(order.descricao);
             const itemsHtml = parsedItems.map(itemString => {
                 const match = itemString.match(/(\d+x\s)?([^()]+)(\(.*\))?/);
                 if (!match) return `<p>${itemString}</p>`;
-
                 const quantity = match[1] || '1x ';
                 const productName = match[2].trim();
                 const customizations = match[3] ? match[3].replace(/[()]/g, '').split(',').map(c => {
@@ -166,16 +309,10 @@
                     if (trimmed.startsWith('sem')) return `<li class="text-red-600">${trimmed}</li>`;
                     return `<li>${trimmed}</li>`;
                 }).join('') : '<li class="text-gray-400 italic">Item padrão</li>';
-
-                return `
-                <div class="mt-2">
-                    <p class="font-semibold text-gray-800">${quantity}${productName}</p>
-                    <ul class="text-xs ml-5 list-disc">${customizations}</ul>
-                </div>`;
+                return `<div class="mt-2"><p class="font-semibold text-gray-800">${quantity}${productName}</p><ul class="text-xs ml-5 list-disc">${customizations}</ul></div>`;
             }).join('');
-
-            return `
-            <div id="order-card-${order.id}" class="bg-white rounded-lg shadow-md p-5 order-card border-l-8 ${config.borderColor}">
+            
+            card.innerHTML = `
                 <div class="flex justify-between items-start mb-3">
                     <div>
                         <h3 class="font-black text-xl text-gray-800">Pedido #${String(order.id).padStart(4, '0')}</h3>
@@ -185,14 +322,64 @@
                 </div>
                 <div class="space-y-2 my-4 border-t border-b py-4">${itemsHtml}</div>
                 <div class="mt-4">
-                    <button ${config.nextStatus ? `onclick="updateOrderStatus(${order.id}, '${config.nextStatus}')"` : 'disabled'} 
-                            class="w-full text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md ${config.buttonClass}">
+                    <button ${config.next ? `onclick="updateOrderStatus(this, ${order.id}, '${config.next}')"` : 'disabled'} 
+                            class="action-btn ${config.buttonClass}">
                         <i class="fas ${config.buttonIcon} mr-2"></i> ${config.buttonText}
                     </button>
                 </div>
-            </div>`;
+            `;
+            return card;
+        }
+        
+        // Nova função para carregar os pedidos e popular o KANBAN
+        async function loadOrders() {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            loadingIndicator.textContent = 'Carregando pedidos ativos...';
+            
+            const { data: orders, error } = await supabaseClient
+                .from('Pedido')
+                .select(`*, Cliente (nome)`)
+                .in('status', ['pendente', 'em preparo', 'saiu para entrega', 'concluido'])
+                .order('data', { ascending: true });
+
+            if (error) {
+                console.error("Erro ao buscar pedidos:", error);
+                loadingIndicator.textContent = 'Erro ao carregar pedidos.';
+                return;
+            }
+            
+            // Limpa todas as colunas
+            Object.values(statusMap).forEach(status => {
+                const column = document.getElementById(status.columnId);
+                if(column) column.innerHTML = '';
+            });
+            
+            orders.forEach(order => {
+                const targetColumnId = statusMap[order.status.toLowerCase()]?.columnId;
+                if (targetColumnId) {
+                    const column = document.getElementById(targetColumnId);
+                    if (column) {
+                        column.appendChild(createOrderCard(order));
+                    }
+                }
+            });
+
+            updateAllCounts();
+            updateAllTimers();
+            loadingIndicator.style.display = 'none';
+            document.getElementById('kanban-container').style.display = 'flex';
         }
 
+        function updateAllCounts() {
+             Object.values(statusMap).forEach(status => {
+                const countElement = document.getElementById(status.countId);
+                const columnElement = document.getElementById(status.columnId);
+                if (countElement && columnElement) {
+                    countElement.textContent = columnElement.children.length;
+                }
+            });
+        }
+        
         function updateAllTimers() {
             document.querySelectorAll('[data-time]').forEach(el => {
                 el.textContent = `${timeAgo(el.dataset.time)}`;
@@ -200,44 +387,14 @@
         }
         setInterval(updateAllTimers, 30000);
 
-        async function fetchAndRenderOrders() {
-            const { data: orders, error } = await supabaseClient
-                .from('Pedido')
-                .select(`*, Cliente (nome)`)
-                .in('status', ['pendente', 'em preparo', 'saiu para entrega'])
-                .order('data', { ascending: true });
-
-            if (error) { console.error("Erro ao buscar pedidos:", error); return; }
-
-            activeOrdersCount.textContent = `${orders.length} Pedido(s) Ativo(s)`;
-            
-            if (orders.length === 0) {
-                ordersList.innerHTML = '<p class="text-center text-gray-500 text-lg mt-10">Nenhum pedido na cozinha. Hora de um cafezinho!</p>';
-                return;
+        // FUNÇÃO CORRIGIDA PARA ATUALIZAR A TELA
+        async function updateOrderStatus(button, orderId, newStatus) {
+            // Adiciona feedback visual imediato ao botão
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Atualizando...`;
             }
 
-            ordersList.innerHTML = orders.map(renderOrderCard).join('');
-            updateAllTimers();
-        }
-
-        function setupRealtimeListener() {
-            supabaseClient.channel('public:Pedido')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'Pedido' }, payload => {
-                    const isNewOrder = payload.eventType === 'INSERT' && payload.new.status.toLowerCase() === 'pendente';
-                    if (isNewOrder) {
-                        notificationSound.play().catch(e => console.error("Erro ao tocar som:", e));
-                    }
-                    
-                    fetchAndRenderOrders().then(() => {
-                        if (isNewOrder) {
-                             const newCard = document.getElementById(`order-card-${payload.new.id}`);
-                             if (newCard) newCard.classList.add('new-order-flash');
-                        }
-                    });
-                }).subscribe();
-        }
-
-        async function updateOrderStatus(orderId, newStatus) {
             const { error } = await supabaseClient
                 .from('Pedido')
                 .update({ status: newStatus })
@@ -246,27 +403,62 @@
             if (error) {
                 console.error("Erro ao atualizar status:", error);
                 alert("Não foi possível atualizar o status do pedido.");
-            }
-        }
-        
-        async function setupAuthAndInitialize() {
-            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
-            if (userString) {
-                const loggedUser = JSON.parse(userString);
-                if (loggedUser.role !== 'cozinha' && loggedUser.role !== 'admin') {
-                    alert('Acesso negado. Você não tem permissão para ver esta página.');
-                    window.location.href = './login.html';
-                    return;
+                // Restaura o botão em caso de erro
+                if(button) {
+                    const config = statusMap[newStatus.toLowerCase()] || {};
+                    button.innerHTML = `<i class="fas ${config.buttonIcon} mr-2"></i> ${config.buttonText}`;
+                    button.disabled = false;
                 }
-                await updateNavUI(loggedUser);
-                await fetchAndRenderOrders();
-                setupRealtimeListener();
-            } else {
-                alert('Acesso negado. Você precisa estar logado para ver esta página.');
-                window.location.href = './login.html';
             }
+            
+            // O realtime listener já vai chamar loadOrders(), então não precisamos chamar de novo aqui
+            // para evitar uma recarga dupla. A UI vai atualizar assim que o Supabase notificar a mudança.
         }
         
+        // FUNÇÃO REALTIME MELHORADA
+        function setupRealtimeListener() {
+            const channel = supabaseClient.channel('pedidos-cozinha-realtime');
+
+            channel
+                .on(
+                    'postgres_changes',
+                    { event: '*', schema: 'public', table: 'Pedido' },
+                    payload => {
+                        console.log('Mudança detectada:', payload);
+                        const isNewOrder = payload.eventType === 'INSERT' && payload.new.status.toLowerCase() === 'pendente';
+                        
+                        if (isNewOrder) {
+                            notificationSound.play().catch(e => console.error("Erro ao tocar som:", e));
+                        }
+                        
+                        // Recarrega os pedidos para refletir qualquer mudança (novo, atualização, etc.)
+                        loadOrders().then(() => {
+                           if (isNewOrder) {
+                               const newCard = document.getElementById(`order-${payload.new.id}`);
+                               if (newCard) {
+                                   console.log(`Aplicando animação ao novo pedido: ${payload.new.id}`);
+                                   newCard.classList.add('new-order-flash');
+                                   // Rola a tela para o novo pedido ficar visível
+                                   newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                               }
+                           }
+                        });
+                    }
+                )
+                .subscribe((status, err) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('Conectado com sucesso ao painel em tempo real!');
+                    }
+                    if (status === 'CHANNEL_ERROR') {
+                        console.error('Falha na conexão em tempo real:', err);
+                        alert('A conexão em tempo real falhou. As atualizações automáticas podem não funcionar.');
+                    }
+                });
+
+            return channel;
+        }
+
+        // LÓGICA DE AUTENTICAÇÃO E UI DO HEADER (ORIGINAL)
         async function updateNavUI(user) {
             const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
             userMenuContainer.innerHTML = `
@@ -303,7 +495,48 @@
             }
         });
 
+        // INICIALIZAÇÃO USANDO O MÉTODO ORIGINAL
+        async function setupAuthAndInitialize() {
+            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
+            if (userString) {
+                const loggedUser = JSON.parse(userString);
+                if (loggedUser.role !== 'cozinha' && loggedUser.role !== 'admin') {
+                    alert('Acesso negado. Você não tem permissão para ver esta página.');
+                    window.location.href = './login.html';
+                    return;
+                }
+                await updateNavUI(loggedUser);
+                await loadOrders(); // Carrega o Kanban
+                setupRealtimeListener();
+            } else {
+                // Removido o alert para não interromper o fluxo se a sessão do Supabase ainda for válida
+                console.log("Nenhum usuário no localStorage, aguardando verificação do Supabase Auth...");
+                // Adiciona um fallback para o Supabase Auth, caso o localStorage falhe
+                 supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                    if (!session) {
+                        window.location.href = './login.html';
+                    } else {
+                        // Se houver uma sessão do Supabase mas não no localStorage, tenta carregar o perfil
+                        const { data: cliente, error } = await supabaseClient
+                            .from('Cliente')
+                            .select('*')
+                            .eq('email', session.user.email)
+                            .single();
+                        
+                        if (cliente) {
+                             // Simula o login salvando no localStorage para manter a consistência do app
+                            localStorage.setItem(cliente.role === 'admin' ? 'currentAdmin' : 'currentUser', JSON.stringify(cliente));
+                            await setupAuthAndInitialize(); // Tenta inicializar novamente com os dados agora no localStorage
+                        } else if (!window.location.pathname.endsWith('login.html')) {
+                             window.location.href = './login.html';
+                        }
+                    }
+                 });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', setupAuthAndInitialize);
     </script>
 </body>
 </html>
+
