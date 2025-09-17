@@ -4,186 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar Produtos - Admin Lanchô</title>
-    <!-- Tailwind CSS para estilização rápida e responsiva -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca do Supabase para interagir com o backend -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Google Fonts para uma tipografia mais agradável -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    <!-- Font Awesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        /* Estilos Globais e Utilitários */
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f9fafb; /* bg-gray-50 */
-            color: #1f2937; /* text-gray-800 */
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
+        body { font-family: 'Inter', sans-serif; }
 
-        /* Estilos para o Modal de Edição */
-        .modal { 
-            transition: opacity 0.3s ease; 
-        }
-        .modal-content { 
-            transition: transform 0.3s ease; 
-        }
-
-        /* --- ESTILOS PARA O NOVO SELETOR DE CATEGORIA "EXUBERANTE" --- */
-        .custom-select-container {
-            position: relative;
-        }
-        .custom-select-trigger {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid #d1d5db; /* border-gray-300 */
-            border-radius: 0.375rem; /* rounded-md */
-            background-color: white;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-        }
-        .custom-select-trigger:hover, .custom-select-trigger.open {
-            border-color: #f59e0b; /* Amarelo Lanchô */
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
-        }
-        .custom-select-options {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background-color: white;
-            border: 1px solid #e5e7eb; /* border-gray-200 */
-            border-radius: 0.375rem; /* rounded-md */
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            margin-top: 0.25rem;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            z-index: 50;
-            overflow: hidden;
-        }
-        .custom-select-options.open {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        .custom-select-option {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .custom-select-option:hover {
-            background-color: #fef3c7; /* Amarelo bem claro */
-        }
-        .custom-select-option.selected {
-            font-weight: 600;
-            color: #ca8a04; /* Amarelo escuro */
-            background-color: #fef9c3; /* Amarelo mais claro ainda */
-        }
+        /* Estilos para Modals e Notificações */
+        .modal, .toast { transition: opacity 0.3s ease, transform 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease; }
+        .product-card { transition: all 0.3s ease; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
 
         /* Estilos para o Contador de Quantidade "Exuberante" */
-        .quantity-stepper {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem; /* space-x-2 */
-        }
-        .quantity-btn {
-            width: 2rem; /* w-8 */
-            height: 2rem; /* h-8 */
-            border-radius: 9999px; /* rounded-full */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
-        }
-        .quantity-btn:active {
-            transform: scale(0.95);
-        }
-        .quantity-minus {
-            background-color: #ef4444; /* bg-red-500 */
-        }
-        .quantity-minus:hover {
-            background-color: #dc2626; /* hover:bg-red-600 */
-        }
-        .quantity-plus {
-            background-color: #22c55e; /* bg-green-500 */
-        }
-        .quantity-plus:hover {
-            background-color: #16a34a; /* hover:bg-green-600 */
-        }
-        .quantity-input {
-            width: 3rem; /* w-12 */
-            text-align: center;
-            font-weight: 600;
-            border: 1px solid #d1d5db; /* border-gray-300 */
-            border-radius: 0.375rem; /* rounded-md */
-            padding: 0.25rem;
-        }
-        .quantity-input::-webkit-outer-spin-button,
-        .quantity-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .quantity-input[type=number] {
-            -moz-appearance: textfield;
-        }
-
-        /* Estilos para o Toggle Switch "Exuberante" */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 28px;
-        }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 28px;
-        }
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .toggle-slider {
-            background-color: #22c55e; /* green-500 */
-        }
-        input:checked + .toggle-slider:before {
-            transform: translateX(22px);
-        }
+        .quantity-stepper { display: flex; align-items: center; gap: 0.5rem; }
+        .quantity-btn { width: 2rem; height: 2rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; cursor: pointer; transition: background-color 0.2s, transform 0.1s; }
+        .quantity-btn:active { transform: scale(0.95); }
+        .quantity-minus { background-color: #ef4444; } .quantity-minus:hover { background-color: #dc2626; }
+        .quantity-plus { background-color: #22c55e; } .quantity-plus:hover { background-color: #16a34a; }
+        .quantity-input { width: 4rem; text-align: center; font-weight: 600; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.25rem; }
+        .quantity-input::-webkit-outer-spin-button, .quantity-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .quantity-input[type=number] { -moz-appearance: textfield; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <!-- Header -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -201,475 +47,451 @@
                 <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700">Entrar</a>
-                <div id="user-menu-container" class="relative hidden"></div>
+                <div id="user-menu-container" class="relative">
+                     <!-- O menu do usuário será inserido aqui pelo JS -->
+                </div>
             </div>
         </nav>
     </header>
 
-    <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-800">Gerenciar Produtos</h1>
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-4xl font-black text-gray-800">Gerenciar Produtos</h1>
+                    <p class="text-gray-500 mt-1">Edite, exclua e controle o estoque dos seus produtos.</p>
+                </div>
                 <a href="./admin.html" class="text-sm text-yellow-600 hover:underline">‹ Voltar ao Painel</a>
             </div>
-            <div class="bg-white rounded-lg shadow-md">
-                <div id="product-list-container">
-                    <div id="loading-products" class="text-center text-gray-500 p-10">
-                        <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        A carregar produtos...
-                    </div>
+
+            <!-- Barra de Ferramentas: Filtros e Busca -->
+            <div class="mb-6 p-4 bg-white rounded-lg shadow-sm flex flex-col md:flex-row items-center gap-4">
+                <div class="relative w-full md:w-1/3">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="search-input" placeholder="Buscar por nome..." class="w-full pl-10 pr-4 py-2 border rounded-full focus:ring-2 focus:ring-yellow-400 focus:outline-none">
                 </div>
+                <div id="category-filters" class="flex-grow flex flex-wrap justify-center md:justify-start gap-2">
+                    <!-- Botões de categoria serão inseridos aqui -->
+                </div>
+            </div>
+
+            <!-- Grid de Produtos -->
+            <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- Cards de produto serão inseridos aqui -->
+            </div>
+            <div id="loading-indicator" class="text-center py-16">
+                <i class="fas fa-spinner fa-spin fa-3x text-yellow-500"></i>
+                <p class="mt-4 text-gray-600">Carregando produtos...</p>
+            </div>
+             <div id="no-results" class="hidden text-center py-16">
+                <i class="fas fa-box-open fa-3x text-gray-400"></i>
+                <p class="mt-4 text-gray-600">Nenhum produto encontrado.</p>
             </div>
         </div>
     </main>
     
     <!-- Modal de Edição -->
-    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden opacity-0 modal">
-        <div id="edit-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95 modal-content"></div>
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 modal opacity-0">
+        <div id="edit-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95 modal-content">
+            <!-- Conteúdo do modal é gerado dinamicamente -->
+        </div>
     </div>
 
-    <!-- Footer -->
+     <!-- Modal de Confirmação -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4 modal opacity-0">
+        <div class="bg-white p-8 rounded-lg shadow-2xl text-center max-w-sm mx-auto modal-content transform scale-95">
+            <i class="fas fa-exclamation-triangle fa-3x text-yellow-500 mb-4"></i>
+            <h2 class="text-2xl font-bold my-4">Tem Certeza?</h2>
+            <p id="confirm-message" class="text-gray-600 mb-6"></p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-confirm-button" class="py-2 px-6 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">Cancelar</button>
+                <button id="confirm-action-button" class="py-2 px-6 bg-red-600 text-white rounded-full hover:bg-red-700">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-24 right-8 text-white py-3 px-6 rounded-lg shadow-lg z-[70] transform translate-x-full toast"></div>
+
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
-                <div>
-                    <h3 class="text-lg font-bold text-yellow-500 mb-4">Lanchô</h3>
-                    <p class="text-gray-400">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold mb-4">Links Rápidos</h3>
-                    <ul class="space-y-2">
-                        <li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li>
-                        <li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li>
-                        <li><a href="./orders.html" class="text-gray-400 hover:text-white">Meus Pedidos</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold mb-4">Contato</h3>
-                    <ul class="space-y-2 text-gray-400">
-                        <li>Rua Mariz e Barros, 273, Rio de Janeiro</li>
-                        <li>(21) 96810-5812</li>
-                        <li>contato@lancho.com.br</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
-                    <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="https://instagram.com/lancho.rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-instagram fa-lg"></i>
-                        </a>
-                        <a href="https://x.com/Lancho_rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-twitter fa-lg"></i>
-                        </a>
-                    </div>
-                </div>
+                <div><h3 class="text-lg font-bold text-yellow-500 mb-4">Lanchô</h3><p class="text-gray-400">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p></div>
+                <div><h3 class="text-lg font-bold mb-4">Links Rápidos</h3><ul class="space-y-2"><li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li><li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li></ul></div>
+                <div><h3 class="text-lg font-bold mb-4">Contato</h3><ul class="space-y-2 text-gray-400"><li>Rua Mariz e Barros, 273, Rio de Janeiro</li><li>(21) 96810-5812</li><li>contato@lancho.com.br</li></ul></div>
+                <div><h3 class="text-lg font-bold mb-4">Siga-nos</h3><div class="flex justify-center md:justify-start space-x-4"><a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram fa-lg"></i></a><a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a></div></div>
             </div>
-            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500">
-                <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
-            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500"><p>&copy; 2025 Lanchô. Todos os direitos reservados.</p></div>
         </div>
     </footer>
 
     <script>
-        // Bloco de Configuração Inicial e Variáveis Globais
-        // =========================================================
+        // --- CONFIGURAÇÃO E VARIÁVEIS GLOBAIS ---
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let loggedUser = null;
-
-        const productListContainer = document.getElementById('product-list-container');
-        const loadingProducts = document.getElementById('loading-products');
+        
+        const productGrid = document.getElementById('product-grid');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const noResults = document.getElementById('no-results');
+        const searchInput = document.getElementById('search-input');
+        const categoryFilters = document.getElementById('category-filters');
+        
         const editModal = document.getElementById('edit-modal');
         const editModalContent = document.getElementById('edit-modal-content');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmMessage = document.getElementById('confirm-message');
+        const cancelConfirmButton = document.getElementById('cancel-confirm-button');
+        const confirmActionButton = document.getElementById('confirm-action-button');
+        const toast = document.getElementById('toast');
 
-        // Função Principal para Carregar e Renderizar os Produtos
-        // =========================================================
-        async function loadProducts() {
-            try {
-                const { data: produtos, error } = await supabaseClient.from('Produto').select('*').order('nome', { ascending: true });
-                if (error) throw error;
-                loadingProducts.style.display = 'none';
-                if (!produtos || produtos.length === 0) {
-                    productListContainer.innerHTML = '<p class="text-center text-gray-500 p-10">Nenhum produto cadastrado.</p>';
-                    return;
-                }
-                productListContainer.innerHTML = `
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                ${produtos.map(p => `
-                                    <tr id="product-row-${p.id}">
-                                        <td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center"><div class="flex-shrink-0 h-10 w-10"><img class="h-10 w-10 rounded-full object-cover" src="${p.image_url || 'https://placehold.co/40x40/e2e8f0/a0aec0?text=L'}" alt="Imagem de ${p.nome}"></div><div class="ml-4"><div class="text-sm font-medium text-gray-900">${p.nome}</div><div class="text-xs text-gray-500">${p.categoria || 'Sem categoria'}</div></div></div></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ ${parseFloat(p.preco).toFixed(2)}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2"><button onclick='openEditModal(${JSON.stringify(p)})' class="text-yellow-600 hover:text-yellow-900">Editar</button><button onclick="deleteProduct(${p.id}, '${p.stripe_price_id}', '${p.nome.replace(/'/g, "\\'")}')" class="text-red-600 hover:text-red-900">Excluir</button></td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
+        let allProducts = [];
+        let loggedUser = null;
+
+        // --- FUNÇÕES DE RENDERIZAÇÃO E UI ---
+        
+        function renderProducts(productsToRender) {
+            productGrid.innerHTML = '';
+            if (productsToRender.length === 0) {
+                noResults.style.display = 'block';
+                return;
+            }
+            noResults.style.display = 'none';
+            productsToRender.forEach(product => {
+                const stock = product.Estoque || { quantidade: 0 };
+                const stockColor = stock.quantidade <= 5 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+                const stockText = stock.quantidade > 0 ? `${stock.quantidade} em estoque` : 'Sem estoque';
+
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-md overflow-hidden flex flex-col product-card';
+                card.innerHTML = `
+                    <img src="${product.image_url}" alt="${product.nome}" class="w-full h-48 object-cover">
+                    <div class="p-4 flex flex-col flex-grow">
+                        <div class="flex justify-between items-start">
+                            <h3 class="text-lg font-bold">${product.nome}</h3>
+                            <span class="text-xs font-semibold px-2 py-1 rounded-full ${stockColor}">${stockText}</span>
+                        </div>
+                        <p class="text-sm text-gray-500">${product.categoria}</p>
+                        <div class="flex-grow"></div>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-xl font-black text-red-600">R$ ${parseFloat(product.preco).toFixed(2).replace('.', ',')}</span>
+                            <div class="flex gap-2">
+                                <button class="edit-btn bg-yellow-400 text-yellow-900 w-10 h-10 rounded-full hover:bg-yellow-500 flex items-center justify-center" data-product='${JSON.stringify(product).replace(/'/g, "&apos;")}'><i class="fas fa-pencil-alt"></i></button>
+                                <button class="delete-btn bg-red-500 text-white w-10 h-10 rounded-full hover:bg-red-600 flex items-center justify-center" data-product-id="${product.id}" data-stripe-id="${product.stripe_price_id}" data-product-name="${product.nome.replace(/"/g, '&quot;')}"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
                     </div>
                 `;
+                productGrid.appendChild(card);
+            });
+            
+            addCardButtonListeners();
+        }
+
+        function addCardButtonListeners() {
+            productGrid.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const productData = JSON.parse(button.dataset.product);
+                    openEditModal(productData);
+                });
+            });
+
+            productGrid.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const { productId, stripeId, productName } = button.dataset;
+                    confirmDelete(productId, stripeId, productName);
+                });
+            });
+        }
+        
+        function renderCategoryFilters(products) {
+            const categories = ['Todos', ...new Set(products.map(p => p.categoria).filter(Boolean))];
+            categoryFilters.innerHTML = categories.map(cat => `
+                <button class="category-filter-btn px-4 py-1.5 text-sm font-semibold rounded-full bg-gray-200 text-gray-700 hover:bg-yellow-400 hover:text-yellow-900 transition-colors" data-category="${cat}">
+                    ${cat}
+                </button>
+            `).join('');
+            
+            categoryFilters.querySelector('[data-category="Todos"]').classList.add('bg-yellow-500', 'text-white', 'hover:bg-yellow-500');
+            
+            categoryFilters.querySelectorAll('.category-filter-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    categoryFilters.querySelectorAll('.category-filter-btn').forEach(btn => {
+                        btn.classList.remove('bg-yellow-500', 'text-white', 'hover:bg-yellow-500');
+                        btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-yellow-400', 'hover:text-yellow-900');
+                    });
+                    button.classList.add('bg-yellow-500', 'text-white', 'hover:bg-yellow-500');
+                    filterProducts();
+                });
+            });
+        }
+
+        function filterProducts() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const activeCategoryButton = categoryFilters.querySelector('.bg-yellow-500');
+            if (!activeCategoryButton) return;
+            const activeCategory = activeCategoryButton.dataset.category;
+            
+            const filtered = allProducts.filter(product => {
+                const matchesSearch = product.nome.toLowerCase().includes(searchTerm);
+                const matchesCategory = activeCategory === 'Todos' || product.categoria === activeCategory;
+                return matchesSearch && matchesCategory;
+            });
+            
+            renderProducts(filtered);
+        }
+
+        function showToast(message, isError = false) {
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-times-circle' : 'fa-check-circle'} mr-2"></i> ${message}`;
+            toast.className = `fixed top-24 right-8 text-white py-3 px-6 rounded-lg shadow-lg z-[70] transform translate-x-full opacity-0 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.remove('translate-x-full', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        function openModal(modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.modal-content').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal(modal) {
+            modal.classList.add('opacity-0');
+            modal.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // --- FUNÇÕES DE DADOS (FETCH, UPDATE, DELETE) ---
+        
+        async function loadProducts() {
+            loadingIndicator.style.display = 'block';
+            productGrid.innerHTML = '';
+            noResults.style.display = 'none';
+            try {
+                const { data, error } = await supabaseClient.from('Produto').select('*, Estoque(*)').order('nome', { ascending: true });
+                if (error) throw error;
+                allProducts = data;
+                renderProducts(allProducts);
+                renderCategoryFilters(allProducts);
             } catch (error) {
                 console.error("Erro ao carregar produtos:", error);
-                loadingProducts.innerHTML = `<p class="text-center text-red-500 p-10">Ocorreu um erro ao buscar os produtos.</p>`;
+                productGrid.innerHTML = `<p class="text-red-500 col-span-full text-center">Erro ao carregar produtos: ${error.message}</p>`;
+            } finally {
+                loadingIndicator.style.display = 'none';
             }
-        }
-
-        // Funções de Gerenciamento do Modal de Edição
-        // =========================================================
-        async function openEditModal(product) {
-            editModal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-            setTimeout(() => { editModal.classList.remove('opacity-0'); editModalContent.classList.remove('scale-95'); }, 10);
-            editModalContent.innerHTML = `<div class="p-8 text-center"><svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
-
-            try {
-                const [allIngredientsRes, associatedIngredientsRes] = await Promise.all([
-                    supabaseClient.from('Ingrediente').select('id, nome, image_url'),
-                    supabaseClient.from('Produto_Ingrediente').select('ingrediente_id, quantidade_padrao, is_customizable').eq('produto_id', product.id)
-                ]);
-
-                if (allIngredientsRes.error) throw allIngredientsRes.error;
-                if (associatedIngredientsRes.error) throw associatedIngredientsRes.error;
-                
-                const allIngredients = allIngredientsRes.data;
-                const associatedMap = new Map(associatedIngredientsRes.data.map(item => [item.ingrediente_id, { qty: item.quantidade_padrao, custom: item.is_customizable }]));
-                
-                const categories = [
-                    { value: 'Mais Vendidos', icon: 'fas fa-star' },
-                    { value: 'Sanduíches', icon: 'fas fa-hamburger' },
-                    { value: 'Combos', icon: 'fas fa-utensils' },
-                    { value: 'Acompanhamentos', icon: 'fas fa-bacon' },
-                    { value: 'Sobremesas', icon: 'fas fa-ice-cream' },
-                    { value: 'Bebidas', icon: 'fas fa-cocktail' }
-                ];
-                const currentCategory = categories.find(c => c.value === product.categoria) || { value: product.categoria || 'Selecione...', icon: 'fas fa-tag' };
-
-                editModalContent.innerHTML = `
-                    <div class="flex justify-between items-center p-4 border-b">
-                        <h3 class="text-2xl font-bold">Editar ${product.nome}</h3>
-                        <button onclick="closeEditModal()" class="p-2 rounded-full text-gray-500 hover:bg-gray-200 text-2xl">&times;</button>
-                    </div>
-                    <div class="p-6 overflow-y-auto">
-                        <form id="edit-product-form" class="space-y-6">
-                            <div><label for="edit-nome" class="block text-sm font-medium text-gray-700">Nome do Produto</label><input type="text" id="edit-nome" value="${product.nome}" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"></div>
-                            <div><label for="edit-descricao" class="block text-sm font-medium text-gray-700">Descrição</label><textarea id="edit-descricao" rows="3" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">${product.descricao}</textarea></div>
-                            <div><label for="edit-preco" class="block text-sm font-medium text-gray-700">Preço Base</label><input type="number" step="0.01" id="edit-preco" value="${product.preco}" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"></div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                                <div class="custom-select-container">
-                                    <div class="custom-select-trigger" tabindex="0">
-                                        <span>
-                                            <i class="${currentCategory.icon} mr-2 text-gray-500"></i>
-                                            <span id="selected-category-text">${currentCategory.value}</span>
-                                        </span>
-                                        <i class="fas fa-chevron-down text-xs text-gray-500"></i>
-                                    </div>
-                                    <div class="custom-select-options">
-                                        ${categories.map(cat => `
-                                            <div class="custom-select-option ${cat.value === product.categoria ? 'selected' : ''}" data-value="${cat.value}">
-                                                <i class="${cat.icon} mr-3 text-gray-500 w-5 text-center"></i>
-                                                <span>${cat.value}</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                    <input type="hidden" id="edit-categoria" value="${product.categoria || ''}">
-                                </div>
-                            </div>
-                            <div><label class="block text-sm font-medium text-gray-700">Imagem</label><div class="mt-1 flex items-center space-x-4"><img id="edit-image-preview" src="${product.image_url || 'https://placehold.co/100x100'}" class="w-24 h-24 rounded-md object-cover"><label for="edit-image-upload" class="cursor-pointer bg-yellow-500 text-white font-bold py-2 px-4 rounded-full hover:bg-yellow-600"><span>Alterar Imagem</span><input id="edit-image-upload" type="file" class="sr-only" accept="image/png, image/jpeg"></label></div></div>
-                            
-                            <div class="border-t pt-6">
-                                <label class="block text-lg font-bold text-gray-800 mb-2">Receita e Adicionais</label>
-                                <p class="text-sm text-gray-500 mb-4">Defina a quantidade padrão de cada ingrediente e se o cliente pode personalizá-lo.</p>
-                                <div id="ingredients-checklist" class="space-y-4 max-h-64 overflow-y-auto p-2">
-                                    ${allIngredients.length > 0 ? allIngredients.map(ing => {
-                                        const assoc = associatedMap.get(ing.id) || { qty: 0, custom: true };
-                                        return `
-                                        <div class="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
-                                            <div class="flex items-center">
-                                                <img src="${ing.image_url || 'https://placehold.co/40x40'}" class="w-10 h-10 rounded-full object-cover mr-4">
-                                                <div class="flex flex-col">
-                                                    <span class="text-gray-800 font-medium">${ing.nome}</span>
-                                                    <div class="flex items-center mt-1">
-                                                        <label class="toggle-switch mr-2">
-                                                            <input type="checkbox" class="toggle-input" data-ingredient-id="${ing.id}" ${assoc.custom ? 'checked' : ''}>
-                                                            <span class="toggle-slider"></span>
-                                                        </label>
-                                                        <span class="text-xs text-gray-500">Personalizável</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="quantity-stepper">
-                                                <button type="button" class="quantity-btn quantity-minus">-</button>
-                                                <input type="number" value="${assoc.qty}" min="0" class="quantity-input" data-ingredient-id="${ing.id}">
-                                                <button type="button" class="quantity-btn quantity-plus">+</button>
-                                            </div>
-                                        </div>
-                                    `}).join('') : '<p class="text-gray-500 text-center">Nenhum ingrediente cadastrado. <a href="./admin-manage-ingredients.html" class="text-yellow-600 underline">Adicionar agora</a>.</p>'}
-                                </div>
-                            </div>
-                            
-                            <div class="pt-4 flex justify-end space-x-3">
-                                <button type="button" onclick="closeEditModal()" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full hover:bg-gray-300">Cancelar</button>
-                                <button type="submit" class="bg-red-600 text-white font-bold py-2 px-4 rounded-full hover:bg-red-700">Salvar Alterações</button>
-                            </div>
-                            <p id="edit-form-message" class="text-sm text-center mt-4"></p>
-                        </form>
-                    </div>
-                `;
-
-                setupCustomSelect();
-
-                document.querySelectorAll('.quantity-btn').forEach(button => {
-                    button.addEventListener('click', () => {
-                        const input = button.parentElement.querySelector('.quantity-input');
-                        let currentValue = parseInt(input.value);
-                        if (button.classList.contains('quantity-plus')) {
-                            input.value = currentValue + 1;
-                        } else if (button.classList.contains('quantity-minus') && currentValue > 0) {
-                            input.value = currentValue - 1;
-                        }
-                    });
-                });
-
-                document.getElementById('edit-image-upload').addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (file) document.getElementById('edit-image-preview').src = URL.createObjectURL(file);
-                });
-
-                document.getElementById('edit-product-form').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    saveProductChanges(product.id);
-                });
-
-            } catch (error) {
-                editModalContent.innerHTML = `<div class="p-8 text-red-500">Erro ao carregar dados: ${error.message}</div>`;
-            }
-        }
-
-        function setupCustomSelect() {
-            const container = document.querySelector('.custom-select-container');
-            if (!container) return;
-            const trigger = container.querySelector('.custom-select-trigger');
-            const options = container.querySelector('.custom-select-options');
-            const hiddenInput = document.getElementById('edit-categoria');
-            const selectedText = document.getElementById('selected-category-text');
-
-            trigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                options.classList.toggle('open');
-                trigger.classList.toggle('open');
-            });
-
-            options.querySelectorAll('.custom-select-option').forEach(option => {
-                option.addEventListener('click', () => {
-                    options.querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
-                    option.classList.add('selected');
-                    
-                    const value = option.dataset.value;
-                    const iconClass = option.querySelector('i').className;
-                    
-                    hiddenInput.value = value;
-                    selectedText.textContent = value;
-                    trigger.querySelector('i').className = `${iconClass.split(' ')[0]} ${iconClass.split(' ')[1]} mr-2 text-gray-500`;
-                    
-                    options.classList.remove('open');
-                    trigger.classList.remove('open');
-                });
-            });
-
-            document.addEventListener('click', (e) => {
-                if (container && !container.contains(e.target)) {
-                    options.classList.remove('open');
-                    trigger.classList.remove('open');
-                }
-            });
-        }
-
-        function closeEditModal() {
-            editModal.classList.add('opacity-0');
-            editModalContent.classList.add('scale-95');
-            setTimeout(() => { 
-                editModal.classList.add('hidden'); 
-                document.body.classList.remove('overflow-hidden'); 
-            }, 300);
         }
 
         async function saveProductChanges(productId) {
-            const formMessage = document.getElementById('edit-form-message');
-            formMessage.textContent = 'Salvando...';
-
-            const nome = document.getElementById('edit-nome').value;
-            const descricao = document.getElementById('edit-descricao').value;
-            const preco = parseFloat(document.getElementById('edit-preco').value);
-            const categoria = document.getElementById('edit-categoria').value;
-            const imageFile = document.getElementById('edit-image-upload').files[0];
-            let imageUrl = document.getElementById('edit-image-preview').src;
-
+            const form = document.getElementById('edit-product-form');
+            const button = form.querySelector('button[type="submit"]');
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Salvando...';
+            
             try {
+                const updates = {
+                    nome: form.nome.value,
+                    descricao: form.descricao.value,
+                    preco: parseFloat(form.preco.value),
+                    categoria: form.categoria.value,
+                };
+
+                const imageFile = form.image.files[0];
                 if (imageFile) {
                     const fileName = `${productId}-${Date.now()}-${imageFile.name}`;
-                    const { data: listData, error: listError } = await supabaseClient.storage.from('produtos').list();
-                    if (listError) throw listError;
-                    const oldFile = listData.find(file => file.name.startsWith(`${productId}-`));
-                    if(oldFile) await supabaseClient.storage.from('produtos').remove([oldFile.name]);
-
-                    const { error: uploadError } = await supabaseClient.storage.from('produtos').upload(fileName, imageFile);
+                    const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('produtos').upload(fileName, imageFile, { upsert: true });
                     if (uploadError) throw uploadError;
-                    imageUrl = supabaseClient.storage.from('produtos').getPublicUrl(fileName).data.publicUrl;
+                    updates.image_url = supabaseClient.storage.from('produtos').getPublicUrl(fileName).data.publicUrl;
                 }
 
-                await supabaseClient.from('Produto').update({ nome, descricao, preco, categoria, image_url: imageUrl }).eq('id', productId);
-                await supabaseClient.from('Produto_Ingrediente').delete().eq('produto_id', productId);
-
-                const ingredientRows = document.querySelectorAll('#ingredients-checklist .flex.items-center.justify-between');
-                const newAssociations = [];
-                ingredientRows.forEach(row => {
-                    const input = row.querySelector('.quantity-input');
-                    const toggle = row.querySelector('.toggle-input');
-                    
-                    newAssociations.push({
-                        produto_id: productId,
-                        ingrediente_id: parseInt(input.dataset.ingredientId),
-                        quantidade_padrao: parseInt(input.value),
-                        is_customizable: toggle.checked
-                    });
-                });
-
-                if (newAssociations.length > 0) {
-                    const { error: insertError } = await supabaseClient.from('Produto_Ingrediente').insert(newAssociations);
-                    if (insertError) throw insertError;
-                }
-
-                formMessage.textContent = 'Produto atualizado com sucesso!';
-                formMessage.className = 'text-sm text-center mt-4 text-green-600';
-                setTimeout(() => { closeEditModal(); loadProducts(); }, 1500);
-
+                const { error: updateError } = await supabaseClient.from('Produto').update(updates).eq('id', productId);
+                if (updateError) throw updateError;
+                
+                const stockInput = form.querySelector('.quantity-input');
+                const stockQuantity = parseInt(stockInput.value);
+                
+                const { error: stockError } = await supabaseClient
+                    .from('Estoque')
+                    .upsert({ id_produto: productId, quantidade: stockQuantity }, { onConflict: 'id_produto' });
+                if(stockError) throw stockError;
+                
+                showToast('Produto atualizado com sucesso!', false);
+                closeModal(editModal);
+                await loadProducts();
             } catch (error) {
-                console.error("Erro ao salvar alterações:", error);
-                formMessage.textContent = `Erro: ${error.message}`;
-                formMessage.className = 'text-sm text-center mt-4 text-red-600';
+                console.error("Erro ao salvar produto:", error);
+                showToast(`Erro: ${error.message}`, true);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = 'Salvar Alterações';
             }
         }
         
-        async function deleteProduct(productId, stripePriceId, productName) {
-            if (!confirm(`Tem certeza que quer excluir o produto "${productName}"?`)) return;
+        function confirmDelete(productId, stripePriceId, productName) {
+            confirmMessage.textContent = `Você realmente quer excluir "${productName}"? Esta ação removerá o produto do site e do sistema de pagamentos.`;
+            openModal(confirmModal);
+            confirmActionButton.onclick = () => executeDelete(productId, stripePriceId, productName);
+        }
+        
+        async function executeDelete(productId, stripePriceId, productName) {
+            confirmActionButton.disabled = true;
+            confirmActionButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Excluindo...';
             try {
                 if (stripePriceId && stripePriceId !== 'null') {
                     await supabaseClient.functions.invoke('delete-stripe-product', { body: { priceId: stripePriceId } });
                 }
+                await supabaseClient.from('avaliacoes').delete().eq('produto_id', productId);
+                await supabaseClient.from('Estoque').delete().eq('id_produto', productId);
                 const { error: dbError } = await supabaseClient.from('Produto').delete().eq('id', productId);
                 if (dbError) throw dbError;
-                alert(`Produto "${productName}" excluído com sucesso.`);
-                loadProducts();
+                showToast(`"${productName}" foi excluído.`, false);
+                await loadProducts();
             } catch (error) {
                 console.error("Erro ao excluir produto:", error);
-                alert(`Ocorreu um erro: ${error.message}`);
+                showToast(`Erro ao excluir: ${error.message}`, true);
+            } finally {
+                confirmActionButton.disabled = false;
+                confirmActionButton.textContent = 'Confirmar';
+                closeModal(confirmModal);
             }
+        }
+
+        // --- FUNÇÕES DO MODAL DE EDIÇÃO ---
+
+        function openEditModal(product) {
+            openModal(editModal);
+            const stock = product.Estoque || { quantidade: 0 };
+            
+            editModalContent.innerHTML = `
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h3 class="text-2xl font-bold">Editar ${product.nome}</h3>
+                    <button type="button" onclick="closeModal(editModal)" class="p-2 rounded-full text-gray-500 hover:bg-gray-200 text-2xl">&times;</button>
+                </div>
+                <form id="edit-product-form" class="flex flex-col flex-grow">
+                    <div class="p-6 overflow-y-auto space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label for="nome" class="block text-sm font-medium">Nome</label><input type="text" name="nome" value="${product.nome}" required class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500"></div>
+                            <div><label for="preco" class="block text-sm font-medium">Preço</label><input type="number" step="0.01" name="preco" value="${product.preco}" required class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500"></div>
+                        </div>
+                        <div><label for="descricao" class="block text-sm font-medium">Descrição</label><textarea name="descricao" rows="3" required class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">${product.descricao}</textarea></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div>
+                                <label for="categoria" class="block text-sm font-medium">Categoria</label>
+                                <select name="categoria" class="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                                    ${['Sanduíches', 'Combos', 'Acompanhamentos', 'Sobremesas', 'Bebidas', 'Mais Vendidos'].map(cat => `<option value="${cat}" ${product.categoria === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium">Estoque</label>
+                                <div class="quantity-stepper mt-1">
+                                    <button type="button" class="quantity-btn quantity-minus">-</button>
+                                    <input type="number" value="${stock.quantidade}" min="0" class="quantity-input">
+                                    <button type="button" class="quantity-btn quantity-plus">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium">Imagem</label>
+                            <div class="mt-1 flex items-center space-x-4">
+                                <img id="edit-image-preview" src="${product.image_url}" class="w-24 h-24 rounded-md object-cover">
+                                <label class="cursor-pointer bg-yellow-500 text-white font-bold py-2 px-4 rounded-full hover:bg-yellow-600">
+                                    <span>Alterar</span><input type="file" name="image" class="sr-only" accept="image/png, image/jpeg">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-gray-50 border-t flex justify-end gap-3 mt-auto">
+                        <button type="button" onclick="closeModal(editModal)" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full hover:bg-gray-300">Cancelar</button>
+                        <button type="submit" class="bg-red-600 text-white font-bold py-2 px-4 rounded-full hover:bg-red-700">Salvar Alterações</button>
+                    </div>
+                </form>
+            `;
+
+            const form = document.getElementById('edit-product-form');
+            form.addEventListener('submit', (e) => { e.preventDefault(); saveProductChanges(product.id); });
+            
+            form.querySelector('input[name="image"]').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) document.getElementById('edit-image-preview').src = URL.createObjectURL(file);
+            });
+
+            form.querySelectorAll('.quantity-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const input = button.parentElement.querySelector('.quantity-input');
+                    let val = parseInt(input.value);
+                    if (button.classList.contains('quantity-plus')) input.value = val + 1;
+                    else if (val > 0) input.value = val - 1;
+                });
+            });
         }
         
-        // Funções de Autenticação e UI do Header
-        // =========================================================
-
-        async function fetchUserStats(userId) {
-            try {
-                const { data, error } = await supabaseClient.rpc('get_user_stats', { p_user_id: userId });
-                if (error) throw error;
-                return data || { totalPedidos: 0, dinheiroGasto: 0.00 };
-            } catch (error) {
-                console.error("Erro ao buscar estatísticas:", error);
-                return { totalPedidos: 0, dinheiroGasto: 0.00 };
-            }
-        }
-
-        async function setupMenusAndAuth() {
-            const mainMenuButton = document.getElementById('main-menu-button');
-            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
-            mainMenuButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                mainMenuDropdown.classList.toggle('hidden');
-            });
-
+        // --- FUNÇÕES DE AUTENTICAÇÃO E SETUP ---
+        
+        async function checkAdminAndSetup() {
             const userString = localStorage.getItem('currentAdmin');
-            if (userString) {
-                loggedUser = JSON.parse(userString);
-                if (loggedUser.role !== 'admin') {
-                    alert('Acesso negado.');
-                    window.location.href = './index.html';
-                    return;
-                }
-            } else {
-                alert('Você precisa estar logado como administrador para acessar esta página.');
-                window.location.href = './login.html';
+            if (!userString || JSON.parse(userString).role !== 'admin') {
+                document.body.innerHTML = `<div class="h-screen w-screen flex flex-col items-center justify-center bg-gray-100"><i class="fas fa-lock fa-3x text-red-500"></i><h1 class="text-2xl font-bold mt-4">Acesso Negado</h1><p class="text-gray-600">Você não tem permissão para ver esta página.</p><a href="./index.html" class="mt-6 text-blue-600 hover:underline">Voltar para a Home</a></div>`;
                 return;
             }
-            
+            loggedUser = JSON.parse(userString);
             await updateNavUI(loggedUser);
-
-            window.addEventListener('click', (event) => {
-                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
-                    mainMenuDropdown.classList.add('hidden');
-                }
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
-                    userMenuDropdown.classList.add('hidden');
-                }
-            });
+            await loadProducts();
         }
 
         async function updateNavUI(user) {
             const userMenuContainer = document.getElementById('user-menu-container');
-            const loginButton = document.getElementById('login-button-main');
-
-            if (user) {
-                loginButton.classList.add('hidden');
-                userMenuContainer.classList.remove('hidden');
-                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
-                const stats = await fetchUserStats(user.id);
-
-                userMenuContainer.innerHTML = `
-                    <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
-                    <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                        <div class="p-4 border-b border-gray-200">
-                            <div class="flex items-center">
-                                <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
-                                <div class="ml-4">
-                                    <p class="text-md font-semibold text-gray-800">${user.nome || 'Admin'}</p>
-                                    <p class="text-xs text-gray-500">${user.email}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="py-2">
-                            <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
-                            <a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>
-                        </div>
-                        <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
-                    </div>`;
-
-                const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
-                const userMenuDropdown = userMenuContainer.querySelector('#user-menu-dropdown');
-                userMenuButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    userMenuDropdown.classList.toggle('hidden');
-                });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentAdmin'); window.location.href = './index.html'; };
-            }
+            const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
+            userMenuContainer.innerHTML = `
+                <button id="user-menu-button" class="p-2 rounded-full"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
+                <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl z-30">
+                     <div class="p-4 border-b"><div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover"><div class="ml-4"><p class="font-semibold">${user.nome}</p><p class="text-xs text-gray-500">${user.email}</p></div></div></div>
+                     <div class="p-2">
+                        <a href="./profile.html" class="w-full text-left flex items-center text-sm text-gray-700 hover:bg-gray-100 p-2 rounded"><i class="fas fa-user-edit w-6 mr-2"></i>Editar Perfil</a>
+                        <a href="./admin.html" class="w-full text-left flex items-center text-sm text-blue-600 hover:bg-gray-100 p-2 rounded"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>
+                     </div>
+                     <div class="p-2 border-t"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
+                </div>`;
+            
+            userMenuContainer.querySelector('#user-menu-button').addEventListener('click', (e) => { 
+                e.stopPropagation();
+                userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden');
+            });
+            userMenuContainer.querySelector('#logout-button').onclick = () => { 
+                localStorage.removeItem('currentAdmin');
+                window.location.href = './index.html'; 
+            };
         }
+
+        // --- INICIALIZAÇÃO E LISTENERS GLOBAIS ---
         
-        // Ponto de Entrada da Página
-        // =========================================================
-        document.addEventListener('DOMContentLoaded', async () => {
-            await setupMenusAndAuth();
-            await loadProducts();
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAndSetup();
+            searchInput.addEventListener('input', filterProducts);
+            
+            cancelConfirmButton.addEventListener('click', () => closeModal(confirmModal));
+            
+            const mainMenuButton = document.getElementById('main-menu-button');
+            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+            mainMenuButton.addEventListener('click', (e) => { e.stopPropagation(); mainMenuDropdown.classList.toggle('hidden'); });
+            
+            window.addEventListener('click', (e) => {
+                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(e.target)) {
+                    mainMenuDropdown.classList.add('hidden');
+                }
+                const userMenuDropdown = document.getElementById('user-menu-dropdown');
+                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.parentElement.contains(e.target)) {
+                    userMenuDropdown.classList.add('hidden');
+                }
+                if (e.target === editModal) {
+                    closeModal(editModal);
+                }
+            });
         });
     </script>
 </body>

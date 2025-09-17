@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="scroll-smooth">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin - Lanchô</title>
+    <title>Painel do Administrador - Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+<body class="bg-gray-100 flex flex-col min-h-screen">
 
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
@@ -31,63 +31,98 @@
                 <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700 hidden">Entrar</a>
                 <div id="user-menu-container" class="relative"></div>
             </div>
         </nav>
     </header>
 
-    <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="max-w-6xl mx-auto">
-            <h1 class="text-4xl font-bold mb-10 text-gray-800">Painel Administrativo</h1>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                    <i class="fas fa-plus-circle text-yellow-500 text-3xl mb-4"></i>
-                    <h2 class="text-xl font-bold mb-2">Adicionar Produto</h2>
-                    <p class="text-gray-600 mb-4">Crie novos itens para o cardápio e adicione-os ao Stripe.</p>
-                    <a href="./admin-add-product.html" class="font-semibold text-red-600 hover:text-red-800">Iniciar ›</a>
-                </div>
+    <main class="container mx-auto p-8 flex-grow">
+        <h1 class="text-4xl font-black text-gray-800 mb-8">Painel do Administrador</h1>
 
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                    <i class="fas fa-edit text-yellow-500 text-3xl mb-4"></i>
-                    <h2 class="text-xl font-bold mb-2">Gerenciar Produtos</h2>
-                    <p class="text-gray-600 mb-4">Edite preços, imagens e associe ingredientes extras.</p>
-                    <a href="./admin-manage-products.html" class="font-semibold text-red-600 hover:text-red-800">Gerenciar ›</a>
+        <!-- SEÇÃO DE GERENCIAMENTO ATUALIZADA -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Adicionar Produto -->
+            <a href="admin-add-product.html" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-1">
+                <div class="flex items-center">
+                    <div class="bg-purple-500 text-white p-4 rounded-full">
+                        <i class="fas fa-plus fa-2x"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h2 class="text-xl font-bold text-gray-800">Adicionar Produto</h2>
+                        <p class="text-gray-600 mt-1">Inclua um novo item no cardápio.</p>
+                    </div>
                 </div>
+            </a>
+            
+            <!-- Gerenciar Produtos -->
+            <a href="admin-manage-products.html" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-1">
+                <div class="flex items-center">
+                    <div class="bg-yellow-500 text-white p-4 rounded-full">
+                        <i class="fas fa-hamburger fa-2x"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h2 class="text-xl font-bold text-gray-800">Gerenciar Produtos</h2>
+                        <p class="text-gray-600 mt-1">Edite ou remova itens existentes.</p>
+                    </div>
+                </div>
+            </a>
+            
+            <!-- Gerenciar Permissões -->
+            <a href="admin-manage-admins.html" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-1">
+                <div class="flex items-center">
+                    <div class="bg-indigo-500 text-white p-4 rounded-full">
+                        <i class="fas fa-user-shield fa-2x"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h2 class="text-xl font-bold text-gray-800">Gerenciar Permissões</h2>
+                        <p class="text-gray-600 mt-1">Altere as permissões dos usuários.</p>
+                    </div>
+                </div>
+            </a>
 
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                    <i class="fas fa-pepper-hot text-yellow-500 text-3xl mb-4"></i>
-                    <h2 class="text-xl font-bold mb-2">Gerenciar Ingredientes</h2>
-                    <p class="text-gray-600 mb-4">Crie e edite os ingredientes adicionais para os produtos.</p>
-                    <a href="./admin-manage-ingredients.html" class="font-semibold text-red-600 hover:text-red-800">Gerenciar ›</a>
+            <!-- Gerenciar Clientes -->
+            <a href="admin-manage-clients.html" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-1">
+                <div class="flex items-center">
+                    <div class="bg-blue-500 text-white p-4 rounded-full">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h2 class="text-xl font-bold text-gray-800">Gerenciar Clientes</h2>
+                        <p class="text-gray-600 mt-1">Visualize os usuários cadastrados.</p>
+                    </div>
                 </div>
+            </a>
 
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                    <i class="fas fa-receipt text-yellow-500 text-3xl mb-4"></i>
-                    <h2 class="text-xl font-bold mb-2">Visualizar Pedidos</h2>
-                    <p class="text-gray-600 mb-4">Acompanhe todos os pedidos realizados pelos clientes.</p>
-                    <a href="./admin-view-orders.html" class="font-semibold text-red-600 hover:text-red-800">Ver Pedidos ›</a>
+            <!-- Visualizar Pedidos -->
+            <a href="admin-view-orders.html" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-1">
+                <div class="flex items-center">
+                    <div class="bg-green-500 text-white p-4 rounded-full">
+                        <i class="fas fa-receipt fa-2x"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h2 class="text-xl font-bold text-gray-800">Visualizar Pedidos</h2>
+                        <p class="text-gray-600 mt-1">Acompanhe o histórico de todos os pedidos.</p>
+                    </div>
                 </div>
+            </a>
+            
+             <!-- Acessar a Cozinha -->
+            <a href="kitchen.html" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-1">
+                <div class="flex items-center">
+                    <div class="bg-red-500 text-white p-4 rounded-full">
+                        <i class="fas fa-utensils fa-2x"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h2 class="text-xl font-bold text-gray-800">Painel da Cozinha</h2>
+                        <p class="text-gray-600 mt-1">Gerencie os pedidos em tempo real.</p>
+                    </div>
+                </div>
+            </a>
 
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                    <i class="fas fa-users-cog text-yellow-500 text-3xl mb-4"></i>
-                    <h2 class="text-xl font-bold mb-2">Gerenciar Clientes</h2>
-                    <p class="text-gray-600 mb-4">Veja a lista de clientes cadastrados e suas informações.</p>
-                    <a href="./admin-manage-clients.html" class="font-semibold text-red-600 hover:text-red-800">Ver Clientes ›</a>
-                </div>
-                
-                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-                    <i class="fas fa-user-shield text-yellow-500 text-3xl mb-4"></i>
-                    <h2 class="text-xl font-bold mb-2">Gerenciar Permissões</h2>
-                    <p class="text-gray-600 mb-4">Defina quem pode acessar este painel administrativo.</p>
-                    <a href="./admin-manage-admins.html" class="font-semibold text-red-600 hover:text-red-800">Gerenciar ›</a>
-                </div>
-
-            </div>
         </div>
     </main>
-
+    
+    <!-- RODAPÉ ADICIONADO -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -100,7 +135,6 @@
                     <ul class="space-y-2">
                         <li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li>
                         <li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li>
-                        <li><a href="./orders.html" class="text-gray-400 hover:text-white">Meus Pedidos</a></li>
                     </ul>
                 </div>
                 <div>
@@ -114,12 +148,8 @@
                 <div>
                     <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
                     <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="https://instagram.com/lancho.rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-instagram fa-lg"></i>
-                        </a>
-                        <a href="https://x.com/Lancho_rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-twitter fa-lg"></i>
-                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a>
                     </div>
                 </div>
             </div>
@@ -129,104 +159,80 @@
         </div>
     </footer>
 
+
     <script>
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const userMenuContainer = document.getElementById('user-menu-container');
 
-        async function fetchUserStats(userId) {
-            try {
-                const { data, error } = await supabaseClient.rpc('get_user_stats', { p_user_id: userId });
-                if (error) throw error;
-                return data;
-            } catch (error) {
-                console.error("Erro ao buscar estatísticas do admin:", error);
-                return { totalPedidos: 0, dinheiroGasto: 0.00 };
-            }
-        }
-
-        async function updateNavUI(user) {
-            const userMenuContainer = document.getElementById('user-menu-container');
-            const loginButton = document.getElementById('login-button-main');
-
-            if (user) {
-                loginButton.classList.add('hidden');
-                userMenuContainer.classList.remove('hidden');
-                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
-                const stats = await fetchUserStats(user.id);
-
-                userMenuContainer.innerHTML = `
-                    <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
-                    <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                        <div class="p-4 border-b border-gray-200">
-                            <div class="flex items-center">
-                                <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
-                                <div class="ml-4">
-                                    <p class="text-md font-semibold text-gray-800">${user.nome || 'Admin'}</p>
-                                    <p class="text-xs text-gray-500">${user.email}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="py-2">
-                            <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
-                            <a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 font-bold bg-blue-50 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>
-                        </div>
-                        <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
-                    </div>`;
-
-                const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
-                const userMenuDropdown = userMenuContainer.querySelector('#user-menu-dropdown');
-                userMenuButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    userMenuDropdown.classList.toggle('hidden');
-                });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { 
-                    localStorage.removeItem('currentAdmin'); 
-                    window.location.href = './index.html'; 
-                };
-            } else {
-                loginButton.classList.remove('hidden');
-                userMenuContainer.classList.add('hidden');
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
+        async function checkAdmin() {
             const userString = localStorage.getItem('currentAdmin');
-            let currentAdmin = null;
-
-            if (userString) {
-                currentAdmin = JSON.parse(userString);
-                if (currentAdmin.role !== 'admin') {
-                    alert('Acesso negado. Você não tem permissão de administrador.');
-                    localStorage.removeItem('currentAdmin');
-                    window.location.href = './index.html';
-                    return;
-                }
-            } else {
-                alert('Você precisa estar logado como administrador para acessar esta página.');
+            if (!userString) {
+                alert('Acesso negado. Você precisa ser um administrador.');
                 window.location.href = './login.html';
                 return;
             }
+            const admin = JSON.parse(userString);
+            if (admin.role !== 'admin') {
+                alert('Acesso negado. Permissões insuficientes.');
+                window.location.href = './index.html';
+                return;
+            }
+            await updateNavUI(admin);
+        }
 
-            const mainMenuButton = document.getElementById('main-menu-button');
-            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
-            mainMenuButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                mainMenuDropdown.classList.toggle('hidden');
-            });
+        async function updateNavUI(user) {
+            const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
+            userMenuContainer.innerHTML = `
+                <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
+                <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
+                    <div class="p-4 border-b">
+                        <div class="flex items-center">
+                            <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover">
+                            <div class="ml-4">
+                                <p class="font-semibold">${user.nome}</p>
+                                <p class="text-xs text-gray-500">${user.email}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-2">
+                        <a href="./profile.html" class="w-full text-left flex items-center text-sm text-gray-700 hover:bg-gray-100 p-2 rounded"><i class="fas fa-user-edit w-6 mr-2"></i>Editar Perfil</a>
+                    </div>
+                    <div class="p-2 border-t">
+                        <button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button>
+                    </div>
+                </div>`;
             
-            await updateNavUI(currentAdmin);
-
-            window.addEventListener('click', (event) => {
-                 if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target)) {
-                    mainMenuDropdown.classList.add('hidden');
-                }
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !userMenuDropdown.contains(event.target)) {
-                    userMenuDropdown.classList.add('hidden');
-                }
+            userMenuContainer.querySelector('#user-menu-button').addEventListener('click', (e) => { 
+                e.stopPropagation();
+                userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden');
             });
+            userMenuContainer.querySelector('#logout-button').onclick = () => { 
+                localStorage.removeItem('currentAdmin'); 
+                window.location.href = './login.html'; 
+            };
+        }
+
+        const mainMenuButton = document.getElementById('main-menu-button');
+        const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+        mainMenuButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            mainMenuDropdown.classList.toggle('hidden');
         });
+        window.addEventListener('click', (event) => {
+            if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
+                mainMenuDropdown.classList.add('hidden');
+            }
+            const userMenuDropdown = document.getElementById('user-menu-dropdown');
+            if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
+                userMenuDropdown.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', checkAdmin);
     </script>
+
 </body>
 </html>
+

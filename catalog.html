@@ -3,105 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cardápio - Lanchô</title>
+    <title>Cardápio Completo - Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        /* Estilos Globais e Utilitários */
-        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f2937; display: flex; flex-direction: column; min-height: 100vh; }
-
-        /* Transições para Modals e Painéis Laterais */
-        .modal, .modal-backdrop, #cart-overlay { transition: opacity 0.3s ease; }
-        .modal-content, #cart-panel { transition: transform 0.3s ease; }
-        #cart-panel { transform: translateX(100%); }
-        .product-card { display: flex; flex-direction: column; }
-        .product-card-content { flex-grow: 1; display: flex; flex-direction: column; }
-        .product-card-description { flex-grow: 1; }
-        
-        /* Estilos para o Toast de Notificação */
-        #toast-notification {
-            position: fixed; bottom: 20px; left: 50%;
-            transform: translateX(-50%) translateY(200%);
-            background-color: #1f2937; color: white;
-            padding: 1rem 1.5rem; border-radius: 9999px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transition: transform 0.5s ease-in-out; z-index: 100; display: flex; align-items: center;
+        body { font-family: 'Inter', sans-serif; }
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        #toast-notification.show { transform: translateX(-50%) translateY(0); }
-
-        /* Estilos para o Contador de Quantidade */
-        .quantity-stepper { display: flex; align-items: center; gap: 0.5rem; }
-        .quantity-btn {
-            width: 2rem; height: 2rem; border-radius: 9999px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; color: white; cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
         }
-        .quantity-btn:active { transform: scale(0.95); }
-        .quantity-minus { background-color: #ef4444; }
-        .quantity-minus:hover { background-color: #dc2626; }
-        .quantity-plus { background-color: #22c55e; }
-        .quantity-plus:hover { background-color: #16a34a; }
-        .quantity-input {
-            width: 3rem; text-align: center; font-weight: 600;
-            border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.25rem;
+        .toast-notification, .modal-transition {
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
-        .quantity-input::-webkit-outer-spin-button, .quantity-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .quantity-input[type=number] { -moz-appearance: textfield; }
-
-        /* Estilos para Avaliações */
-        .star-rating { display: inline-flex; }
-        .star-rating .star { color: #d1d5db; transition: color 0.2s; }
-        .star-rating .star.filled { color: #f59e0b; }
-        .details-trigger { cursor: pointer; } /* Torna a área de detalhes clicável */
-
-        .review-stars-input { display: flex; flex-direction: row-reverse; justify-content: flex-end; }
-        .review-stars-input input { display: none; }
-        .review-stars-input label {
-            font-size: 2rem; color: #d1d5db; cursor: pointer;
-            transition: transform 0.1s, color 0.2s;
+        .modal-content {
+            transition: transform 0.3s ease;
         }
-        .review-stars-input label:hover,
-        .review-stars-input label:hover ~ label,
-        .review-stars-input input:checked ~ label {
-            color: #f59e0b;
+        /* Estilo para as estrelas de avaliação (MAIS EXUBERANTE) */
+        .star-rating { display: inline-flex; direction: rtl; }
+        .star-rating input { display: none; }
+        .star-rating label {
+            font-size: 2.5rem; /* Estrelas maiores */
+            color: #d1d5db; /* gray-300 */
+            cursor: pointer;
+            transition: color 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
-        .review-stars-input label:hover { transform: scale(1.1); }
-
-        /* Estilos para a Confirmação Exuberante de Avaliação */
-        .review-confirmation-container {
-            text-align: center;
-            padding: 2.5rem 2rem;
-            animation: fadeInScaleUp 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+        .star-rating label:hover {
+            transform: scale(1.2); /* Efeito de zoom */
         }
-        @keyframes fadeInScaleUp {
-            from { opacity: 0; transform: scale(0.85); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .review-confirmation-icon {
-            font-size: 4rem;
-            line-height: 1;
-            color: #22c55e; /* green-500 */
-            animation: iconPop 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        @keyframes iconPop {
-            0% { transform: scale(0); }
-            60% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-        .review-confirmation-title {
-            font-size: 1.5rem; /* text-2xl */
-            font-weight: 900; /* font-black */
-            margin-top: 1rem;
-            color: #1f2937; /* gray-800 */
-        }
-        .review-confirmation-message {
-            color: #4b5563; /* gray-600 */
-            margin-top: 0.5rem;
-            font-size: 1.1rem;
+        .star-rating input:checked ~ label,
+        .star-rating:not(:checked) > label:hover,
+        .star-rating:not(:checked) > label:hover ~ label {
+            color: #f59e0b; /* amber-500 */
         }
     </style>
 </head>
@@ -115,7 +52,7 @@
                 </button>
                 <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden z-30">
                     <a href="./index.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-home w-6 mr-2"></i>Home</a>
-                    <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100 font-semibold"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
+                    <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
                     <a href="./ofertas.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
                     <a href="./sobre.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
                 </div>
@@ -124,52 +61,112 @@
                 <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
             </div>
             <div class="flex items-center space-x-4">
-                <button id="cart-button" class="relative p-2 rounded-full text-gray-600 hover:bg-gray-200">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span id="cart-count" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
-                </button>
-                <a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700">Entrar</a>
-                <div id="user-menu-container" class="relative hidden"></div>
+                <div id="user-menu-container" class="relative"></div>
             </div>
         </nav>
     </header>
 
     <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <h1 class="text-4xl font-bold text-center mb-10 text-gray-800">Nosso Cardápio</h1>
-        <div id="menu-container" class="space-y-16">
-            <p id="loading-message" class="col-span-full text-center text-gray-500 text-lg">
-                 <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                 A carregar o cardápio...
-            </p>
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-black text-gray-800">Nosso Cardápio</h1>
+            <p class="text-lg text-gray-500 mt-2">Feito com os melhores ingredientes, especialmente para você.</p>
+        </div>
+
+        <div id="catalog-container" class="space-y-12">
+            <!-- As categorias e produtos serão inseridos aqui -->
+        </div>
+        <div id="loading-indicator" class="text-center py-16">
+            <i class="fas fa-spinner fa-spin fa-3x text-yellow-500"></i>
+            <p class="mt-4 text-gray-600">Carregando delícias...</p>
         </div>
     </main>
 
-    <div id="customization-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 hidden opacity-0 modal-backdrop">
-        <div id="customization-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform scale-95 modal-content">
-            </div>
-    </div>
-
-    <div id="product-details-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 hidden opacity-0 modal-backdrop">
-        <div id="product-details-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transform scale-95 modal-content">
-            </div>
+    <!-- Botão Flutuante do Carrinho -->
+    <div id="cart-button-container" class="fixed bottom-8 right-8 z-30">
+        <button id="cart-button" class="bg-red-600 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform">
+            <i class="fas fa-shopping-cart fa-lg"></i>
+            <span id="cart-count" class="absolute -top-1 -right-1 bg-yellow-400 text-red-800 text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">0</span>
+        </button>
     </div>
     
-    <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-40 hidden opacity-0"></div>
-    <div id="cart-panel" class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col" style="transform: translateX(100%);">
-        <div class="flex justify-between items-center p-4 border-b">
-            <h2 class="text-2xl font-bold">Meu Carrinho</h2>
-            <button id="close-cart-button" class="p-2 rounded-full text-gray-500 hover:bg-gray-200 text-2xl">&times;</button>
-        </div>
-        <div id="cart-items" class="flex-grow p-4 overflow-y-auto"></div>
-        <div class="p-4 border-t bg-gray-50">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-lg font-semibold">Total:</span>
-                <span id="cart-total" class="text-xl font-bold">R$ 0,00</span>
+    <!-- Modal do Carrinho de Compras -->
+    <div id="cart-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 modal-transition opacity-0">
+        <div id="cart-modal-content" class="bg-gray-100 w-full max-w-lg rounded-xl shadow-2xl flex flex-col max-h-[90vh] modal-content transform scale-95">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-bold">Seu Carrinho</h2>
+                <button id="close-cart-button" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
             </div>
-            <button id="checkout-button" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-full hover:bg-green-700 transition-colors">
-                Finalizar Compra
-            </button>
+            <div id="cart-items-container" class="p-6 space-y-4 overflow-y-auto flex-grow"></div>
+            <div class="p-6 bg-white rounded-b-xl border-t">
+                 <div id="cart-total-container" class="flex justify-between items-center text-xl font-bold mb-4">
+                    <span>Total:</span>
+                    <span id="cart-total">R$ 0,00</span>
+                </div>
+                <button id="checkout-button" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-full hover:bg-green-700 transition-colors flex justify-center items-center">
+                    <span id="checkout-button-text">Finalizar Compra</span>
+                    <i id="checkout-spinner" class="fas fa-spinner fa-spin ml-2 hidden"></i>
+                </button>
+            </div>
         </div>
+    </div>
+
+    <!-- Modal "Faça Login" -->
+    <div id="login-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 modal-transition opacity-0">
+        <div class="bg-white p-8 rounded-lg shadow-2xl text-center max-w-sm mx-auto modal-content transform scale-95">
+            <i class="fas fa-user-lock fa-3x text-yellow-500 mb-4"></i>
+            <h2 class="text-2xl font-bold mb-2">Ops!</h2>
+            <p class="text-gray-600 mb-6">Você precisa fazer login para adicionar itens ao carrinho ou ver avaliações.</p>
+            <div class="flex justify-center gap-4">
+                <button id="close-login-modal-button" class="py-2 px-6 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">Fechar</button>
+                <a href="./login.html" class="py-2 px-6 bg-red-600 text-white rounded-full hover:bg-red-700">Fazer Login</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Erro Exuberante -->
+    <div id="error-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4 modal-transition opacity-0">
+        <div class="bg-white p-8 rounded-lg shadow-2xl text-center max-w-sm mx-auto modal-content transform scale-95">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100">
+                <i class="fas fa-times fa-2x text-red-600"></i>
+            </div>
+            <h2 class="text-2xl font-bold my-4">Ocorreu um Erro</h2>
+            <p id="error-message" class="text-gray-600 mb-6">Não foi possível completar a sua solicitação.</p>
+            <button id="close-error-modal-button" class="py-2 px-8 bg-red-600 text-white rounded-full hover:bg-red-700">Entendi</button>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação para Excluir -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[70] p-4 modal-transition opacity-0">
+        <div class="bg-white p-8 rounded-lg shadow-2xl text-center max-w-sm mx-auto modal-content transform scale-95">
+            <i class="fas fa-exclamation-triangle fa-3x text-yellow-500 mb-4"></i>
+            <h2 class="text-2xl font-bold my-4">Tem Certeza?</h2>
+            <p id="confirm-message" class="text-gray-600 mb-6">Essa ação não pode ser desfeita.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-confirm-button" class="py-2 px-6 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300">Cancelar</button>
+                <button id="confirm-action-button" class="py-2 px-6 bg-red-600 text-white rounded-full hover:bg-red-700">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Avaliações -->
+    <div id="reviews-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 modal-transition opacity-0">
+        <div class="bg-gray-100 w-full max-w-2xl rounded-xl shadow-2xl flex flex-col max-h-[90vh] modal-content transform scale-95">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h2 id="reviews-modal-title" class="text-2xl font-bold">Avaliações</h2>
+                <button id="close-reviews-modal-button" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+            </div>
+            <div id="reviews-list" class="p-6 space-y-4 overflow-y-auto flex-grow">
+                <!-- Lista de avaliações -->
+            </div>
+            <div id="review-form-container" class="p-6 bg-white rounded-b-xl border-t">
+                <!-- Formulário para adicionar avaliação -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-24 right-8 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg z-50 transform translate-x-full opacity-0">
+        <i class="fas fa-check-circle mr-2"></i> Item adicionado ao carrinho!
     </div>
 
     <footer class="bg-gray-800 text-white mt-auto">
@@ -184,7 +181,6 @@
                     <ul class="space-y-2">
                         <li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li>
                         <li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li>
-                        <li><a href="./orders.html" class="text-gray-400 hover:text-white">Meus Pedidos</a></li>
                     </ul>
                 </div>
                 <div>
@@ -198,12 +194,8 @@
                 <div>
                     <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
                     <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="https://instagram.com/lancho.rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-instagram fa-lg"></i>
-                        </a>
-                        <a href="https://x.com/Lancho_rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-twitter fa-lg"></i>
-                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a>
                     </div>
                 </div>
             </div>
@@ -213,749 +205,467 @@
         </div>
     </footer>
 
-    <div id="toast-notification">
-        <i class="fas fa-check-circle mr-3 text-green-400"></i>
-        <span id="toast-message"></span>
-    </div>
-
     <script>
-        // Bloco de Configuração Inicial e Variáveis Globais
-        // =========================================================
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let loggedUser = null; 
-        let cart = [];
-        let allProducts = [];
 
-        // Mapeamento dos elementos do DOM
-        const menuContainer = document.getElementById('menu-container');
-        const loadingMessage = document.getElementById('loading-message');
-        const customizationModal = document.getElementById('customization-modal');
-        const customizationModalContent = document.getElementById('customization-modal-content');
-        const productDetailsModal = document.getElementById('product-details-modal');
-        const productDetailsModalContent = document.getElementById('product-details-modal-content');
-        const cartButton = document.getElementById('cart-button');
-        const closeCartButton = document.getElementById('close-cart-button');
-        const cartOverlay = document.getElementById('cart-overlay');
-        const cartPanel = document.getElementById('cart-panel');
+        // --- ELEMENTOS GLOBAIS ---
+        const catalogContainer = document.getElementById('catalog-container');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const userMenuContainer = document.getElementById('user-menu-container');
         const cartCount = document.getElementById('cart-count');
-        const cartItemsContainer = document.getElementById('cart-items');
+        const cartButton = document.getElementById('cart-button');
+        const toast = document.getElementById('toast');
+        
+        // Modals
+        const loginModal = document.getElementById('login-modal');
+        const closeLoginModalButton = document.getElementById('close-login-modal-button');
+        const cartModal = document.getElementById('cart-modal');
+        const closeCartButton = document.getElementById('close-cart-button');
+        const errorModal = document.getElementById('error-modal');
+        const errorMessage = document.getElementById('error-message');
+        const closeErrorModalButton = document.getElementById('close-error-modal-button');
+        const reviewsModal = document.getElementById('reviews-modal');
+        const closeReviewsModalButton = document.getElementById('close-reviews-modal-button');
+        const reviewsModalTitle = document.getElementById('reviews-modal-title');
+        const reviewsList = document.getElementById('reviews-list');
+        const reviewFormContainer = document.getElementById('review-form-container');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmMessage = document.getElementById('confirm-message');
+        const cancelConfirmButton = document.getElementById('cancel-confirm-button');
+        const confirmActionButton = document.getElementById('confirm-action-button');
+
+        // Cart Modal Elements
+        const cartItemsContainer = document.getElementById('cart-items-container');
         const cartTotal = document.getElementById('cart-total');
         const checkoutButton = document.getElementById('checkout-button');
-        const toastNotification = document.getElementById('toast-notification');
-        const toastMessage = document.getElementById('toast-message');
-        let toastTimeout;
+        const checkoutButtonText = document.getElementById('checkout-button-text');
+        const checkoutSpinner = document.getElementById('checkout-spinner');
 
-        // Funções de UI (Toast, Carrinho, etc.)
-        // =========================================================
+        let loggedUser = null;
+
+        // --- FUNÇÕES DE RENDERIZAÇÃO ---
         
+        function renderStars(rating, totalReviews = 0, isInteractive = false) {
+            const fullStars = Math.round(rating);
+            const emptyStars = 5 - fullStars;
+            let starsHtml = '';
+            for (let i = 0; i < fullStars; i++) starsHtml += '<i class="fas fa-star text-yellow-400"></i>';
+            for (let i = 0; i < emptyStars; i++) starsHtml += '<i class="far fa-star text-yellow-400"></i>';
+            const interactiveClass = isInteractive ? 'cursor-pointer hover:opacity-75' : '';
+            return `<div class="flex items-center gap-2 ${interactiveClass}">${starsHtml} <span class="text-xs text-gray-500">(${totalReviews})</span></div>`;
+        }
+        
+        function renderProducts(products) {
+            const groupedByCategory = products.reduce((acc, product) => {
+                const category = product.categoria || 'Outros';
+                if (!acc[category]) acc[category] = [];
+                acc[category].push(product);
+                return acc;
+            }, {});
+
+            catalogContainer.innerHTML = Object.entries(groupedByCategory).map(([category, items]) => `
+                <section id="${category.toLowerCase().replace(/\s+/g, '-')}" class="scroll-mt-24">
+                    <h2 class="text-3xl font-bold border-b-4 border-yellow-400 pb-2 mb-8 inline-block">${category}</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        ${items.map(product => `
+                            <div class="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col product-card">
+                                <img src="${product.image_url}" alt="${product.nome}" class="w-full h-56 object-cover">
+                                <div class="p-6 flex flex-col flex-grow">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="text-xl font-bold">${product.nome}</h3>
+                                        <div onclick='openReviewsModal(${product.id}, "${product.nome.replace(/"/g, '&quot;')}")'>
+                                            ${renderStars(product.media_avaliacoes, product.total_avaliacoes, true)}
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-600 mt-2 flex-grow">${product.descricao}</p>
+                                    <div class="flex justify-between items-center mt-6">
+                                        <span class="text-2xl font-black text-red-600">R$ ${parseFloat(product.preco).toFixed(2).replace('.', ',')}</span>
+                                        <button onclick='addToCart(${JSON.stringify(product).replace(/'/g, "&apos;")})' class="bg-yellow-400 text-yellow-900 font-bold py-2 px-4 rounded-full hover:bg-yellow-500 transition-colors">
+                                            <i class="fas fa-cart-plus mr-2"></i>Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+            `).join('');
+        }
+
+        async function fetchAndRenderProducts() {
+            loadingIndicator.style.display = 'block';
+            const { data, error } = await supabaseClient.from('Produto').select('*').order('categoria, nome');
+            if (error) {
+                console.error('Erro ao buscar produtos:', error);
+                loadingIndicator.innerHTML = '<p class="text-red-500">Não foi possível carregar o cardápio. Tente novamente mais tarde.</p>';
+                return;
+            }
+            renderProducts(data);
+            loadingIndicator.style.display = 'none';
+        }
+        
+        // --- FUNÇÕES DE MODAL E NOTIFICAÇÃO ---
+
         function showToast(message, isError = false) {
-            clearTimeout(toastTimeout);
-            toastMessage.textContent = message;
-            toastNotification.querySelector('i').className = isError 
-                ? 'fas fa-exclamation-circle mr-3 text-red-400' 
-                : 'fas fa-check-circle mr-3 text-green-400';
-            toastNotification.classList.add('show');
-            toastTimeout = setTimeout(() => {
-                toastNotification.classList.remove('show');
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-times-circle' : 'fa-check-circle'} mr-2"></i> ${message}`;
+            toast.className = `fixed top-24 right-8 text-white py-3 px-6 rounded-lg shadow-lg z-[80] transform translate-x-full opacity-0 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.remove('translate-x-full', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 500);
             }, 3000);
         }
 
-        function toggleCart() {
-            const isHidden = cartPanel.style.transform === 'translateX(100%)';
-            if (isHidden) {
-                cartOverlay.classList.remove('hidden');
-                setTimeout(() => cartOverlay.classList.remove('opacity-0'), 10);
-                cartPanel.style.transform = 'translateX(0)';
-                document.body.classList.add('overflow-hidden');
-            } else {
-                cartOverlay.classList.add('opacity-0');
-                setTimeout(() => cartOverlay.classList.add('hidden'), 300);
-                cartPanel.style.transform = 'translateX(100%)';
-                document.body.classList.remove('overflow-hidden');
-            }
+        function openModal(modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.modal-content').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal(modal) {
+            modal.classList.add('opacity-0');
+            modal.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function showErrorModal(message) {
+            errorMessage.textContent = message;
+            openModal(errorModal);
         }
         
-        cartButton.addEventListener('click', toggleCart);
-        closeCartButton.addEventListener('click', toggleCart);
-        cartOverlay.addEventListener('click', toggleCart);
+        // --- FUNÇÕES DO CARRINHO ---
 
-        // Funções de Gerenciamento do Carrinho
-        // =========================================================
-
-        function saveCart() { 
-            localStorage.setItem('shoppingCart', JSON.stringify(cart)); 
-        }
-
-        function loadCart() {
-             const savedCart = localStorage.getItem('shoppingCart');
-             if (savedCart) {
-                 try {
-                     const parsedCart = JSON.parse(savedCart);
-                     if (Array.isArray(parsedCart)) {
-                         cart = parsedCart;
-                     } else {
-                         cart = [];
-                     }
-                 } catch (e) {
-                     cart = [];
-                     localStorage.removeItem('shoppingCart');
-                 }
-             }
-             updateCartUI();
-        }
-        
-        function addToCart(product, customizations) {
-            const customId = customizations.map(c => `${c.id}:${c.quantity}`).sort().join('|');
-            const cartItemId = `${product.id}-${customId}`;
-
-            const existingItem = cart.find(item => item.id === cartItemId);
-            if (existingItem) {
-                existingItem.quantity++;
+        function addToCart(product) {
+            if (!loggedUser) { openModal(loginModal); return; }
+            let cart = JSON.parse(localStorage.getItem('lanchoCart')) || [];
+            const existingProductIndex = cart.findIndex(item => item.id === product.id);
+            if (existingProductIndex > -1) {
+                cart[existingProductIndex].quantity += 1;
             } else {
-                cart.push({
-                    id: cartItemId,
-                    product: product,
-                    customizations: customizations,
-                    quantity: 1
-                });
+                cart.push({ ...product, quantity: 1 });
             }
-
-            saveCart();
-            updateCartUI();
-            showToast(`${product.nome} foi adicionado ao carrinho!`);
-            closeCustomizationModal();
+            localStorage.setItem('lanchoCart', JSON.stringify(cart));
+            updateCartCount();
+            showToast('Item adicionado ao carrinho!');
         }
 
-        function updateCartUI() {
-            cartItemsContainer.innerHTML = '';
-            let total = 0;
-            let count = 0;
-            if (cart.length === 0) {
-                cartItemsContainer.innerHTML = '<p class="text-center text-gray-500 py-10">Seu carrinho está vazio.</p>';
-            } else {
-                cart.forEach(item => {
-                    const itemBasePrice = item.product.preco || 0;
-                    const customizationPrice = item.customizations.reduce((sum, cust) => sum + (cust.price * cust.quantity), 0);
-                    const singleItemPrice = itemBasePrice + customizationPrice;
-                    const itemTotal = singleItemPrice * item.quantity;
-                    total += itemTotal;
-                    count += item.quantity;
-                    
-                    const customizationsHtml = item.customizations
-                        .filter(cust => cust.quantity !== 0)
-                        .map(cust => {
-                            if (cust.quantity > 0) return `<li class="text-xs text-green-600 ml-5">+ ${cust.quantity}x ${cust.name}</li>`;
-                            if (cust.quantity < 0) return `<li class="text-xs text-red-600 ml-5">Sem ${cust.name}</li>`;
-                            return '';
-                        }).join('');
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('lanchoCart')) || [];
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.textContent = totalItems;
+        }
 
-                    cartItemsContainer.innerHTML += `
-                        <div class="flex items-center justify-between py-4 border-b">
-                            <div class="flex items-start">
-                                <img src="${item.product.image_url || 'https://placehold.co/64x64'}" class="w-16 h-16 rounded-md object-cover mr-4">
-                                <div>
-                                    <p class="font-semibold">${item.product.nome}</p>
-                                    <ul class="mt-1">${customizationsHtml}</ul>
-                                    <p class="text-sm text-gray-600 mt-2 font-bold">Total do item: R$ ${itemTotal.toFixed(2)}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-3">
-                                <button onclick="changeQuantity('${item.id}', -1)" class="w-6 h-6 rounded-full bg-gray-200">-</button>
-                                <span>${item.quantity}</span>
-                                <button onclick="changeQuantity('${item.id}', 1)" class="w-6 h-6 rounded-full bg-gray-200">+</button>
-                                <button onclick="removeFromCart('${item.id}')" class="text-red-500 hover:text-red-700 text-xl">&times;</button>
-                            </div>
-                        </div>`;
-                });
-            }
-            cartCount.textContent = count;
-            cartTotal.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        function renderCartModal() {
+            const cart = JSON.parse(localStorage.getItem('lanchoCart')) || [];
             checkoutButton.disabled = cart.length === 0;
-        }
+            checkoutButton.classList.toggle('bg-gray-400', cart.length === 0);
+            checkoutButton.classList.toggle('cursor-not-allowed', cart.length === 0);
+            checkoutButton.classList.toggle('bg-green-600', cart.length > 0);
+            checkoutButton.classList.toggle('hover:bg-green-700', cart.length > 0);
 
-        function changeQuantity(cartItemId, amount) {
-            const item = cart.find(i => i.id === cartItemId);
-            if (item) {
-                item.quantity += amount;
-                if (item.quantity <= 0) { removeFromCart(cartItemId); } 
-                else { saveCart(); updateCartUI(); }
-            }
-        }
-
-        function removeFromCart(cartItemId) {
-            cart = cart.filter(item => item.id !== cartItemId);
-            saveCart();
-            updateCartUI();
-        }
-
-        // Funções de Checkout
-        // =========================================================
-        checkoutButton.addEventListener('click', async () => {
-            if (!loggedUser) {
-                showToast('Você precisa fazer login para finalizar a compra!', true);
-                setTimeout(() => { window.location.href = './login.html'; }, 1500);
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p class="text-center text-gray-500">Seu carrinho está vazio.</p>';
+                cartTotal.textContent = 'R$ 0,00';
                 return;
             }
             
-            checkoutButton.disabled = true;
-            checkoutButton.textContent = 'A processar...';
+            cartItemsContainer.innerHTML = cart.map(item => `
+                <div class="flex items-center gap-4 border-b pb-4">
+                    <img src="${item.image_url}" alt="${item.nome}" class="w-16 h-16 rounded-md object-cover">
+                    <div class="flex-grow">
+                        <h4 class="font-bold">${item.nome}</h4>
+                        <p class="text-sm text-gray-600">R$ ${parseFloat(item.preco).toFixed(2).replace('.', ',')}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="updateCartItemQuantity(${item.id}, -1)" class="w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="updateCartItemQuantity(${item.id}, 1)" class="w-8 h-8 bg-gray-200 rounded-full hover:bg-gray-300">+</button>
+                    </div>
+                    <button onclick="removeCartItem(${item.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `).join('');
 
-            try {
-                const line_items = [];
-                cart.forEach(item => {
-                    const itemBasePrice = item.product.preco || 0;
-                    const customizationPrice = item.customizations.reduce((sum, cust) => sum + (cust.price * cust.quantity), 0);
-                    const finalPrice = itemBasePrice + customizationPrice;
-                    
-                    if (finalPrice < 0.50 && line_items.length === cart.length - 1 && cart.length > 0) return;
-
-                    const customizationsText = item.customizations
-                        .filter(c => c.quantity !== 0)
-                        .map(c => {
-                            if (c.quantity > 0) return `+${c.quantity} ${c.name}`;
-                            if (c.quantity < 0) return `Sem ${c.name}`;
-                            return null;
-                        }).filter(Boolean).join(', ');
-
-                    const product_data = {
-                        name: item.product.nome,
-                        images: [item.product.image_url]
-                    };
-
-                    if (customizationsText) {
-                        product_data.description = `(${customizationsText})`;
-                    }
-
-                    line_items.push({
-                        price_data: {
-                            currency: 'brl',
-                            product_data: product_data,
-                            unit_amount: Math.round(finalPrice * 100),
-                        },
-                        quantity: item.quantity,
-                    });
-                });
-                
-                if (line_items.length === 0) throw new Error("Seu carrinho está vazio ou os itens não têm preço.");
-
-                const { data, error } = await supabaseClient.functions.invoke('create-checkout-session', { 
-                    body: { line_items, clienteId: loggedUser.id, customerEmail: loggedUser.email }, 
-                });
-
-                if (error) {
-                    const errorBody = await error.context.json();
-                    throw new Error(errorBody.error || 'A função de checkout retornou um erro.');
-                }
-                
-                cart = [];
-                saveCart();
-                window.location.href = data.checkoutUrl;
-
-            } catch (e) {
-                console.error('Erro ao finalizar compra:', e);
-                showToast(`Erro: ${e.message}`, true);
-                checkoutButton.disabled = false;
-                checkoutButton.textContent = 'Finalizar Compra';
-            }
-        });
-
-        // Funções de Carregamento de Produtos
-        // =========================================================
-
-        async function loadProductsAndIngredients() {
-            try {
-                const { data: products, error } = await supabaseClient
-                    .from('Produto')
-                    .select(`*, Produto_Ingrediente (quantidade_padrao, is_customizable, Ingrediente (*))`);
-
-                if (error) throw error;
-                
-                loadingMessage.style.display = 'none';
-                if (!products || products.length === 0) {
-                    menuContainer.innerHTML = '<p class="text-center text-gray-500">Nenhum produto disponível.</p>';
-                    return;
-                }
-                
-                products.forEach(p => {
-                    p.ingredients = p.Produto_Ingrediente.map(pi => ({
-                        ...pi.Ingrediente,
-                        quantidade_padrao: pi.quantidade_padrao,
-                        is_customizable: pi.is_customizable,
-                    })).filter(ing => ing && ing.id);
-                });
-                allProducts = products;
-
-                const productsByCategory = products.reduce((acc, product) => {
-                    const category = product.categoria || 'Outros';
-                    if (!acc[category]) acc[category] = [];
-                    acc[category].push(product);
-                    return acc;
-                }, {});
-
-                const categoryOrder = ['Mais Vendidos', 'Sanduíches', 'Combos', 'Acompanhamentos', 'Sobremesas', 'Bebidas', 'Outros'];
-                
-                menuContainer.innerHTML = '';
-                
-                categoryOrder.forEach(category => {
-                    if (productsByCategory[category]) {
-                        const section = document.createElement('section');
-                        section.innerHTML = `
-                            <h2 class="text-3xl font-bold text-gray-800 mb-8">${category}</h2>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                ${productsByCategory[category].map(p => renderProductCard(p)).join('')}
-                            </div>`;
-                        menuContainer.appendChild(section);
-                    }
-                });
-            } catch (error) {
-                console.error('Erro ao carregar produtos:', error);
-                loadingMessage.textContent = `Falha ao carregar o cardápio: ${error.message}`;
-            }
+            const total = cart.reduce((sum, item) => sum + item.preco * item.quantity, 0);
+            cartTotal.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
         }
         
-        function renderProductCard(p) {
-            const averageRating = p.media_avaliacoes || 0;
-            const totalReviews = p.total_avaliacoes || 0;
-            const hasCustomization = p.ingredients && p.ingredients.some(i => i.is_customizable);
-            const buttonText = hasCustomization ? 'Personalizar' : 'Adicionar';
-            const buttonIcon = hasCustomization ? 'fa-wand-magic-sparkles' : 'fa-cart-plus';
-            
-            let starsHtml = '';
-            for (let i = 1; i <= 5; i++) {
-                starsHtml += `<i class="star ${i <= averageRating ? 'filled' : ''} fa-solid fa-star"></i>`;
+        function updateCartItemQuantity(productId, change) {
+            let cart = JSON.parse(localStorage.getItem('lanchoCart')) || [];
+            const itemIndex = cart.findIndex(item => item.id === productId);
+            if (itemIndex > -1) {
+                cart[itemIndex].quantity += change;
+                if (cart[itemIndex].quantity <= 0) cart.splice(itemIndex, 1);
+            }
+            localStorage.setItem('lanchoCart', JSON.stringify(cart));
+            updateCartCount();
+            renderCartModal();
+        }
+
+        function removeCartItem(productId) {
+            let cart = JSON.parse(localStorage.getItem('lanchoCart')) || [];
+            cart = cart.filter(item => item.id !== productId);
+            localStorage.setItem('lanchoCart', JSON.stringify(cart));
+            updateCartCount();
+            renderCartModal();
+        }
+
+        async function handleCheckout() {
+            checkoutButton.disabled = true;
+            checkoutButtonText.textContent = 'Processando...';
+            checkoutSpinner.classList.remove('hidden');
+
+            if (!loggedUser) {
+                showErrorModal('Sua sessão expirou. Por favor, faça login novamente para finalizar a compra.');
+                checkoutButton.disabled = false; checkoutButtonText.textContent = 'Finalizar Compra'; checkoutSpinner.classList.add('hidden');
+                return;
             }
 
+            const cart = JSON.parse(localStorage.getItem('lanchoCart')) || [];
+            const invalidItems = cart.filter(item => !item.stripe_price_id);
+            if (invalidItems.length > 0) {
+                showErrorModal(`Os seguintes itens não podem ser processados: ${invalidItems.map(i => i.nome).join(', ')}. Remova-os do carrinho.`);
+                checkoutButton.disabled = false; checkoutButtonText.textContent = 'Finalizar Compra'; checkoutSpinner.classList.add('hidden');
+                return;
+            }
+
+            const line_items = cart.map(item => ({ price: item.stripe_price_id, quantity: item.quantity }));
+
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('create-checkout-session', { 
+                    body: { line_items, clienteId: loggedUser.id, customerEmail: loggedUser.email } 
+                });
+                if (error) throw error;
+                if (data.error) throw new Error(data.error);
+                window.location.href = data.checkoutUrl;
+            } catch (error) {
+                console.error('Erro no checkout:', error);
+                showErrorModal('Não foi possível iniciar o checkout. Tente novamente.');
+                checkoutButton.disabled = false; checkoutButtonText.textContent = 'Finalizar Compra'; checkoutSpinner.classList.add('hidden');
+            }
+        }
+
+        // --- FUNÇÕES DE AVALIAÇÃO ---
+
+        async function openReviewsModal(productId, productName) {
+            reviewsModal.dataset.productId = productId; // Armazena o ID do produto no modal
+            reviewsModalTitle.textContent = `Avaliações de ${productName}`;
+            reviewsList.innerHTML = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+            reviewFormContainer.innerHTML = '';
+            openModal(reviewsModal);
+
+            const { data, error } = await supabaseClient.from('avaliacoes').select(`id, nota, comentario, created_at, Cliente(id, nome, avatar_url)`).eq('produto_id', productId).order('created_at', { ascending: false });
+
+            if (error) {
+                reviewsList.innerHTML = '<p class="text-red-500">Não foi possível carregar as avaliações.</p>';
+                return;
+            }
+
+            let userReview = loggedUser ? data.find(r => r.Cliente.id === loggedUser.id) : null;
+
+            reviewsList.innerHTML = data.length === 0 ? '<p class="text-center text-gray-500">Este produto ainda não tem avaliações. Seja o primeiro!</p>' : data.map(review => renderReview(review)).join('');
+            
+            if (!loggedUser) {
+                reviewFormContainer.innerHTML = '<p class="text-center text-sm text-gray-600">Você precisa estar <a href="./login.html" class="text-blue-600 hover:underline">logado</a> para deixar uma avaliação.</p>';
+            } else if (!userReview) {
+                renderReviewForm(productId);
+            }
+        }
+
+        function renderReview(review) {
+            const isUserReview = loggedUser && review.Cliente.id === loggedUser.id;
+            const editButtons = isUserReview ? `
+                <div class="flex gap-2">
+                    <button onclick="editReview(${review.id}, ${review.nota}, \`${review.comentario.replace(/`/g, "\\`")}\`)" class="text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                    <button onclick="confirmDeleteReview(${review.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                </div>` : '';
+
             return `
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden product-card hover:shadow-xl transition-shadow duration-300 flex flex-col">
-                <div class="details-trigger" data-product-id="${p.id}">
-                    <img src="${p.image_url || './images/lanchoxburger.jpg'}" alt="Foto de ${p.nome}" class="w-full h-56 object-cover">
-                </div>
-                <div class="p-6 flex flex-col flex-grow">
-                    <div class="flex-grow">
-                        <div class="details-trigger flex justify-between items-baseline mb-2" data-product-id="${p.id}">
-                            <h3 class="text-2xl font-semibold">${p.nome}</h3>
-                            <p class="text-xl font-bold text-green-600">R$${parseFloat(p.preco).toFixed(2).replace('.', ',')}</p>
+            <div id="review-${review.id}" class="flex items-start gap-4 border-b pb-4">
+                <img src="${review.Cliente.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.Cliente.nome)}&background=e2e8f0&color=4a5568`}" alt="${review.Cliente.nome}" class="w-12 h-12 rounded-full object-cover">
+                <div class="flex-grow">
+                    <div class="flex justify-between items-center">
+                        <h5 class="font-bold">${review.Cliente.nome}</h5>
+                        <div class="flex items-center gap-4">
+                            <span class="text-xs text-gray-500">${new Date(review.created_at).toLocaleDateString('pt-BR')}</span>
+                            ${editButtons}
                         </div>
-                        <div class="details-trigger flex items-center space-x-2 mb-3 text-sm" data-product-id="${p.id}">
-                            <div class="star-rating">${starsHtml}</div>
-                            <span class="text-gray-500">(${totalReviews} avaliações)</span>
-                        </div>
-                        <p class="text-gray-600 mb-4">${p.descricao}</p>
                     </div>
-                    <button class="mt-auto block w-full text-center bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-full transition-colors action-button" data-product-id="${p.id}">
-                        <i class="fas ${buttonIcon} mr-2"></i>${buttonText}
-                    </button>
+                    <div>${renderStars(review.nota)}</div>
+                    <p class="text-gray-700 mt-1">${review.comentario || ''}</p>
                 </div>
             </div>`;
         }
         
-        // Funções dos Modais (Personalização e Detalhes)
-        // =========================================================
-
-        function openCustomizationModal(productId) {
-            const product = allProducts.find(p => p.id === productId);
-            if (!product) return;
-
-            customizationModal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-            setTimeout(() => { 
-                customizationModal.classList.remove('opacity-0'); 
-                customizationModalContent.classList.remove('scale-95'); 
-            }, 10);
-
-            let currentTotal = product.preco;
-
-            customizationModalContent.innerHTML = `
-                <div class="flex justify-between items-start p-6 border-b">
-                    <div><h2 class="text-3xl font-bold">${product.nome}</h2><p class="text-gray-500">Personalize seu pedido</p></div>
-                    <button id="close-customization-modal" class="p-2 -mt-2 -mr-2 rounded-full text-gray-400 hover:bg-gray-200 text-2xl">&times;</button>
-                </div>
-                <div class="p-6 flex-grow overflow-y-auto">
-                    <div class="space-y-3">
-                        ${product.ingredients.filter(i => i.is_customizable).map(ing => `
-                            <div class="flex items-center justify-between p-2 rounded-lg">
-                                <div class="flex items-center">
-                                    <img src="${ing.image_url || 'https://placehold.co/40x40'}" class="w-10 h-10 rounded-full object-cover mr-4">
-                                    <div><p class="font-medium text-gray-800">${ing.nome}</p><p class="text-sm text-green-600">+ R$ ${parseFloat(ing.preco).toFixed(2)}</p></div>
-                                </div>
-                                <div class="quantity-stepper">
-                                    <button type="button" class="quantity-btn quantity-minus">-</button>
-                                    <input type="number" value="${ing.quantidade_padrao}" min="0" class="quantity-input" data-price="${ing.preco}" data-id="${ing.id}" data-name="${ing.nome}" data-base-qty="${ing.quantidade_padrao}">
-                                    <button type="button" class="quantity-btn quantity-plus">+</button>
-                                </div>
-                            </div>`).join('')}
+        function renderReviewForm(productId, isEditing = false, reviewId = null, currentRating = 1, currentComment = '') {
+            reviewFormContainer.innerHTML = `
+                <h3 class="font-bold mb-2">${isEditing ? 'Editando sua avaliação' : 'Deixe sua avaliação'}</h3>
+                <form id="review-form">
+                    <div class="star-rating mb-2">
+                        ${[5,4,3,2,1].map(n => `<input type="radio" id="${n}-stars" name="rating" value="${n}" ${n === currentRating ? 'checked' : ''} required /><label for="${n}-stars">&#9733;</label>`).join('')}
                     </div>
-                </div>
-                <div class="p-6 border-t bg-gray-50 flex items-center justify-between">
-                    <div><p class="text-sm text-gray-600">Total do Item</p><p id="customization-total" class="text-3xl font-bold">R$ ${currentTotal.toFixed(2)}</p></div>
-                    <button id="add-customized-to-cart" class="bg-red-600 text-white font-bold py-3 px-6 rounded-full text-lg hover:bg-red-700 transition-transform hover:scale-105">Adicionar ao Carrinho</button>
-                </div>`;
-            
-            const totalElement = document.getElementById('customization-total');
-            const ingredientInputs = customizationModalContent.querySelectorAll('.quantity-input');
-
-            function updateTotal() {
-                let newTotal = product.preco;
-                ingredientInputs.forEach(input => {
-                    const quantity = parseInt(input.value);
-                    const baseQuantity = parseInt(input.dataset.baseQty);
-                    const price = parseFloat(input.dataset.price);
-                    if (quantity > baseQuantity) {
-                        newTotal += (quantity - baseQuantity) * price;
-                    }
-                });
-                totalElement.textContent = `R$ ${newTotal.toFixed(2)}`;
-            }
-            updateTotal();
-
-            customizationModalContent.querySelectorAll('.quantity-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const input = e.currentTarget.parentElement.querySelector('.quantity-input');
-                    let currentValue = parseInt(input.value);
-                    if (button.classList.contains('quantity-plus')) {
-                        input.value = currentValue + 1;
-                    } else if (button.classList.contains('quantity-minus') && currentValue > 0) {
-                        input.value = currentValue - 1;
-                    }
-                    updateTotal();
-                });
-            });
-
-            ingredientInputs.forEach(input => input.addEventListener('change', updateTotal));
-
-            document.getElementById('add-customized-to-cart').onclick = () => {
-                const customizations = [];
-                ingredientInputs.forEach(input => {
-                    const quantity = parseInt(input.value);
-                    const baseQuantity = parseInt(input.dataset.baseQty);
-                    if (quantity !== baseQuantity) {
-                        customizations.push({
-                            id: parseInt(input.dataset.id), name: input.dataset.name,
-                            price: parseFloat(input.dataset.price), quantity: quantity - baseQuantity,
-                        });
-                    }
-                });
-                addToCart(product, customizations);
-            };
-
-            document.getElementById('close-customization-modal').onclick = closeCustomizationModal;
-        }
-
-        function closeCustomizationModal() {
-            customizationModal.classList.add('opacity-0');
-            customizationModalContent.classList.add('scale-95');
-            setTimeout(() => { 
-                customizationModal.classList.add('hidden'); 
-                document.body.classList.remove('overflow-hidden'); 
-            }, 300);
-        }
-
-        // NOVA FUNÇÃO PARA CONFIRMAÇÃO EXUBERANTE
-        function showExuberantConfirmation(container, title, message) {
-             container.innerHTML = `
-                <div class="review-confirmation-container">
-                    <div class="review-confirmation-icon">
-                        <i class="fas fa-check-circle"></i>
+                    <textarea name="comment" class="w-full p-2 border rounded-md" placeholder="Escreva seu comentário (opcional)...">${currentComment}</textarea>
+                    <div class="flex gap-2 mt-2">
+                        ${isEditing ? `<button type="button" onclick="openReviewsModal(${productId}, document.getElementById('reviews-modal-title').textContent.replace('Avaliações de ', ''))" class="flex-1 bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full hover:bg-gray-400">Cancelar</button>` : ''}
+                        <button type="submit" class="flex-1 ${isEditing ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-500 hover:bg-yellow-600'} text-white font-bold py-2 px-4 rounded-full">${isEditing ? 'Salvar Alterações' : 'Enviar Avaliação'}</button>
                     </div>
-                    <h3 class="review-confirmation-title">${title}</h3>
-                    <p class="review-confirmation-message">${message}</p>
-                </div>
+                </form>
             `;
+            
+            document.getElementById('review-form').onsubmit = (event) => {
+                event.preventDefault();
+                if (isEditing) {
+                    handleUpdateReview(event, reviewId, productId);
+                } else {
+                    handleReviewSubmit(event, productId);
+                }
+            };
         }
 
+        function editReview(reviewId, currentRating, currentComment) {
+            const productId = reviewsModal.dataset.productId;
+            renderReviewForm(productId, true, reviewId, currentRating, currentComment);
+        }
 
-        async function openProductDetailsModal(productId) {
-            const product = allProducts.find(p => p.id === productId);
-            if (!product) return;
+        async function handleUpdateReview(event, reviewId, productId) {
+            const form = event.target;
+            const nota = form.rating.value;
+            const comentario = form.comment.value;
             
-            productDetailsModal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-            setTimeout(() => { 
-                productDetailsModal.classList.remove('opacity-0'); 
-                productDetailsModalContent.classList.remove('scale-95'); 
-            }, 10);
-            
-            productDetailsModalContent.innerHTML = `<div class="p-8 text-center"><svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
-            
-            const { data: reviews, error } = await supabaseClient
-                .from('avaliacoes')
-                .select(`
-                    id, nota, comentario, created_at, cliente_id,
-                    cliente:Cliente ( nome, avatar_url )
-                `)
-                .eq('produto_id', productId)
-                .order('created_at', { ascending: false });
-
-            if(error) {
-                console.error("Erro ao buscar avaliações:", error);
-                showToast('Erro ao carregar avaliações: ' + error.message, true);
+            try {
+                const { error } = await supabaseClient.from('avaliacoes').update({ nota: parseInt(nota), comentario }).eq('id', reviewId);
+                if (error) throw error;
+                showToast('Avaliação atualizada!');
+                openReviewsModal(productId, reviewsModalTitle.textContent.replace('Avaliações de ', ''));
+                fetchAndRenderProducts();
+            } catch (error) {
+                showErrorModal('Não foi possível atualizar sua avaliação.');
+                console.error("Erro ao atualizar avaliação:", error);
             }
-            
-            const reviewsHtml = reviews && reviews.length > 0
-                ? reviews.map(review => {
-                    const avatar = (review.cliente && review.cliente.avatar_url) ? review.cliente.avatar_url : `https://ui-avatars.com/api/?name=${encodeURIComponent(review.cliente ? review.cliente.nome : 'U')}&background=fde68a&color=c2410c`;
-                    let starsHtml = Array.from({length: 5}, (_, i) => `<i class="star ${i < review.nota ? 'filled' : ''} fa-solid fa-star text-sm"></i>`).join('');
-                    
-                    const actionButtons = loggedUser && loggedUser.id === review.cliente_id ? `
-                        <div class="ml-auto space-x-3">
-                            <button onclick="editReview(${review.id}, ${productId})" class="text-xs text-blue-600 hover:underline font-semibold">Editar</button>
-                            <button onclick="deleteReview(${review.id}, ${productId})" class="text-xs text-red-600 hover:underline font-semibold">Excluir</button>
-                        </div>
-                    ` : '';
+        }
+        
+        function confirmDeleteReview(reviewId) {
+            openModal(confirmModal);
+            confirmMessage.textContent = "Você tem certeza que quer excluir sua avaliação? Esta ação não pode ser desfeita.";
+            confirmActionButton.onclick = () => handleDeleteReview(reviewId);
+        }
 
-                    return `
-                    <div id="review-${review.id}" class="py-4 border-b last:border-b-0">
-                        <div class="flex items-center mb-2">
-                            <img src="${avatar}" class="w-10 h-10 rounded-full object-cover mr-3">
-                            <div>
-                                <p class="font-semibold">${review.cliente ? review.cliente.nome : 'Anônimo'}</p>
-                                <p class="text-xs text-gray-500">${new Date(review.created_at).toLocaleDateString('pt-BR')}</p>
-                            </div>
-                            <div class="star-rating ml-4">${starsHtml}</div>
-                            ${actionButtons}
-                        </div>
-                        <p class="text-gray-700 pl-12">${review.comentario || ''}</p>
-                    </div>`;
-                }).join('')
-                : '<p class="text-center text-gray-500 py-6">Este produto ainda não tem avaliações. Seja o primeiro!</p>';
-            
-            const addReviewHtml = loggedUser
-                ? `<div id="review-box" class="bg-yellow-50 p-4 rounded-lg">
-                       <h4 class="font-bold text-lg mb-2">Deixe sua avaliação</h4>
-                       <form id="review-form">
-                           <div class="review-stars-input mb-2">
-                               <input type="radio" id="star5" name="rating" value="5" required/><label for="star5" title="5 estrelas">★</label>
-                               <input type="radio" id="star4" name="rating" value="4"/><label for="star4" title="4 estrelas">★</label>
-                               <input type="radio" id="star3" name="rating" value="3"/><label for="star3" title="3 estrelas">★</label>
-                               <input type="radio" id="star2" name="rating" value="2"/><label for="star2" title="2 estrelas">★</label>
-                               <input type="radio" id="star1" name="rating" value="1"/><label for="star1" title="1 estrela">★</label>
-                           </div>
-                           <textarea id="review-comment" class="w-full border rounded-md p-2" rows="3" placeholder="Escreva seu comentário..."></textarea>
-                           <button type="submit" class="mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full transition-transform hover:scale-105">Enviar Avaliação</button>
-                       </form>
-                   </div>`
-                : `<p class="text-center text-gray-500 py-4 bg-gray-100 rounded-md">Você precisa <a href="./login.html" class="text-yellow-600 font-semibold">fazer login</a> para deixar uma avaliação.</p>`;
-
-            productDetailsModalContent.innerHTML = `
-                <div class="flex justify-between items-center p-4 border-b"><h2 class="text-2xl font-bold">${product.nome}</h2><button id="close-product-modal" class="p-2 rounded-full text-gray-400 hover:bg-gray-200 text-2xl">&times;</button></div>
-                <div class="flex-grow overflow-y-auto">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-                        <div><img src="${product.image_url || './images/lanchoxburger.jpg'}" class="w-full rounded-lg shadow-md mb-4"><p class="text-3xl font-bold text-green-600 text-center mb-4">R$ ${parseFloat(product.preco).toFixed(2)}</p><p class="text-gray-600">${product.descricao}</p></div>
-                        <div><h3 class="text-xl font-bold mb-4">Avaliações de Clientes</h3>${addReviewHtml}<div class="mt-4">${reviewsHtml}</div></div>
-                    </div>
-                </div>`;
-            
-            document.getElementById('close-product-modal').onclick = closeProductDetailsModal;
-            
-            const reviewForm = document.getElementById('review-form');
-            if (reviewForm) {
-                reviewForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    
-                    const submitButton = reviewForm.querySelector('button[type="submit"]');
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = `<svg class="animate-spin h-5 w-5 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
-
-                    const notaRadio = reviewForm.querySelector('input[name="rating"]:checked');
-                    if (!notaRadio) {
-                        showToast('Por favor, selecione uma nota de 1 a 5 estrelas.', true);
-                        submitButton.disabled = false;
-                        submitButton.textContent = 'Enviar Avaliação';
-                        return;
-                    }
-                    const nota = parseInt(notaRadio.value);
-                    const comentario = document.getElementById('review-comment').value;
-                    
-                    const { error: insertError } = await supabaseClient.from('avaliacoes').insert({ produto_id: productId, cliente_id: loggedUser.id, nota: nota, comentario: comentario });
-
-                    if (insertError) { 
-                        showToast('Erro ao enviar avaliação: ' + insertError.message, true); 
-                        console.error("Erro ao inserir avaliação:", insertError);
-                        submitButton.disabled = false;
-                        submitButton.textContent = 'Enviar Avaliação';
-                        return; 
-                    }
-                    
-                    const reviewBox = document.getElementById('review-box');
-                    showExuberantConfirmation(
-                        reviewBox,
-                        'Avaliação Recebida!',
-                        'Sua opinião é o nosso ingrediente secreto. Obrigado por contribuir!'
-                    );
-
-                    setTimeout(async () => {
-                         await loadProductsAndIngredients();
-                         await openProductDetailsModal(productId);
-                    }, 3500);
-                });
+        async function handleDeleteReview(reviewId) {
+            try {
+                const { error } = await supabaseClient.from('avaliacoes').delete().eq('id', reviewId);
+                if (error) throw error;
+                showToast('Avaliação excluída com sucesso.');
+                closeModal(confirmModal);
+                const productId = reviewsModal.dataset.productId;
+                const productName = reviewsModalTitle.textContent.replace('Avaliações de ', '');
+                openReviewsModal(productId, productName);
+                fetchAndRenderProducts();
+            } catch(error) {
+                console.error("Erro ao excluir avaliação:", error);
+                showErrorModal('Não foi possível excluir sua avaliação.');
+                closeModal(confirmModal);
             }
         }
 
-        function closeProductDetailsModal() {
-            productDetailsModal.classList.add('opacity-0');
-            productDetailsModalContent.classList.add('scale-95');
-            setTimeout(() => { 
-                productDetailsModal.classList.add('hidden'); 
-                document.body.classList.remove('overflow-hidden'); 
-            }, 300);
+        async function handleReviewSubmit(event, productId) {
+            event.preventDefault();
+            const form = event.target;
+            const nota = form.rating.value;
+            const comentario = form.comment.value;
+            if (!nota) { showToast('Por favor, selecione uma nota.', true); return; }
+
+            try {
+                const { error } = await supabaseClient.from('avaliacoes').insert({ produto_id: productId, cliente_id: loggedUser.id, nota: parseInt(nota), comentario });
+                if (error) throw error;
+                showToast('Avaliação enviada com sucesso!');
+                closeModal(reviewsModal);
+                fetchAndRenderProducts();
+            } catch (error) {
+                console.error("Erro ao enviar avaliação:", error);
+                if (error.message.includes('duplicate key')) {
+                    showErrorModal('Você já avaliou este produto. Você pode editar ou excluir sua avaliação existente.');
+                } else {
+                    showErrorModal('Não foi possível enviar sua avaliação.');
+                }
+            }
         }
+        
+        // --- FUNÇÕES DE AUTENTICAÇÃO E UI ---
 
-        // Funções de Autenticação e UI do Header
-        // =========================================================
-        async function setupMenusAndAuth() {
-            const mainMenuButton = document.getElementById('main-menu-button');
-            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
-            mainMenuButton.addEventListener('click', (event) => { event.stopPropagation(); mainMenuDropdown.classList.toggle('hidden'); });
-
+        async function checkUserAndSetupPage() {
             const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
-            if (userString) { loggedUser = JSON.parse(userString); }
+            if (userString) loggedUser = JSON.parse(userString);
             await updateNavUI(loggedUser);
-
-            window.addEventListener('click', (event) => {
-                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) { mainMenuDropdown.classList.add('hidden'); }
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) { userMenuDropdown.classList.add('hidden'); }
-            });
         }
 
         async function updateNavUI(user) {
-            const userMenuContainer = document.getElementById('user-menu-container');
-            const loginButton = document.getElementById('login-button-main');
-
+            let userMenuContent = `<a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700">Entrar</a>`;
             if (user) {
-                loginButton.classList.add('hidden');
-                userMenuContainer.classList.remove('hidden');
                 const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
-                const adminLink = user.role === 'admin' ? '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>' : '';
-
-                userMenuContainer.innerHTML = `
+                const adminLink = user.role === 'admin' ? `<a href="./admin.html" class="w-full text-left flex items-center text-sm text-blue-600 hover:bg-gray-100 p-2 rounded"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>` : '';
+                userMenuContent = `
                     <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
                     <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                        <div class="p-4 border-b"><div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0"><div class="ml-4"><p class="text-md font-semibold">${user.nome || 'Cliente'}</p><p class="text-xs text-gray-500">${user.email}</p></div></div></div>
-                        <div class="py-2"><a href="./profile.html" class="flex items-center py-2 px-4 text-sm hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a><a href="./orders.html" class="flex items-center py-2 px-4 text-sm hover:bg-yellow-100"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>${adminLink}</div>
+                        <div class="p-4 border-b"><div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover"><div class="ml-4"><p class="font-semibold">${user.nome}</p><p class="text-xs text-gray-500">${user.email}</p></div></div></div>
+                        <div class="p-2">
+                            <a href="./profile.html" class="w-full text-left flex items-center text-sm text-gray-700 hover:bg-gray-100 p-2 rounded"><i class="fas fa-user-edit w-6 mr-2"></i>Editar Perfil</a>
+                            <a href="./orders.html" class="w-full text-left flex items-center text-sm text-gray-700 hover:bg-gray-100 p-2 rounded"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
+                            ${adminLink}
+                        </div>
                         <div class="p-2 border-t"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                     </div>`;
-
-                userMenuContainer.querySelector('#user-menu-button').addEventListener('click', (event) => { event.stopPropagation(); userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden'); });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); localStorage.removeItem('currentAdmin'); window.location.reload(); };
-            } else {
-                loginButton.classList.remove('hidden');
-                userMenuContainer.classList.add('hidden');
+            }
+            userMenuContainer.innerHTML = userMenuContent;
+            if (user) {
+                userMenuContainer.querySelector('#user-menu-button').addEventListener('click', (e) => { 
+                    e.stopPropagation();
+                    userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden');
+                });
+                userMenuContainer.querySelector('#logout-button').onclick = () => { 
+                    localStorage.removeItem('currentUser'); 
+                    localStorage.removeItem('currentAdmin'); 
+                    window.location.reload();
+                };
             }
         }
         
-        // --- FUNÇÕES PARA EDITAR E EXCLUIR AVALIAÇÕES ---
-        
-        function deleteReview(reviewId, productId) {
-             const reviewElement = document.getElementById(`review-${reviewId}`);
-             if (!reviewElement) return;
+        const mainMenuButton = document.getElementById('main-menu-button');
+        const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+        mainMenuButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            mainMenuDropdown.classList.toggle('hidden');
+        });
 
-             reviewElement.innerHTML = `
-                <div class="bg-red-50 p-4 rounded-lg border border-red-200 text-center">
-                    <p class="font-bold text-red-800">Tem certeza que deseja excluir esta avaliação?</p>
-                    <p class="text-sm text-red-700 mt-1">Esta ação não pode ser desfeita.</p>
-                    <div class="mt-4 flex justify-center space-x-3">
-                         <button onclick="openProductDetailsModal(${productId})" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-1 px-4 rounded-full">Cancelar</button>
-                         <button id="confirm-delete-${reviewId}" class="text-sm bg-red-600 hover:bg-red-700 text-white font-semibold py-1 px-4 rounded-full">Excluir</button>
-                    </div>
-                </div>
-             `;
-             
-             document.getElementById(`confirm-delete-${reviewId}`).addEventListener('click', async () => {
-                 try {
-                    const { error: deleteError } = await supabaseClient.from('avaliacoes').delete().eq('id', reviewId);
-                    if (deleteError) throw deleteError;
-                    
-                    showToast('Avaliação excluída com sucesso!');
-                    await loadProductsAndIngredients();
-                    await openProductDetailsModal(productId);
-                } catch (error) {
-                    console.error('Erro ao excluir avaliação:', error);
-                    showToast(`Erro ao excluir avaliação: ${error.message}`, true);
-                }
-             });
-        }
-
-        function editReview(reviewId, productId) {
-            const reviewElement = document.getElementById(`review-${reviewId}`);
-            if (!reviewElement) return;
-
-            const currentComment = reviewElement.querySelector('p.text-gray-700').textContent;
-            const currentRating = reviewElement.querySelectorAll('.star.filled').length;
-
-            reviewElement.innerHTML = `
-                <div class="bg-blue-50 p-4 rounded-md border border-blue-200">
-                    <h4 class="font-bold mb-2">Editando sua avaliação</h4>
-                    <div class="review-stars-input mb-2">
-                        <input type="radio" id="edit-star5" name="edit-rating" value="5" ${currentRating === 5 ? 'checked' : ''} required/><label for="edit-star5" title="5 estrelas">★</label>
-                        <input type="radio" id="edit-star4" name="edit-rating" value="4" ${currentRating === 4 ? 'checked' : ''}/><label for="edit-star4" title="4 estrelas">★</label>
-                        <input type="radio" id="edit-star3" name="edit-rating" value="3" ${currentRating === 3 ? 'checked' : ''}/><label for="edit-star3" title="3 estrelas">★</label>
-                        <input type="radio" id="edit-star2" name="edit-rating" value="2" ${currentRating === 2 ? 'checked' : ''}/><label for="edit-star2" title="2 estrelas">★</label>
-                        <input type="radio" id="edit-star1" name="edit-rating" value="1" ${currentRating === 1 ? 'checked' : ''}/><label for="edit-star1" title="1 estrela">★</label>
-                    </div>
-                    <textarea id="edit-review-comment" class="w-full border rounded-md p-2" rows="3">${currentComment}</textarea>
-                    <div class="mt-2 flex justify-end space-x-2">
-                        <button onclick="openProductDetailsModal(${productId})" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-1 px-3 rounded-full">Cancelar</button>
-                        <button onclick="saveReview(${reviewId}, ${productId})" class="text-sm bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-full">Salvar</button>
-                    </div>
-                </div>
-            `;
-        }
-        
-        async function saveReview(reviewId, productId) {
-            const notaRadio = document.querySelector('input[name="edit-rating"]:checked');
-            if(!notaRadio) {
-                showToast('Por favor, selecione uma nota.', true);
-                return;
+        window.addEventListener('click', (event) => {
+            if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
+                mainMenuDropdown.classList.add('hidden');
             }
-            const newNota = parseInt(notaRadio.value);
-            const newComentario = document.getElementById('edit-review-comment').value;
-
-            try {
-                const { error: updateReviewError } = await supabaseClient.from('avaliacoes').update({ nota: newNota, comentario: newComentario }).eq('id', reviewId);
-                if (updateReviewError) throw updateReviewError;
-
-                showToast('Avaliação atualizada com sucesso!');
-                await loadProductsAndIngredients();
-                await openProductDetailsModal(productId);
-            } catch (error) {
-                console.error('Erro ao salvar avaliação:', error);
-                showToast(`Erro ao salvar avaliação: ${error.message}`, true);
+            const userMenuDropdown = document.getElementById('user-menu-dropdown');
+            if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
+                userMenuDropdown.classList.add('hidden');
             }
-        }
-        
-        // Ponto de Entrada da Página
-        // =========================================================
-        document.addEventListener('DOMContentLoaded', async () => {
-            await setupMenusAndAuth();
-            loadCart();
-            await loadProductsAndIngredients();
+        });
 
-            menuContainer.addEventListener('click', (event) => {
-                const detailsTrigger = event.target.closest('.details-trigger');
-                const actionButton = event.target.closest('.action-button');
-
-                if (detailsTrigger) {
-                    const productId = parseInt(detailsTrigger.dataset.productId);
-                    openProductDetailsModal(productId);
-                    return;
-                }
-
-                if (actionButton) {
-                    const productId = parseInt(actionButton.dataset.productId);
-                    const product = allProducts.find(p => p.id === productId);
-                    if (!product) return;
-                    
-                    const hasCustomization = product.ingredients && product.ingredients.some(i => i.is_customizable);
-                    if (hasCustomization) {
-                        openCustomizationModal(productId);
-                    } else {
-                        addToCart(product, []);
-                    }
-                }
+        document.addEventListener('DOMContentLoaded', () => {
+            checkUserAndSetupPage();
+            fetchAndRenderProducts();
+            updateCartCount();
+            
+            // Listeners para fechar modais
+            cartButton.addEventListener('click', () => {
+                if (!loggedUser) { openModal(loginModal); return; }
+                renderCartModal(); openModal(cartModal);
             });
+            closeCartButton.addEventListener('click', () => closeModal(cartModal));
+            closeLoginModalButton.addEventListener('click', () => closeModal(loginModal));
+            closeErrorModalButton.addEventListener('click', () => closeModal(errorModal));
+            closeReviewsModalButton.addEventListener('click', () => closeModal(reviewsModal));
+            checkoutButton.addEventListener('click', handleCheckout);
+            cancelConfirmButton.addEventListener('click', () => closeModal(confirmModal));
         });
     </script>
 </body>

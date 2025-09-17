@@ -10,6 +10,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .form-input-group {
+            position: relative;
+        }
+        .form-input-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af; /* gray-400 */
+        }
+        .form-input {
+            padding-left: 2.5rem !important;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
@@ -21,69 +34,83 @@
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
                 <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                    <a href="./index.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-home w-6 mr-2"></i>Home</a>
-                    <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
-                    <a href="./ofertas.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
-                    <a href="./sobre.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
+                    <a href="./admin.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-arrow-left w-6 mr-2"></i>Voltar ao Painel</a>
                 </div>
             </div>
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                 <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700">Entrar</a>
-                <div id="user-menu-container" class="relative hidden"></div>
+                <div id="user-menu-container" class="relative"></div>
             </div>
         </nav>
     </header>
 
     <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-800">Adicionar Novo Produto</h1>
-                <a href="./admin.html" class="text-sm text-yellow-600 hover:underline">‹ Voltar ao Painel</a>
+        <div class="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-black text-gray-800">Novo Produto no Cardápio</h1>
+                <p class="text-gray-500 mt-2">Preencha os detalhes abaixo para adicionar um novo item.</p>
             </div>
 
             <form id="add-product-form" class="space-y-6">
-                <div>
-                    <label for="nome" class="block text-sm font-medium text-gray-700">Nome do Produto</label>
-                    <input type="text" id="nome" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Nome do Produto -->
+                    <div>
+                        <label for="nome" class="block text-sm font-medium text-gray-700 mb-1">Nome do Produto</label>
+                        <div class="form-input-group">
+                            <i class="fas fa-hamburger form-input-icon"></i>
+                            <input type="text" id="nome" required class="form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                    </div>
+                    <!-- Preço -->
+                    <div>
+                        <label for="preco" class="block text-sm font-medium text-gray-700 mb-1">Preço (ex: 19.99)</label>
+                        <div class="form-input-group">
+                             <i class="fas fa-dollar-sign form-input-icon"></i>
+                            <input type="number" step="0.01" id="preco" required class="form-input mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Descrição -->
                 <div>
-                    <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
-                    <textarea id="descricao" rows="3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"></textarea>
-                </div>
-                <div>
-                    <label for="preco" class="block text-sm font-medium text-gray-700">Preço (ex: 19.99)</label>
-                    <input type="number" step="0.01" id="preco" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
+                    <label for="descricao" class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                    <textarea id="descricao" rows="4" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"></textarea>
                 </div>
                 
+                <!-- Categoria -->
                 <div>
-                    <label for="categoria" class="block text-sm font-medium text-gray-700">Categoria</label>
+                    <label for="categoria" class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
                     <select id="categoria" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500">
                         <option value="Sanduíches">Sanduíches</option>
                         <option value="Combos">Combos</option>
                         <option value="Acompanhamentos">Acompanhamentos</option>
                         <option value="Sobremesas">Sobremesas</option>
                         <option value="Bebidas">Bebidas</option>
-                         <option value="Mais Vendidos">Mais Vendidos</option>
+                        <option value="Mais Vendidos">Mais Vendidos</option>
                     </select>
                 </div>
                 
+                <!-- Upload de Imagem -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Imagem do Produto</label>
-                    <div class="mt-1 flex items-center space-x-4">
-                        <img id="image-preview" src="https://placehold.co/100x100/e2e8f0/a0aec0?text=Imagem" alt="Pré-visualização" class="w-24 h-24 rounded-md object-cover bg-gray-100">
-                        <label for="image-upload" class="cursor-pointer bg-yellow-500 text-white font-bold py-2 px-4 rounded-full hover:bg-yellow-600 transition-colors">
-                            <span>Escolher Ficheiro</span>
+                    <div class="mt-2 flex items-center space-x-6">
+                        <img id="image-preview" src="https://placehold.co/128x128/e2e8f0/a0aec0?text=Imagem" alt="Pré-visualização" class="w-32 h-32 rounded-lg object-cover bg-gray-100 shadow-inner">
+                        <label for="image-upload" class="cursor-pointer bg-white text-gray-700 font-bold py-2 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors shadow-sm">
+                            <i class="fas fa-upload mr-2"></i>
+                            <span>Carregar Imagem</span>
                             <input id="image-upload" name="image-upload" type="file" class="sr-only" accept="image/png, image/jpeg">
                         </label>
                     </div>
                 </div>
 
-                <div>
-                    <button type="submit" id="submit-button" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-full hover:bg-red-700 transition-colors flex justify-center items-center">
-                        Adicionar Produto
+                <!-- Botão de Envio -->
+                <div class="pt-4">
+                    <button type="submit" id="submit-button" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-full hover:bg-red-700 transition-colors flex justify-center items-center shadow-lg hover:shadow-red-500/50 transform hover:scale-105">
+                        <span id="button-text">Adicionar Produto ao Cardápio</span>
+                        <i id="loading-spinner" class="fas fa-spinner fa-spin ml-2 hidden"></i>
                     </button>
                     <p id="form-message" class="text-sm text-center mt-4"></p>
                 </div>
@@ -117,12 +144,8 @@
                 <div>
                     <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
                     <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="https://instagram.com/lancho.rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-instagram fa-lg"></i>
-                        </a>
-                        <a href="https://x.com/Lancho_rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-twitter fa-lg"></i>
-                        </a>
+                        <a href="https://instagram.com/lancho.rj" target="_blank" class="text-gray-400 hover:text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="https://x.com/Lancho_rj" target="_blank" class="text-gray-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a>
                     </div>
                 </div>
             </div>
@@ -136,10 +159,11 @@
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let loggedUser = null;
-
+        
         const addProductForm = document.getElementById('add-product-form');
         const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
         const formMessage = document.getElementById('form-message');
         const imageUploadInput = document.getElementById('image-upload');
         const imagePreview = document.getElementById('image-preview');
@@ -155,7 +179,8 @@
             event.preventDefault();
             formMessage.textContent = '';
             submitButton.disabled = true;
-            submitButton.innerHTML = `<svg class="animate-spin h-5 w-5 -ml-1 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processando...`;
+            buttonText.textContent = 'Adicionando...';
+            loadingSpinner.classList.remove('hidden');
 
             const nome = document.getElementById('nome').value;
             const descricao = document.getElementById('descricao').value;
@@ -166,15 +191,18 @@
             try {
                 if (!imageFile) throw new Error("A imagem do produto é obrigatória.");
 
+                // 1. Upload da Imagem para o Supabase Storage
                 const fileName = `${Date.now()}-${imageFile.name}`;
                 const { data: uploadData, error: uploadError } = await supabaseClient.storage
                     .from('produtos')
                     .upload(fileName, imageFile);
                 if (uploadError) throw uploadError;
 
+                // 2. Obter a URL pública da imagem
                 const { data: { publicUrl } } = supabaseClient.storage.from('produtos').getPublicUrl(fileName);
                 const imageUrl = publicUrl;
 
+                // 3. Chamar a Supabase Function para criar o produto no Stripe
                 const { data: stripeData, error: stripeError } = await supabaseClient.functions.invoke('add-stripe-product', {
                     body: { 
                         productName: nome, 
@@ -187,6 +215,7 @@
                 
                 const stripe_price_id = stripeData.priceId;
 
+                // 4. Inserir o produto no banco de dados
                 const { data: produtoData, error: produtoError } = await supabaseClient
                     .from('Produto')
                     .insert({ nome, descricao, preco, image_url: imageUrl, stripe_price_id, categoria })
@@ -194,15 +223,19 @@
                     .single();
                 if (produtoError) throw produtoError;
 
+                // 5. Criar a entrada correspondente no estoque
                 const { error: estoqueError } = await supabaseClient
                     .from('Estoque')
-                    .insert({ id_produto: produtoData.id, quantidade: 0 });
+                    .insert({ id_produto: produtoData.id, quantidade: 0 }); // Inicia com 0
                 if (estoqueError) throw estoqueError;
 
                 formMessage.textContent = 'Produto adicionado com sucesso!';
                 formMessage.className = 'text-sm text-center mt-4 text-green-600';
                 addProductForm.reset();
-                imagePreview.src = 'https://placehold.co/100x100/e2e8f0/a0aec0?text=Imagem';
+                imagePreview.src = 'https://placehold.co/128x128/e2e8f0/a0aec0?text=Imagem';
+                setTimeout(() => {
+                    window.location.href = './admin-manage-products.html';
+                }, 1500);
 
             } catch (error) {
                 console.error("Erro ao adicionar produto:", error);
@@ -210,102 +243,70 @@
                 formMessage.className = 'text-sm text-center mt-4 text-red-600';
             } finally {
                 submitButton.disabled = false;
-                submitButton.textContent = 'Adicionar Produto';
+                buttonText.textContent = 'Adicionar Produto ao Cardápio';
+                loadingSpinner.classList.add('hidden');
             }
         });
 
-        async function fetchUserStats(userId) {
-            try {
-                const { data, error } = await supabaseClient.rpc('get_user_stats', { p_user_id: userId });
-                if (error) throw error;
-                return data;
-            } catch (error) {
-                console.error("Erro ao buscar estatísticas:", error);
-                return { totalPedidos: 0, dinheiroGasto: 0.00 };
-            }
-        }
-
-        async function setupMenusAndAuth() {
-            const mainMenuButton = document.getElementById('main-menu-button');
-            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
-            mainMenuButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                mainMenuDropdown.classList.toggle('hidden');
-            });
-
+        // Funções de autenticação e UI do cabeçalho
+        async function checkAdmin() {
             const userString = localStorage.getItem('currentAdmin');
-            if (userString) {
-                loggedUser = JSON.parse(userString);
-                if (loggedUser.role !== 'admin') {
-                    alert('Acesso negado.');
-                    window.location.href = './index.html';
-                    return;
-                }
-            } else {
-                alert('Você precisa estar logado como administrador para acessar esta página.');
+            if (!userString) {
+                alert('Acesso negado. Você precisa ser um administrador.');
                 window.location.href = './login.html';
                 return;
             }
-            
-            await updateNavUI(loggedUser);
-
-            window.addEventListener('click', (event) => {
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuDropdown.contains(event.target) && !mainMenuButton.contains(event.target)) {
-                    mainMenuDropdown.classList.add('hidden');
-                }
-                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
-                    userMenuDropdown.classList.add('hidden');
-                }
-            });
+            const admin = JSON.parse(userString);
+            if (admin.role !== 'admin') {
+                alert('Acesso negado. Permissões insuficientes.');
+                window.location.href = './index.html';
+                return;
+            }
+            await updateNavUI(admin);
         }
 
         async function updateNavUI(user) {
             const userMenuContainer = document.getElementById('user-menu-container');
-            const loginButton = document.getElementById('login-button-main');
-
             if (user) {
-                loginButton.classList.add('hidden');
-                userMenuContainer.classList.remove('hidden');
-                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
-                const stats = await fetchUserStats(user.id);
-
+                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
                 userMenuContainer.innerHTML = `
                     <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
                     <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                        <div class="p-4 border-b border-gray-200">
-                            <div class="flex items-center">
-                                <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
-                                <div class="ml-4">
-                                    <p class="text-md font-semibold text-gray-800">${user.nome || 'Admin'}</p>
-                                    <p class="text-xs text-gray-500">${user.email}</p>
-                                </div>
-                            </div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 text-center">
-                                <div><p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p><p class="text-xs text-gray-500">Pedidos</p></div>
-                                <div><p class="text-sm font-semibold text-gray-800">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs text-gray-500">Gasto Total</p></div>
-                            </div>
-                        </div>
-                        <div class="py-2">
-                            <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
-                            <a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>
-                        </div>
-                        <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
+                        <div class="p-4 border-b"><div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover"><div class="ml-4"><p class="font-semibold">${user.nome}</p><p class="text-xs text-gray-500">${user.email}</p></div></div></div>
+                        <div class="p-2"><a href="./profile.html" class="w-full text-left flex items-center text-sm text-gray-700 hover:bg-gray-100 p-2 rounded"><i class="fas fa-user-edit w-6 mr-2"></i>Editar Perfil</a></div>
+                        <div class="p-2 border-t"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                     </div>`;
 
-                const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
-                const userMenuDropdown = userMenuContainer.querySelector('#user-menu-dropdown');
-                userMenuButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    userMenuDropdown.classList.toggle('hidden');
+                userMenuContainer.querySelector('#user-menu-button').addEventListener('click', (e) => { 
+                    e.stopPropagation();
+                    userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden');
                 });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentAdmin'); window.location.href = './index.html'; };
+                userMenuContainer.querySelector('#logout-button').onclick = () => { 
+                    localStorage.removeItem('currentAdmin'); 
+                    window.location.href = './login.html'; 
+                };
             }
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            await setupMenusAndAuth();
+        const mainMenuButton = document.getElementById('main-menu-button');
+        const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+        mainMenuButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            mainMenuDropdown.classList.toggle('hidden');
         });
+
+        window.addEventListener('click', (event) => {
+            if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
+                mainMenuDropdown.classList.add('hidden');
+            }
+            const userMenuDropdown = document.getElementById('user-menu-dropdown');
+            if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
+                userMenuDropdown.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', checkAdmin);
     </script>
 </body>
 </html>
+

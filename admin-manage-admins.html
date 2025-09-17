@@ -1,20 +1,29 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="scroll-smooth">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Permissões - Admin Lanchô</title>
+    <title>Gerenciar Permissões - Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
+        .role-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .role-admin { background-color: #ef4444; color: white; } /* red-500 */
+        .role-cozinha { background-color: #f59e0b; color: white; } /* amber-500 */
+        .role-user { background-color: #8b5cf6; color: white; } /* violet-500 */
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+<body class="bg-gray-100 flex flex-col min-h-screen">
 
-    <!-- Header (Seu design) -->
     <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
@@ -22,49 +31,32 @@
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
                 <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                    <a href="./index.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-home w-6 mr-2"></i>Home</a>
-                    <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
-                    <a href="./ofertas.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
-                    <a href="./sobre.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
+                     <a href="./admin.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-arrow-left w-6 mr-2"></i>Voltar ao Painel</a>
                 </div>
             </div>
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                 <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700">Entrar</a>
-                <div id="user-menu-container" class="relative hidden"></div>
+                <div id="user-menu-container" class="relative"></div>
             </div>
         </nav>
     </header>
 
-    <!-- Conteúdo Principal -->
-    <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-800">Gerenciar Permissões</h1>
-                <a href="./admin.html" class="text-sm text-yellow-600 hover:underline">‹ Voltar ao Painel</a>
-            </div>
-            <div id="message-area" class="mb-6"></div>
-            <div class="bg-white rounded-lg shadow-md overflow-x-auto">
-                <table class="min-w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permissão</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clients-table-body" class="bg-white divide-y divide-gray-200">
-                        <tr id="loading-clients"><td colspan="3" class="text-center p-10 text-gray-500">Carregando...</td></tr>
-                        <!-- Lista de clientes/admins será inserida aqui -->
-                    </tbody>
-                </table>
-            </div>
+    <main class="container mx-auto p-8 flex-grow">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-black text-gray-800">Gerenciar Permissões</h1>
+            <input type="text" id="search-bar" placeholder="Pesquisar por nome ou e-mail..." class="w-1/3 px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+        </div>
+
+        <div id="user-list-container" class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div id="loading-indicator" class="text-center p-10"><i class="fas fa-spinner fa-spin fa-3x text-yellow-500"></i></div>
+            <ul id="user-list" class="divide-y divide-gray-200">
+                <!-- Usuários serão inseridos aqui -->
+            </ul>
         </div>
     </main>
 
-    <!-- Footer (Seu design) -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
@@ -77,7 +69,6 @@
                     <ul class="space-y-2">
                         <li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li>
                         <li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li>
-                        <li><a href="./orders.html" class="text-gray-400 hover:text-white">Meus Pedidos</a></li>
                     </ul>
                 </div>
                 <div>
@@ -91,12 +82,8 @@
                 <div>
                     <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
                     <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="https://instagram.com/lancho.rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-instagram fa-lg"></i>
-                        </a>
-                        <a href="https://x.com/Lancho_rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-twitter fa-lg"></i>
-                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a>
                     </div>
                 </div>
             </div>
@@ -105,170 +92,168 @@
             </div>
         </div>
     </footer>
+
     <script>
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let loggedUser = null;
 
-        async function loadUsers() {
-            const tableBody = document.getElementById('clients-table-body');
-            try {
-                const { data: users, error } = await supabaseClient.from('Cliente').select('*').order('nome');
-                if (error) throw error;
+        const userMenuContainer = document.getElementById('user-menu-container');
+        const userList = document.getElementById('user-list');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const searchBar = document.getElementById('search-bar');
+        let allUsers = [];
+
+        function renderUsers(usersToRender) {
+            if (usersToRender.length === 0) {
+                userList.innerHTML = `<li class="p-6 text-center text-gray-500">Nenhum usuário encontrado.</li>`;
+                return;
+            }
+
+            userList.innerHTML = usersToRender.map(user => {
+                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
+                const roles = ['user', 'cozinha', 'admin'];
                 
-                document.getElementById('loading-clients').style.display = 'none';
+                return `
+                <li class="p-4 sm:p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center">
+                        <img class="h-12 w-12 rounded-full object-cover" src="${avatar}" alt="Avatar de ${user.nome}">
+                        <div class="ml-4">
+                            <p class="text-lg font-semibold text-gray-900">${user.nome}</p>
+                            <p class="text-sm text-gray-500">${user.email}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="role-badge role-${user.role}">${user.role}</span>
+                        <select data-user-id="${user.id}" class="role-select border-gray-300 rounded-md shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+                            ${roles.map(role => `<option value="${role}" ${user.role === role ? 'selected' : ''}>${role.charAt(0).toUpperCase() + role.slice(1)}</option>`).join('')}
+                        </select>
+                        <button onclick="handleRoleUpdate(this, ${user.id})" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors font-semibold">Salvar</button>
+                    </div>
+                </li>`;
+            }).join('');
+        }
 
-                if (!users || users.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-10 text-gray-500">Nenhum usuário encontrado.</td></tr>';
-                    return;
-                }
+        async function loadAndRenderUsers() {
+            loadingIndicator.style.display = 'block';
+            userList.innerHTML = '';
 
-                tableBody.innerHTML = users.map(user => {
-                    const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}`;
-                    const isSelf = user.id === loggedUser.id;
-                    let actionButton = '';
-
-                    if (isSelf) {
-                        actionButton = '<span class="text-sm text-gray-500">(Você)</span>';
-                    } else if (user.role === 'admin') {
-                        actionButton = `<button onclick="updateRole(${user.id}, 'user')" class="font-semibold text-red-600 hover:text-red-800">Rebaixar</button>`;
-                    } else {
-                        actionButton = `<button onclick="updateRole(${user.id}, 'admin')" class="font-semibold text-green-600 hover:text-green-800">Promover a Admin</button>`;
-                    }
-
-                    return `
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10">
-                                        <img class="h-10 w-10 rounded-full object-cover" src="${avatar}" alt="">
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">${user.nome}</div>
-                                        <div class="text-sm text-gray-500">${user.email}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                ${user.role === 'admin' 
-                                    ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Admin</span>' 
-                                    : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Usuário</span>'
-                                }
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                ${actionButton}
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-
-            } catch (error) {
-                console.error("Erro ao carregar usuários:", error);
-                tableBody.innerHTML = `<tr><td colspan="3" class="text-center p-10 text-red-500">Erro ao carregar usuários.</td></tr>`;
+            const { data, error } = await supabaseClient.from('Cliente').select('*').order('nome');
+            if (error) {
+                console.error("Erro ao buscar usuários:", error);
+                loadingIndicator.innerHTML = `<p class="p-6 text-center text-red-500">Erro ao carregar usuários.</p>`;
+                return;
             }
+
+            allUsers = data;
+            renderUsers(allUsers);
+            loadingIndicator.style.display = 'none';
         }
 
-        async function updateRole(userId, newRole) {
-            try {
-                const { error } = await supabaseClient.from('Cliente').update({ role: newRole }).eq('id', userId);
-                if (error) throw error;
-                showMessage(`Permissão atualizada com sucesso!`, false);
-                await loadUsers(); // Recarrega a lista para mostrar a mudança
-            } catch (error) {
-                console.error("Erro ao atualizar permissão:", error);
-                showMessage(`Erro ao atualizar permissão: ${error.message}`, true);
+        async function handleRoleUpdate(button, userId) {
+            const select = button.previousElementSibling;
+            const newRole = select.value;
+            
+            if (!confirm(`Tem certeza que deseja alterar a permissão deste usuário para "${newRole}"?`)) {
+                return;
             }
-        }
 
-        function showMessage(message, isError = false) {
-            const messageArea = document.getElementById('message-area');
-            const color = isError ? 'red' : 'green';
-            messageArea.innerHTML = `<div class="bg-${color}-100 text-${color}-700 p-4 rounded-md">${message}</div>`;
-            setTimeout(() => { messageArea.innerHTML = ''; }, 4000);
-        }
+            button.disabled = true;
+            button.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+            
+            const { error } = await supabaseClient
+                .from('Cliente')
+                .update({ role: newRole })
+                .eq('id', userId);
 
-        async function fetchUserStats(userId) {
-            try {
-                const { data, error } = await supabaseClient.rpc('get_user_stats', { p_user_id: userId });
-                if (error) throw error;
-                return data;
-            } catch (error) {
-                console.error("Erro ao buscar estatísticas:", error);
-                return { totalPedidos: 0, dinheiroGasto: 0.00 };
-            }
-        }
-
-        async function setupMenusAndAuth() {
-            const mainMenuButton = document.getElementById('main-menu-button');
-            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
-            mainMenuButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                mainMenuDropdown.classList.toggle('hidden');
-            });
-
-            const userString = localStorage.getItem('currentAdmin');
-            if (userString) {
-                loggedUser = JSON.parse(userString);
-                if (loggedUser.role !== 'admin') {
-                    alert('Acesso negado.');
-                    window.location.href = './index.html';
-                    return;
-                }
+            if (error) {
+                alert('Falha ao atualizar permissão: ' + error.message);
             } else {
-                alert('Você precisa estar logado como administrador para acessar esta página.');
+                alert('Permissão atualizada com sucesso!');
+            }
+            
+            await loadAndRenderUsers();
+        }
+        
+        searchBar.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredUsers = allUsers.filter(user => 
+                user.nome.toLowerCase().includes(searchTerm) || 
+                user.email.toLowerCase().includes(searchTerm)
+            );
+            renderUsers(filteredUsers);
+        });
+
+        // Autenticação e menus
+        async function checkAdmin() {
+            const userString = localStorage.getItem('currentAdmin');
+            if (!userString) {
+                alert('Acesso negado. Você precisa ser um administrador.');
                 window.location.href = './login.html';
                 return;
             }
-            
-            await updateNavUI(loggedUser);
-
-            window.addEventListener('click', (event) => {
-                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuDropdown.contains(event.target) && !mainMenuButton.contains(event.target)) {
-                    mainMenuDropdown.classList.add('hidden');
-                }
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
-                    userMenuDropdown.classList.add('hidden');
-                }
-            });
+            const admin = JSON.parse(userString);
+            if (admin.role !== 'admin') {
+                alert('Acesso negado. Permissões insuficientes.');
+                window.location.href = './index.html';
+                return;
+            }
+            await updateNavUI(admin);
         }
 
         async function updateNavUI(user) {
-            const userMenuContainer = document.getElementById('user-menu-container');
-            const loginButton = document.getElementById('login-button-main');
-
-            if (user) {
-                loginButton.classList.add('hidden');
-                userMenuContainer.classList.remove('hidden');
-                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
-                const stats = await fetchUserStats(user.id);
-
-                userMenuContainer.innerHTML = `
-                    <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
-                    <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                        <div class="p-4 border-b border-gray-200">
-                            <div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0"><div class="ml-4"><p class="text-md font-semibold text-gray-800">${user.nome || 'Admin'}</p><p class="text-xs text-gray-500">${user.email}</p></div></div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 text-center"><div><p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p><p class="text-xs text-gray-500">Pedidos</p></div><div><p class="text-sm font-semibold text-gray-800">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs text-gray-500">Gasto Total</p></div></div>
+           const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
+            userMenuContainer.innerHTML = `
+                <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
+                <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
+                    <div class="p-4 border-b">
+                        <div class="flex items-center">
+                            <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover">
+                            <div class="ml-4">
+                                <p class="font-semibold">${user.nome}</p>
+                                <p class="text-xs text-gray-500">${user.email}</p>
+                            </div>
                         </div>
-                        <div class="py-2">
-                            <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
-                            <a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>
-                        </div>
-                        <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
-                    </div>`;
-
-                const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
-                const userMenuDropdown = userMenuContainer.querySelector('#user-menu-dropdown');
-                userMenuButton.addEventListener('click', (event) => { event.stopPropagation(); userMenuDropdown.classList.toggle('hidden'); });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentAdmin'); window.location.href = './index.html'; };
-            }
+                    </div>
+                    <div class="p-2">
+                        <a href="./profile.html" class="w-full text-left flex items-center text-sm text-gray-700 hover:bg-gray-100 p-2 rounded"><i class="fas fa-user-edit w-6 mr-2"></i>Editar Perfil</a>
+                    </div>
+                    <div class="p-2 border-t">
+                        <button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button>
+                    </div>
+                </div>`;
+            
+            userMenuContainer.querySelector('#user-menu-button').addEventListener('click', (e) => { 
+                e.stopPropagation();
+                userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden');
+            });
+            userMenuContainer.querySelector('#logout-button').onclick = () => { 
+                localStorage.removeItem('currentAdmin'); 
+                window.location.href = './login.html'; 
+            };
         }
 
+        const mainMenuButton = document.getElementById('main-menu-button');
+        const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+        mainMenuButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            mainMenuDropdown.classList.toggle('hidden');
+        });
+        window.addEventListener('click', (event) => {
+            if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
+                mainMenuDropdown.classList.add('hidden');
+            }
+            const userMenuDropdown = document.getElementById('user-menu-dropdown');
+            if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
+                userMenuDropdown.classList.add('hidden');
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', async () => {
-            await setupMenusAndAuth();
-            await loadUsers();
+             await checkAdmin();
+             await loadAndRenderUsers();
         });
     </script>
 </body>
 </html>
+
