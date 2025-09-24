@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
@@ -42,34 +41,6 @@
                 </button>
             </div>
         </form>
-
-        <div class="relative">
-            <div class="absolute inset-0 flex items-center">
-                <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-                <span class="px-2 bg-white text-gray-500">Ou continue com</span>
-            </div>
-        </div>
-
-        <div>
-            <div id="g_id_onload"
-                 data-client_id="975618621125-k0qaq6qimn0ddb45gv8d9mfkps0pttgv.apps.googleusercontent.com"
-                 data-callback="handleGoogleCredentialResponse"
-                 data-context="signin"
-                 data-ux_mode="popup"
-                 data-auto_prompt="false">
-            </div>
-
-            <div class="g_id_signin"
-                 data-type="standard"
-                 data-shape="rectangular"
-                 data-theme="outline"
-                 data-text="continue_with"
-                 data-size="large"
-                 data-logo_alignment="left">
-            </div>
-        </div>
 
         <div class="text-sm text-center">
             <a href="./register.html" class="font-medium text-yellow-600 hover:text-yellow-500">
@@ -129,27 +100,6 @@
             }
         });
         
-        async function handleGoogleCredentialResponse(googleResponse) {
-            clearMessages();
-            showMessage('Login com Google bem-sucedido. Verificando dados...', false);
-
-            const id_token = googleResponse.credential;
-
-            try {
-                const { data: cliente, error: functionError } = await supabaseClient.functions.invoke('handle-google-signin', {
-                    body: { id_token: id_token },
-                });
-
-                if (functionError) throw new Error(`Erro da função Supabase: ${functionError.message}`);
-                if (!cliente) throw new Error("A função do Supabase não retornou os dados do cliente.");
-
-                handleLoginSuccess(cliente);
-
-            } catch (error) {
-                showMessage(`Falha no login com Google: ${error.message}`);
-            }
-        }
-
         function handleLoginSuccess(user) {
             let message = 'Autenticado com sucesso! Redirecionando...';
             let redirectUrl = './catalog.html';
@@ -162,7 +112,7 @@
             } else if (user.role === 'cozinha') {
                 message = 'Autenticado como Cozinha! Redirecionando...';
                 redirectUrl = './kitchen.html';
-                storageKey = 'currentUser'; // Cozinha pode usar o mesmo que o user normal
+                storageKey = 'currentUser';
             }
 
             showMessage(message, false);
