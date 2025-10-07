@@ -6,126 +6,276 @@
     <title>Sobre Nós - Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        :root {
+            /* Variáveis de Cor - Modo Claro */
+            --bg-color: #EAE0D5;
+            --particle-color: rgba(0, 0, 0, 0.1);
+            --ui-bg-color: rgba(255, 255, 255, 0.25);
+            --ui-border-color: rgba(255, 255, 255, 0.4);
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-tertiary: #6b7280;
+            --accent-color: #dc2626;
+            --accent-color-hover: #b91c1c;
+            --link-color: #ca8a04;
+            --link-color-hover: #a16207;
+        }
+
+        html.dark {
+            /* Variáveis de Cor - Modo Escuro */
+            --bg-color: #0d1a2d;
+            --particle-color: rgba(255, 255, 255, 0.1);
+            --ui-bg-color: rgba(17, 24, 39, 0.4);
+            --ui-border-color: rgba(255, 255, 255, 0.2);
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-tertiary: #9ca3af;
+            --accent-color: #ef4444;
+            --accent-color-hover: #dc2626;
+            --link-color: #f59e0b;
+            --link-color-hover: #d97706;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* Animação de Partículas */
+        .particle-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; overflow: hidden; z-index: -1; }
+        .particle { position: absolute; display: block; list-style: none; background-color: var(--particle-color); border-radius: 50%; animation: drift 20s linear infinite alternate; bottom: -20px; transition: background-color 0.5s ease; }
+        .particle:nth-child(1) { left: 10%; width: 2px; height: 2px; animation-duration: 18s; animation-delay: -2s; }
+        .particle:nth-child(2) { left: 20%; width: 3px; height: 3px; animation-duration: 22s; animation-delay: -15s; }
+        .particle:nth-child(3) { left: 25%; width: 1px; height: 1px; animation-duration: 25s; animation-delay: -5s; }
+        .particle:nth-child(4) { left: 40%; width: 3px; height: 3px; animation-duration: 15s; animation-delay: 0s; }
+        .particle:nth-child(5) { left: 50%; width: 2px; height: 2px; animation-duration: 28s; animation-delay: -5s; }
+        .particle:nth-child(6) { left: 65%; width: 1px; height: 1px; animation-duration: 16s; animation-delay: -10s; }
+        .particle:nth-child(7) { left: 75%; width: 2px; height: 2px; animation-duration: 19s; animation-delay: -22s; }
+        .particle:nth-child(8) { left: 85%; width: 3px; height: 3px; animation-duration: 24s; animation-delay: -8s; }
+        .particle:nth-child(9) { left: 90%; width: 1px; height: 1px; animation-duration: 17s; animation-delay: -18s; }
+        .particle:nth-child(10){ left: 55%; width: 2px; height: 2px; animation-duration: 21s; animation-delay: -12s; }
+
+        @keyframes drift {
+            from { transform: translateY(0) translateX(0); opacity: 0.8; }
+            to { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+        }
+        
+        /* Efeito de Vidro */
+        .glass-effect { background: var(--ui-bg-color); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--ui-border-color); transition: background-color 0.5s ease, border-color 0.5s ease; }
+        
+        /* Seletor de Tema */
+        .theme-switch { position: relative; display: inline-flex; align-items: center; width: 80px; height: 40px; padding: 4px; border-radius: 20px; cursor: pointer; }
+        .theme-switch .switch-blob { position: absolute; width: 32px; height: 32px; border-radius: 50%; background-color: var(--accent-color); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s ease; transform: translateX(0px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        html.dark .theme-switch .switch-blob { transform: translateX(40px); }
+        .theme-switch .icon { width: 24px; height: 24px; z-index: 10; margin: 0 4px; }
+        .theme-switch .icon.sun { color: #f59e0b; }
+        .theme-switch .icon.moon { color: #e5e7eb; }
+
+        /* Themed Styles */
+        .themed-text-secondary { color: var(--text-secondary); }
+        .themed-text-tertiary { color: var(--text-tertiary); }
+        .themed-link { color: var(--link-color); }
+        .themed-link:hover { color: var(--link-color-hover); }
+        .themed-accent-bg { background-color: var(--accent-color); }
+        .themed-accent-bg:hover { background-color: var(--accent-color-hover); }
+
+        /* Modal Transitions */
+        .modal-transition { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+<body class="flex flex-col min-h-screen">
+    <div class="particle-container">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
 
-    <!-- Header (Seu design) -->
-    <header class="bg-white shadow-sm sticky top-0 z-20">
+    <header class="glass-effect sticky top-0 z-20 shadow-lg">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
-                <button id="main-menu-button" class="p-2 rounded-full text-gray-600 hover:bg-gray-200">
+                <button id="main-menu-button" class="p-2 rounded-full themed-text-secondary hover:themed-accent-bg hover:text-white transition-colors">
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
-                <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                    <a href="./index.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-home w-6 mr-2"></i>Home</a>
-                    <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
-                    <a href="./ofertas.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
-                    <a href="./sobre.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100 font-semibold"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
+                <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 glass-effect rounded-lg shadow-xl overflow-hidden z-30">
+                    <a href="./index.html" class="block py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-home w-6 mr-2"></i>Home</a>
+                    <a href="./catalog.html" class="block py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
+                    <a href="./ofertas.html" class="block py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
+                    <a href="./sobre.html" class="block py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white font-semibold"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
                 </div>
             </div>
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
+                <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto" onerror="this.style.display='none'; this.nextSibling.style.display='block'"/><h1 class="text-3xl font-bold themed-link hidden">Lanchô</h1></a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700">Entrar</a>
-                <div id="user-menu-container" class="relative hidden"></div>
+                <div id="user-menu-container" class="relative"></div>
             </div>
         </nav>
     </header>
 
-    <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl font-bold text-center mb-4 text-gray-800">Equipe Lanchô</h1>
-            <p class="text-center text-gray-600 mb-12">Pessoas por trás do projeto.</p>
-
-            <div class="bg-white p-8 rounded-lg shadow-md mb-12">
-                <p class="text-lg leading-relaxed text-gray-700">
+            <h1 class="text-4xl font-bold text-center mb-4" style="color: var(--text-primary);">Nossa Missão</h1>
+             <div class="glass-effect p-8 rounded-lg shadow-lg mb-12">
+                <p class="text-lg leading-relaxed themed-text-secondary">
                     O Lanchô surgiu para sanar a dificuldade no atendimento ao cliente em uma lanchonete, automatizando e agilizando este processo. Com isso, surgiu a ideia do website, onde o cliente acessa e tem toda informação necessária para realizar este processo.
                 </p>
             </div>
 
-            <h2 class="text-3xl font-bold text-center mb-10 text-gray-800">Nossa Equipe</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                <!-- Membro da Equipe 1 -->
-                <div class="flex flex-col items-center">
-                    <img src="./images/felipe.jpg" alt="Felipe" class="w-32 h-32 rounded-full object-cover shadow-lg mb-4">
-                    <h3 class="font-bold text-lg">Felipe</h3>
-                    <p class="text-gray-500">Gerente</p>
-                </div>
-                <!-- Membro da Equipe 2 -->
-                <div class="flex flex-col items-center">
-                    <img src="./images/samuel.jpg" alt="Samuel" class="w-32 h-32 rounded-full object-cover shadow-lg mb-4">
-                    <h3 class="font-bold text-lg">Samuel</h3>
-                    <p class="text-gray-500">Operador de Documentações</p>
-                </div>
-                <!-- Membro da Equipe 3 -->
-                <div class="flex flex-col items-center">
-                    <img src="./images/enzo.jpg" alt="Enzo" class="w-32 h-32 rounded-full object-cover shadow-lg mb-4">
-                    <h3 class="font-bold text-lg">Enzo</h3>
-                    <p class="text-gray-500">Desenvolvedor Full-Stack</p>
-                </div>
-                <!-- Membro da Equipe 4 -->
-                <div class="flex flex-col items-center">
-                    <img src="./images/diogo.jpg" alt="Diogo" class="w-32 h-32 rounded-full object-cover shadow-lg mb-4">
-                    <h3 class="font-bold text-lg">Diogo</h3>
-                    <p class="text-gray-500">Operador de Banco de Dados</p>
-                </div>
+            <h2 class="text-3xl font-bold text-center mb-10" style="color: var(--text-primary);">A Equipe por Trás do Sabor</h2>
+            <div id="team-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <!-- Team members will be injected here by JavaScript -->
             </div>
         </div>
     </main>
 
-    <!-- Footer (Seu design) -->
-    <footer class="bg-gray-800 text-white mt-auto">
+    <footer class="glass-effect text-white mt-auto shadow-lg">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
                 <div>
-                    <h3 class="text-lg font-bold text-yellow-500 mb-4">Lanchô</h3>
-                    <p class="text-gray-400">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
+                    <h3 class="text-lg font-bold themed-link mb-4">Lanchô</h3>
+                    <p class="themed-text-tertiary">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4">Links Rápidos</h3>
+                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Links Rápidos</h3>
                     <ul class="space-y-2">
-                        <li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li>
-                        <li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li>
-                        <li><a href="./orders.html" class="text-gray-400 hover:text-white">Meus Pedidos</a></li>
+                        <li><a href="./index.html" class="themed-text-tertiary hover:themed-link">Home</a></li>
+                        <li><a href="./catalog.html" class="themed-text-tertiary hover:themed-link">Cardápio</a></li>
+                        <li><a href="./orders.html" class="themed-text-tertiary hover:themed-link">Meus Pedidos</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4">Contato</h3>
-                    <ul class="space-y-2 text-gray-400">
+                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Contato</h3>
+                    <ul class="space-y-2 themed-text-tertiary">
                         <li>Rua Mariz e Barros, 273, Rio de Janeiro</li>
                         <li>(21) 96810-5812</li>
                         <li>contato@lancho.com.br</li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
+                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Siga-nos</h3>
                     <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="https://instagram.com/lancho.rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-instagram fa-lg"></i>
-                        </a>
-                        <a href="https://x.com/Lancho_rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-twitter fa-lg"></i>
-                        </a>
+                        <a href="https://instagram.com/lancho.rj" target="_blank" class="themed-text-tertiary hover:themed-link"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="https://x.com/Lancho_rj" target="_blank" class="themed-text-tertiary hover:themed-link"><i class="fab fa-twitter fa-lg"></i></a>
                     </div>
                 </div>
             </div>
-            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500">
+            <div class="border-t mt-8 pt-6 text-center themed-text-tertiary" style="border-color: var(--ui-border-color);">
                 <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
+    
+     <div id="theme-switcher" class="theme-switch glass-effect rounded-full fixed bottom-6 right-6 z-50">
+        <div class="switch-blob"></div>
+        <svg class="icon sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        <svg class="icon moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 modal-transition opacity-0">
+        <div id="profile-modal-content" class="glass-effect w-full max-w-lg rounded-xl shadow-2xl flex flex-col md:flex-row max-h-[90vh] modal-content transform scale-95">
+            <div id="modal-image-container" class="md:w-1/3">
+                 <img id="modal-img" src="" alt="Foto do perfil" class="w-full h-48 md:h-full object-cover rounded-t-xl md:rounded-l-xl md:rounded-t-none">
+            </div>
+            <div class="p-8 md:w-2/3 flex flex-col">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 id="modal-name" class="text-3xl font-bold">Nome do Membro</h2>
+                        <p id="modal-role" class="themed-link font-semibold">Cargo</p>
+                    </div>
+                    <button id="close-profile-modal-button" class="themed-text-secondary hover:themed-text-primary text-3xl leading-none">&times;</button>
+                </div>
+                <p id="modal-description" class="themed-text-secondary my-6 flex-grow">Descrição do membro da equipe.</p>
+                <a id="modal-instagram" href="#" target="_blank" class="w-full text-center bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105">
+                    <i class="fab fa-instagram mr-2"></i> Ver Perfil no Instagram
+                </a>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const teamData = [
+            {
+                name: "Felipe",
+                role: "Gerente de Projetos",
+                image: "./images/felipe.jpg",
+                instagram: "https://www.instagram.com/felipefbr_/",
+                description: "Como gerente, Felipe orquestra todas as etapas do Lanchô, garantindo que a visão se transforme em realidade. Sua liderança une a equipe, focando na entrega de uma experiência de usuário impecável."
+            },
+            {
+                name: "Samuel",
+                role: "Operador de Documentações",
+                image: "./images/samuel.jpg",
+                instagram: "https://www.instagram.com/samuelpessoac/",
+                description: "Samuel é o arquiteto da informação por trás do Lanchô. Responsável pela documentação, ele garante que o projeto seja claro, consistente e fácil de manter. Sua atenção aos detalhes é fundamental."
+            },
+            {
+                name: "Enzo",
+                role: "Desenvolvedor Full-Stack",
+                image: "./images/enzo.jpg",
+                instagram: "https://www.instagram.com/braga_ezz/",
+                description: "Enzo é a força motriz do desenvolvimento. Atuando como Full-Stack, ele constrói a interface que os usuários amam e a lógica robusta do servidor. Sua paixão por tecnologia é visível em cada linha de código."
+            },
+            {
+                name: "Diogo",
+                role: "Operador de Banco de Dados",
+                image: "./images/diogo.jpg",
+                instagram: "https://www.instagram.com/diogo.b_4/",
+                description: "Diogo é o guardião dos dados. Especialista em banco de dados, ele projeta, implementa e otimiza a estrutura que armazena todas as informações, garantindo que o sistema seja rápido, seguro e escalável."
+            }
+        ];
+
+        function renderTeam() {
+            const teamGrid = document.getElementById('team-grid');
+            teamGrid.innerHTML = teamData.map((member, index) => `
+                <div class="flex flex-col items-center cursor-pointer group" onclick="openProfileModal(${index})">
+                    <div class="relative">
+                        <img src="${member.image}" alt="${member.name}" class="w-32 h-32 rounded-full object-cover shadow-lg mb-4 transition-transform transform group-hover:scale-110">
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-full flex items-center justify-center transition-all duration-300">
+                            <i class="fas fa-search text-white text-2xl opacity-0 group-hover:opacity-100"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-lg" style="color: var(--text-primary);">${member.name}</h3>
+                    <p class="themed-text-tertiary">${member.role}</p>
+                </div>
+            `).join('');
+        }
+        
+        function openModal(modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.modal-content').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal(modal) {
+            modal.classList.add('opacity-0');
+            modal.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function openProfileModal(index) {
+            const member = teamData[index];
+            document.getElementById('modal-img').src = member.image;
+            document.getElementById('modal-name').textContent = member.name;
+            document.getElementById('modal-role').textContent = member.role;
+            document.getElementById('modal-description').textContent = member.description;
+            document.getElementById('modal-instagram').href = member.instagram;
+            openModal(document.getElementById('profile-modal'));
+        }
 
         async function fetchUserStats(userId) {
             try {
@@ -138,75 +288,68 @@
             }
         }
 
-        async function setupMenusAndAuth() {
-            const mainMenuButton = document.getElementById('main-menu-button');
-            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
-            mainMenuButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                mainMenuDropdown.classList.toggle('hidden');
-            });
-
-            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
-            let loggedUser = null;
-            if (userString) {
-                loggedUser = JSON.parse(userString);
-            }
-            
-            await updateNavUI(loggedUser);
-
-            window.addEventListener('click', (event) => {
-                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuDropdown.contains(event.target) && !mainMenuButton.contains(event.target)) {
-                    mainMenuDropdown.classList.add('hidden');
-                }
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
-                    userMenuDropdown.classList.add('hidden');
-                }
-            });
-        }
-
         async function updateNavUI(user) {
             const userMenuContainer = document.getElementById('user-menu-container');
-            const loginButton = document.getElementById('login-button-main');
-
+            let userMenuContent = `<a href="./login.html" id="login-button-main" class="themed-accent-bg text-white font-bold text-sm py-2 px-5 rounded-full transition-colors">Entrar</a>`;
             if (user) {
-                loginButton.classList.add('hidden');
-                userMenuContainer.classList.remove('hidden');
-                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
+                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
                 const stats = await fetchUserStats(user.id);
-
-                let adminLink = '';
-                if (user.role === 'admin') {
-                    adminLink = '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>';
-                }
-
-                userMenuContainer.innerHTML = `
+                const adminLink = user.role === 'admin' ? `<a href="./admin.html" class="flex items-center py-2 px-4 text-sm hover:themed-accent-bg hover:!text-white" style="color: #2563eb;"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>` : '';
+                userMenuContent = `
                     <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
-                    <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                        <div class="p-4 border-b border-gray-200">
-                            <div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0"><div class="ml-4"><p class="text-md font-semibold text-gray-800">${user.nome || 'Cliente'}</p><p class="text-xs text-gray-500">${user.email}</p></div></div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 text-center"><div><p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p><p class="text-xs text-gray-500">Pedidos</p></div><div><p class="text-sm font-semibold text-gray-800">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs text-gray-500">Gasto Total</p></div></div>
+                    <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 glass-effect rounded-lg shadow-xl overflow-hidden z-30">
+                         <div class="p-4 border-b" style="border-color: var(--ui-border-color);">
+                            <div class="flex items-center">
+                                <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
+                                <div class="ml-4">
+                                    <p class="text-md font-semibold" style="color: var(--text-primary);">${user.nome || 'Cliente'}</p>
+                                    <p class="text-xs themed-text-secondary">${user.email}</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 grid grid-cols-2 gap-4 text-center">
+                                <div><p class="text-sm font-semibold" style="color: var(--text-primary);">${stats.totalPedidos}</p><p class="text-xs themed-text-secondary">Pedidos</p></div>
+                                <div><p class="text-sm font-semibold" style="color: var(--text-primary);">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs themed-text-secondary">Gasto Total</p></div>
+                            </div>
                         </div>
                         <div class="py-2">
-                            <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
-                            <a href="./orders.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
+                            <a href="./profile.html" class="flex items-center py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
+                            <a href="./orders.html" class="flex items-center py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
                             ${adminLink}
                         </div>
-                        <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
+                        <div class="p-2 border-t" style="border-color: var(--ui-border-color);"><button id="logout-button" class="w-full text-left flex items-center text-sm p-2 rounded hover:bg-red-50" style="color: var(--accent-color);"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                     </div>`;
-
-                const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
-                const userMenuDropdown = userMenuContainer.querySelector('#user-menu-dropdown');
-                userMenuButton.addEventListener('click', (event) => { event.stopPropagation(); userMenuDropdown.classList.toggle('hidden'); });
+            }
+            userMenuContainer.innerHTML = userMenuContent;
+            if (user) {
+                userMenuContainer.querySelector('#user-menu-button').addEventListener('click', e => { e.stopPropagation(); userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden'); });
                 userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); localStorage.removeItem('currentAdmin'); window.location.reload(); };
-            } else {
-                loginButton.classList.remove('hidden');
-                userMenuContainer.classList.add('hidden');
             }
         }
-        
-        document.addEventListener('DOMContentLoaded', async () => {
-            await setupMenusAndAuth();
+
+        async function setupPage() {
+            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
+            await updateNavUI(userString ? JSON.parse(userString) : null);
+            
+            const mainMenuButton = document.getElementById('main-menu-button');
+            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+            mainMenuButton.addEventListener('click', (event) => { event.stopPropagation(); mainMenuDropdown.classList.toggle('hidden'); });
+
+            window.addEventListener('click', (event) => {
+                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) { mainMenuDropdown.classList.add('hidden'); }
+                const userMenuDropdown = document.getElementById('user-menu-dropdown');
+                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) { userMenuDropdown.classList.add('hidden'); }
+            });
+            
+            document.getElementById('close-profile-modal-button').addEventListener('click', () => closeModal(document.getElementById('profile-modal')));
+            
+            const themeSwitcher = document.getElementById('theme-switcher');
+            const docHtml = document.documentElement;
+            themeSwitcher.addEventListener('click', () => { docHtml.classList.toggle('dark'); });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupPage();
+            renderTeam();
         });
     </script>
 </body>
