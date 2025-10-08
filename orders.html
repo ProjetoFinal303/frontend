@@ -6,147 +6,88 @@
     <title>Meus Pedidos - Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        :root {
-            /* Variáveis de Cor - Modo Claro */
-            --bg-color: #EAE0D5;
-            --particle-color: rgba(0, 0, 0, 0.1);
-            --ui-bg-color: rgba(255, 255, 255, 0.25);
-            --ui-border-color: rgba(255, 255, 255, 0.4);
-            --text-primary: #1f2937;
-            --text-secondary: #4b5563;
-            --text-tertiary: #6b7280;
-            --accent-color: #dc2626;
-            --accent-color-hover: #b91c1c;
-            --link-color: #ca8a04;
-            --link-color-hover: #a16207;
-            --timeline-inactive-bg: rgba(0,0,0,0.05);
-            --timeline-inactive-border: rgba(0,0,0,0.1);
-            --timeline-active-bg: #fefce8;
-            --timeline-active-border: #facc15;
-            --timeline-active-text: #ca8a04;
-            --timeline-completed-bg: #dcfce7;
-            --timeline-completed-border: #4ade80;
-            --timeline-completed-text: #16a34a;
-        }
-
-        html.dark {
-            /* Variáveis de Cor - Modo Escuro */
-            --bg-color: #0d1a2d;
-            --particle-color: rgba(255, 255, 255, 0.1);
-            --ui-bg-color: rgba(17, 24, 39, 0.4);
-            --ui-border-color: rgba(255, 255, 255, 0.2);
-            --text-primary: #f9fafb;
-            --text-secondary: #d1d5db;
-            --text-tertiary: #9ca3af;
-            --accent-color: #ef4444;
-            --accent-color-hover: #dc2626;
-            --link-color: #f59e0b;
-            --link-color-hover: #d97706;
-            --timeline-inactive-bg: rgba(255,255,255,0.05);
-            --timeline-inactive-border: rgba(255,255,255,0.1);
-            --timeline-active-bg: rgba(250, 204, 21, 0.1);
-            --timeline-completed-bg: rgba(74, 222, 128, 0.1);
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            transition: background-color 0.5s ease, color 0.5s ease;
-        }
-
-        /* Animação de Partículas */
-        .particle-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; overflow: hidden; z-index: -1; }
-        .particle { position: absolute; display: block; list-style: none; background-color: var(--particle-color); border-radius: 50%; animation: drift 20s linear infinite alternate; bottom: -20px; transition: background-color 0.5s ease; }
-        .particle:nth-child(1) { left: 10%; width: 2px; height: 2px; animation-duration: 18s; animation-delay: -2s; }
-        .particle:nth-child(2) { left: 20%; width: 3px; height: 3px; animation-duration: 22s; animation-delay: -15s; }
-        .particle:nth-child(3) { left: 25%; width: 1px; height: 1px; animation-duration: 25s; animation-delay: -5s; }
-        .particle:nth-child(4) { left: 40%; width: 3px; height: 3px; animation-duration: 15s; animation-delay: 0s; }
-        .particle:nth-child(5) { left: 50%; width: 2px; height: 2px; animation-duration: 28s; animation-delay: -5s; }
-        .particle:nth-child(6) { left: 65%; width: 1px; height: 1px; animation-duration: 16s; animation-delay: -10s; }
-        .particle:nth-child(7) { left: 75%; width: 2px; height: 2px; animation-duration: 19s; animation-delay: -22s; }
-        .particle:nth-child(8) { left: 85%; width: 3px; height: 3px; animation-duration: 24s; animation-delay: -8s; }
-        .particle:nth-child(9) { left: 90%; width: 1px; height: 1px; animation-duration: 17s; animation-delay: -18s; }
-        .particle:nth-child(10){ left: 55%; width: 2px; height: 2px; animation-duration: 21s; animation-delay: -12s; }
-
-        @keyframes drift {
-            from { transform: translateY(0) translateX(0); opacity: 0.8; }
-            to { transform: translateY(-100vh) translateX(50px); opacity: 0; }
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; color: #1f2937; display: flex; flex-direction: column; min-height: 100vh; }
         
-        /* Efeito de Vidro */
-        .glass-effect { background: var(--ui-bg-color); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--ui-border-color); transition: background-color 0.5s ease, border-color 0.5s ease; }
-        
-        /* Seletor de Tema */
-        .theme-switch { position: relative; display: inline-flex; align-items: center; width: 80px; height: 40px; padding: 4px; border-radius: 20px; cursor: pointer; }
-        .theme-switch .switch-blob { position: absolute; width: 32px; height: 32px; border-radius: 50%; background-color: var(--accent-color); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s ease; transform: translateX(0px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-        html.dark .theme-switch .switch-blob { transform: translateX(40px); }
-        .theme-switch .icon { width: 24px; height: 24px; z-index: 10; margin: 0 4px; }
-        .theme-switch .icon.sun { color: #f59e0b; }
-        .theme-switch .icon.moon { color: #e5e7eb; }
+        #toast-notification {
+            position: fixed; bottom: 20px; left: 50%;
+            transform: translateX(-50%) translateY(200%);
+            background-color: #1f2937; color: white;
+            padding: 1rem 1.5rem; border-radius: 9999px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.5s ease-in-out; z-index: 100; display: flex; align-items: center;
+        }
+        #toast-notification.show { transform: translateX(-50%) translateY(0); }
 
-        /* Themed Styles */
-        .themed-text-secondary { color: var(--text-secondary); }
-        .themed-text-tertiary { color: var(--text-tertiary); }
-        .themed-link { color: var(--link-color); }
-        .themed-link:hover { color: var(--link-color-hover); }
-        .themed-accent-bg { background-color: var(--accent-color); }
-        .themed-accent-bg:hover { background-color: var(--accent-color-hover); }
-
-        /* Timeline */
+        /* Estilos da Linha do Tempo do Pedido */
         .timeline { display: flex; justify-content: space-between; align-items: flex-start; padding: 1rem 0; }
         .timeline-step { text-align: center; flex-basis: 25%; position: relative; }
-        .timeline-icon { width: 50px; height: 50px; border-radius: 50%; background-color: var(--timeline-inactive-bg); color: var(--text-tertiary); display: inline-flex; align-items: center; justify-content: center; font-size: 1.25rem; border: 4px solid var(--timeline-inactive-border); transition: all 0.3s ease; }
-        .timeline-label { display: block; margin-top: 0.5rem; font-size: 0.8rem; font-weight: 500; color: var(--text-tertiary); transition: color 0.3s ease; }
-        .timeline-step.active .timeline-icon { background-color: var(--timeline-active-bg); border-color: var(--timeline-active-border); color: var(--timeline-active-text); }
-        .timeline-step.active .timeline-label { color: var(--text-primary); font-weight: 600; }
-        .timeline-step.completed .timeline-icon { background-color: var(--timeline-completed-bg); border-color: var(--timeline-completed-border); color: var(--timeline-completed-text); }
-        .timeline-step.completed .timeline-label { color: var(--text-secondary); }
+        .timeline-step .timeline-icon {
+            width: 50px; height: 50px; border-radius: 50%;
+            background-color: #e5e7eb; color: #9ca3af;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.25rem; border: 4px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .timeline-step .timeline-label {
+            display: block; margin-top: 0.5rem; font-size: 0.8rem;
+            font-weight: 500; color: #6b7280; transition: color 0.3s ease;
+        }
+        .timeline-step.active .timeline-icon { background-color: #fefce8; border-color: #facc15; color: #ca8a04; }
+        .timeline-step.active .timeline-label { color: #1f2937; font-weight: 600; }
+        .timeline-step.completed .timeline-icon { background-color: #dcfce7; border-color: #4ade80; color: #16a34a; }
+        .timeline-step.completed .timeline-label { color: #1f2937; }
 
-        .timeline-step:not(:last-child)::after { content: ''; position: absolute; top: 25px; left: 50%; width: 100%; height: 4px; background-color: var(--timeline-inactive-border); transform: translateX(50%); z-index: -1; transition: background-color 0.3s ease; }
-        .timeline-step.completed::after { background-color: var(--timeline-completed-border); }
+        .timeline-step:not(:last-child)::after {
+            content: ''; position: absolute;
+            top: 25px; left: 50%;
+            width: 100%; height: 4px;
+            background-color: #e5e7eb;
+            transform: translateX(50%);
+            z-index: -1;
+            transition: background-color 0.3s ease;
+        }
+        .timeline-step.completed::after { background-color: #4ade80; }
         
+        /* Efeito de entrada para os cards */
         .order-card { animation: slideInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-        @keyframes slideInUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
-    <div class="particle-container">
-        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
-        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
-    </div>
+<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
 
-    <header class="glass-effect sticky top-0 z-20 shadow-lg">
+    <header class="bg-white shadow-sm sticky top-0 z-20">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
-                <button id="main-menu-button" class="p-2 rounded-full themed-text-secondary hover:themed-accent-bg hover:text-white transition-colors">
-                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                <button id="main-menu-button" class="p-2 rounded-full text-gray-600 hover:bg-gray-200">
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
-                <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 glass-effect rounded-lg shadow-xl overflow-hidden z-30">
-                    <a href="./index.html" class="block py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-home w-6 mr-2"></i>Home</a>
-                    <a href="./catalog.html" class="block py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
-                    <a href="./ofertas.html" class="block py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
-                    <a href="./sobre.html" class="block py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
+                <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden z-30">
+                    <a href="./index.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-home w-6 mr-2"></i>Home</a>
+                    <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
+                    <a href="./ofertas.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
+                    <a href="./sobre.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
                 </div>
             </div>
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto" onerror="this.style.display='none'; this.nextSibling.style.display='block'"/><h1 class="text-3xl font-bold themed-link hidden">Lanchô</h1></a>
+                <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
             </div>
             <div class="flex items-center space-x-4">
-                <div id="user-menu-container" class="relative"></div>
+                <a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700">Entrar</a>
+                <div id="user-menu-container" class="relative hidden"></div>
             </div>
         </nav>
     </header>
 
     <main class="container mx-auto p-4 md:p-8 flex-grow">
         <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl font-black text-center mb-4" style="color: var(--text-primary);">Meus Pedidos</h1>
-            <p class="text-center themed-text-secondary mb-10">Acompanhe o status dos seus lanches e veja seu histórico de delícias.</p>
+            <h1 class="text-4xl font-black text-center mb-4 text-gray-800">Meus Pedidos</h1>
+            <p class="text-center text-gray-500 mb-10">Acompanhe o status dos seus lanches e veja seu histórico de delícias.</p>
             
             <div id="orders-container" class="space-y-8">
                 <!-- Pedidos serão inseridos aqui -->
@@ -154,78 +95,78 @@
         </div>
     </main>
 
-    <footer class="glass-effect text-white mt-auto shadow-lg">
+    <footer class="bg-gray-800 text-white mt-auto">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
                 <div>
-                    <h3 class="text-lg font-bold themed-link mb-4">Lanchô</h3>
-                    <p class="themed-text-tertiary">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
+                    <h3 class="text-lg font-bold text-yellow-500 mb-4">Lanchô</h3>
+                    <p class="text-gray-400">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Links Rápidos</h3>
+                    <h3 class="text-lg font-bold mb-4">Links Rápidos</h3>
                     <ul class="space-y-2">
-                        <li><a href="./index.html" class="themed-text-tertiary hover:themed-link">Home</a></li>
-                        <li><a href="./catalog.html" class="themed-text-tertiary hover:themed-link">Cardápio</a></li>
-                        <li><a href="./orders.html" class="themed-text-tertiary hover:themed-link">Meus Pedidos</a></li>
+                        <li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li>
+                        <li><a href="./orders.html" class="text-gray-400 hover:text-white">Meus Pedidos</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Contato</h3>
-                    <ul class="space-y-2 themed-text-tertiary">
+                    <h3 class="text-lg font-bold mb-4">Contato</h3>
+                    <ul class="space-y-2 text-gray-400">
                         <li>Rua Mariz e Barros, 273, Rio de Janeiro</li>
                         <li>(21) 96810-5812</li>
                         <li>contato@lancho.com.br</li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Siga-nos</h3>
+                    <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
                     <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="https://instagram.com/lancho.rj" target="_blank" class="themed-text-tertiary hover:themed-link"><i class="fab fa-instagram fa-lg"></i></a>
-                        <a href="https://x.com/Lancho_rj" target="_blank" class="themed-text-tertiary hover:themed-link"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="https://instagram.com/lancho.rj" target="_blank" class="text-gray-400 hover:text-white"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="https://x.com/Lancho_rj" target="_blank" class="text-gray-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a>
                     </div>
                 </div>
             </div>
-            <div class="border-t mt-8 pt-6 text-center themed-text-tertiary" style="border-color: var(--ui-border-color);">
-                <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
-            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500"><p>&copy; 2025 Lanchô. Todos os direitos reservados.</p></div>
         </div>
     </footer>
     
-    <div id="theme-switcher" class="theme-switch glass-effect rounded-full fixed bottom-6 right-6 z-50">
-        <div class="switch-blob"></div>
-        <svg class="icon sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-        <svg class="icon moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+    <div id="toast-notification">
+        <i class="fas fa-check-circle mr-3 text-green-400"></i>
+        <span id="toast-message"></span>
     </div>
-
-    <div id="toast-notification" class="fixed bottom-8 left-1/2 -translate-x-1/2 p-4 rounded-full text-white z-[100] transition-transform duration-500 translate-y-24 opacity-0 glass-effect"></div>
 
     <script>
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let loggedUser = null;
+
+        const ordersContainer = document.getElementById('orders-container');
+        const toastNotification = document.getElementById('toast-notification');
+        const toastMessage = document.getElementById('toast-message');
+        let toastTimeout;
         let allProducts = [];
 
         function showToast(message, isError = false) {
-            const toast = document.getElementById('toast-notification');
-            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle text-red-400' : 'fa-check-circle text-green-400'} mr-3"></i><span>${message}</span>`;
-            toast.classList.remove('opacity-0', 'translate-y-24');
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-24');
-            }, 3000);
+            clearTimeout(toastTimeout);
+            toastMessage.textContent = message;
+            toastNotification.querySelector('i').className = isError 
+                ? 'fas fa-exclamation-circle mr-3 text-red-400' 
+                : 'fas fa-check-circle mr-3 text-green-400';
+            toastNotification.classList.add('show');
+            toastTimeout = setTimeout(() => toastNotification.classList.remove('show'), 3000);
         }
 
         const statusInfo = {
-            'pendente': { text: 'Pendente', icon: 'fa-receipt', step: 1 },
-            'em preparo': { text: 'Em Preparo', icon: 'fa-kitchen-set', step: 2 },
-            'saiu para entrega': { text: 'A Caminho', icon: 'fa-truck-fast', step: 3 },
-            'entregue': { text: 'Entregue', icon: 'fa-house-chimney', step: 4 },
-            'concluido': { text: 'Entregue', icon: 'fa-house-chimney', step: 4 },
-            'cancelado': { text: 'Cancelado', icon: 'fa-times-circle', step: 0 }
+            'Pendente': { text: 'Pendente', color: 'yellow', icon: 'fa-clock', step: 1 },
+            'Em preparo': { text: 'Em Preparo', color: 'blue', icon: 'fa-kitchen-set', step: 2 },
+            'Saiu para entrega': { text: 'A Caminho', color: 'indigo', icon: 'fa-truck-fast', step: 3 },
+            'Entregue': { text: 'Entregue', color: 'green', icon: 'fa-check-circle', step: 4 },
+            'Cancelado': { text: 'Cancelado', color: 'red', icon: 'fa-times-circle', step: 0 }
         };
 
-        function renderTimeline(currentStatusKey) {
-            const currentStep = statusInfo[currentStatusKey]?.step || 0;
+        function renderTimeline(currentStatus) {
+            const currentStep = statusInfo[currentStatus]?.step || 0;
             const steps = [
                 { label: 'Recebido', icon: 'fa-receipt' },
                 { label: 'Preparando', icon: 'fa-kitchen-set' },
@@ -238,20 +179,22 @@
                 ${steps.map((step, index) => {
                     const stepNumber = index + 1;
                     let statusClass = '';
-                    if (currentStatusKey === 'cancelado') statusClass = '';
-                    else if (stepNumber < currentStep) statusClass = 'completed';
-                    else if (stepNumber === currentStep) statusClass = 'active';
-                    
+                    if (stepNumber < currentStep) statusClass = 'completed';
+                    if (stepNumber === currentStep) statusClass = 'active';
+                    if (currentStatus === 'Cancelado') statusClass = '';
+
                     return `
                     <div class="timeline-step ${statusClass}">
                         <div class="timeline-icon"><i class="fas ${step.icon}"></i></div>
                         <span class="timeline-label">${step.label}</span>
-                    </div>`;
+                    </div>
+                    `;
                 }).join('')}
-            </div>`;
+            </div>
+            `;
         }
-        
-        async function reorder(orderDescription) {
+
+        async function reorder(orderId, orderDescription) {
             if (!allProducts.length) {
                 const { data, error } = await supabaseClient.from('Produto').select('*');
                 if (error) {
@@ -261,72 +204,64 @@
                 allProducts = data;
             }
 
-            const cart = JSON.parse(localStorage.getItem('lanchoCart')) || [];
-            const itemDescriptions = orderDescription.split(',').map(d => d.trim());
-            
-            let itemsAddedCount = 0;
-            itemDescriptions.forEach(desc => {
-                const parts = desc.match(/(\d+)x\s(.+)/);
-                let quantity = 1;
-                let name = desc;
+            const itemNames = orderDescription.split(', ').map(name => name.trim());
+            const cart = JSON.parse(localStorage.getItem('shoppingCart')) || [];
 
-                if (parts) {
-                    quantity = parseInt(parts[1], 10);
-                    name = parts[2].trim();
-                }
-
+            let itemsAdded = 0;
+            itemNames.forEach(name => {
                 const product = allProducts.find(p => p.nome.toLowerCase() === name.toLowerCase());
-                if(product){
-                    const existingItem = cart.find(item => item.id === product.id);
+                if (product) {
+                    const cartItemId = `${product.id}-`; // ID simples, sem customização
+                    const existingItem = cart.find(item => item.id === cartItemId);
                     if (existingItem) {
-                        existingItem.quantity += quantity;
+                        existingItem.quantity++;
                     } else {
-                        cart.push({ ...product, quantity });
+                        cart.push({ id: cartItemId, product, customizations: [], quantity: 1 });
                     }
-                    itemsAddedCount++;
+                    itemsAdded++;
                 }
             });
 
-            if (itemsAddedCount > 0) {
-                localStorage.setItem('lanchoCart', JSON.stringify(cart));
-                showToast(`Itens adicionados ao carrinho! Redirecionando...`);
+            if (itemsAdded > 0) {
+                localStorage.setItem('shoppingCart', JSON.stringify(cart));
+                showToast(`${itemsAdded} ite${itemsAdded > 1 ? 'ns' : 'm'} adicionado${itemsAdded > 1 ? 's' : ''} ao carrinho!`);
+                // Redireciona para o cardápio para o usuário ver o carrinho
                 setTimeout(() => window.location.href = './catalog.html', 1500);
             } else {
                 showToast('Não foi possível encontrar os produtos para refazer este pedido.', true);
             }
         }
 
-
         function renderOrderCard(order) {
-            const status = statusInfo[order.status.toLowerCase()] || { text: 'Desconhecido', icon: 'fa-question-circle', step: 0 };
+            const status = statusInfo[order.status] || { text: 'Desconhecido', color: 'gray', icon: 'fa-question-circle' };
             const formattedDate = new Date(order.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
             
             return `
-            <div class="glass-effect rounded-2xl shadow-lg overflow-hidden order-card">
-                <div class="p-6 border-b flex justify-between items-center" style="border-color: var(--ui-border-color);">
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden order-card">
+                <div class="p-6 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                     <div>
-                        <p class="text-sm font-semibold themed-link">PEDIDO #${String(order.id).padStart(6, '0')}</p>
-                        <p class="themed-text-tertiary text-sm">${formattedDate}</p>
+                        <p class="text-sm font-semibold text-red-600">PEDIDO #${String(order.id).padStart(6, '0')}</p>
+                        <p class="text-gray-500 text-sm">${formattedDate}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-xl font-bold" style="color: var(--text-primary);">R$ ${order.valor.toFixed(2).replace('.', ',')}</p>
+                         <p class="text-xl font-bold text-gray-800">R$ ${order.valor.toFixed(2).replace('.', ',')}</p>
                     </div>
                 </div>
                 
                 <div class="p-6">
-                    ${renderTimeline(order.status.toLowerCase())}
+                    ${renderTimeline(order.status)}
                 </div>
 
-                <div class="p-6 border-t" style="border-color: var(--ui-border-color);">
+                <div class="p-6 bg-gray-50 border-t border-gray-200">
                     <h4 class="font-bold mb-2">Itens do Pedido:</h4>
-                    <p class="themed-text-secondary text-sm mb-4">${order.descricao}</p>
+                    <p class="text-gray-600 text-sm mb-4">${order.descricao}</p>
                     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                       <div class="flex items-center gap-2 py-2 px-4 rounded-full font-bold text-sm w-full sm:w-auto justify-center" style="background-color: var(--timeline-${status.step < 4 && status.step > 0 ? 'active' : 'completed'}-bg); color: var(--timeline-${status.step < 4 && status.step > 0 ? 'active' : 'completed'}-text);">
+                       <div class="flex items-center gap-2 py-2 px-4 rounded-full bg-${status.color}-100 text-${status.color}-700 font-bold text-sm w-full sm:w-auto justify-center">
                            <i class="fas ${status.icon}"></i>
                            <span>${status.text}</span>
                        </div>
-                        ${(status.step === 4) ? 
-                            `<button onclick="reorder('${order.descricao.replace(/'/g, "\\'")}')" class="w-full sm:w-auto themed-accent-bg text-white font-bold py-2 px-5 rounded-full transition-transform transform hover:scale-105">
+                        ${order.status === 'Entregue' ? 
+                            `<button onclick="reorder(${order.id}, '${order.descricao.replace(/'/g, "\\'")}')" class="w-full sm:w-auto bg-red-600 text-white font-bold py-2 px-5 rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105">
                                 <i class="fas fa-redo-alt mr-2"></i>Pedir Novamente
                             </button>` : ''
                         }
@@ -337,19 +272,18 @@
         }
 
         async function loadOrders() {
-            const ordersContainer = document.getElementById('orders-container');
             if (!loggedUser) {
                 ordersContainer.innerHTML = `
-                <div class="text-center glass-effect p-12 rounded-2xl shadow-lg">
-                    <i class="fas fa-user-lock text-5xl themed-link mb-4"></i>
+                <div class="text-center bg-white p-12 rounded-2xl shadow-lg">
+                    <i class="fas fa-user-lock text-5xl text-yellow-500 mb-4"></i>
                     <h2 class="text-2xl font-bold mb-2">Acesso Restrito</h2>
-                    <p class="themed-text-secondary mb-6">Você precisa estar logado para ver seus pedidos.</p>
-                    <a href="./login.html" class="themed-accent-bg text-white font-bold py-3 px-8 rounded-full hover:scale-105 inline-block transition-transform">Fazer Login</a>
+                    <p class="text-gray-500 mb-6">Você precisa estar logado para ver seus pedidos.</p>
+                    <a href="./login.html" class="bg-red-600 text-white font-bold py-3 px-8 rounded-full hover:bg-red-700 transition-transform hover:scale-105 inline-block">Fazer Login</a>
                 </div>`;
                 return;
             }
 
-            ordersContainer.innerHTML = `<div class="text-center themed-text-secondary p-8"><i class="fas fa-spinner fa-spin fa-2x themed-link"></i><p class="mt-2">Buscando seus pedidos...</p></div>`;
+            ordersContainer.innerHTML = `<p class="text-center text-gray-500"><svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Buscando seus pedidos...</p>`;
             
             try {
                 const { data: orders, error } = await supabaseClient
@@ -364,11 +298,11 @@
                     ordersContainer.innerHTML = orders.map(renderOrderCard).join('');
                 } else {
                     ordersContainer.innerHTML = `
-                    <div class="text-center glass-effect p-12 rounded-2xl shadow-lg">
-                        <i class="fas fa-shopping-bag text-5xl themed-link mb-4"></i>
-                        <h2 class="text-2xl font-bold mb-2">Nenhum pedido por aqui!</h2>
-                        <p class="themed-text-secondary mb-6">Parece que você ainda não experimentou nossas delícias. Que tal começar agora?</p>
-                        <a href="./catalog.html" class="themed-accent-bg text-white font-bold py-3 px-8 rounded-full hover:scale-105 inline-block transition-transform">Ver Cardápio</a>
+                    <div class="text-center bg-white p-12 rounded-2xl shadow-lg">
+                         <i class="fas fa-shopping-bag text-5xl text-yellow-500 mb-4"></i>
+                         <h2 class="text-2xl font-bold mb-2">Nenhum pedido por aqui!</h2>
+                         <p class="text-gray-500 mb-6">Parece que você ainda não experimentou nossas delícias. Que tal começar agora?</p>
+                         <a href="./catalog.html" class="bg-red-600 text-white font-bold py-3 px-8 rounded-full hover:bg-red-700 transition-transform hover:scale-105 inline-block">Ver Cardápio</a>
                     </div>`;
                 }
             } catch (error) {
@@ -377,67 +311,52 @@
             }
         }
         
-        async function updateNavUI(user) {
-            const userMenuContainer = document.getElementById('user-menu-container');
-            let userMenuContent = `<a href="./login.html" id="login-button-main" class="themed-accent-bg text-white font-bold text-sm py-2 px-5 rounded-full transition-colors">Entrar</a>`;
-            if (user) {
-                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
-                 const stats = await fetchUserStats(user.id);
-                const adminLink = user.role === 'admin' ? `<a href="./admin.html" class="flex items-center py-2 px-4 text-sm hover:themed-accent-bg hover:!text-white" style="color: #2563eb;"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>` : '';
-                userMenuContent = `
-                    <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
-                    <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 glass-effect rounded-lg shadow-xl overflow-hidden z-30">
-                         <div class="p-4 border-b" style="border-color: var(--ui-border-color);">
-                            <div class="flex items-center">
-                                <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
-                                <div class="ml-4">
-                                    <p class="text-md font-semibold" style="color: var(--text-primary);">${user.nome || 'Cliente'}</p>
-                                    <p class="text-xs themed-text-secondary">${user.email}</p>
-                                </div>
-                            </div>
-                           <div class="mt-4 grid grid-cols-2 gap-4 text-center">
-                                <div><p class="text-sm font-semibold" style="color: var(--text-primary);">${stats.totalPedidos}</p><p class="text-xs themed-text-secondary">Pedidos</p></div>
-                                <div><p class="text-sm font-semibold" style="color: var(--text-primary);">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs themed-text-secondary">Gasto Total</p></div>
-                            </div>
-                        </div>
-                        <div class="py-2">
-                            <a href="./profile.html" class="flex items-center py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
-                            <a href="./orders.html" class="flex items-center py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white font-semibold"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
-                            ${adminLink}
-                        </div>
-                        <div class="p-2 border-t" style="border-color: var(--ui-border-color);"><button id="logout-button" class="w-full text-left flex items-center text-sm p-2 rounded hover:bg-red-50" style="color: var(--accent-color);"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
-                    </div>`;
-            }
-            userMenuContainer.innerHTML = userMenuContent;
-            if (user) {
-                userMenuContainer.querySelector('#user-menu-button').addEventListener('click', e => { e.stopPropagation(); userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden'); });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); localStorage.removeItem('currentAdmin'); window.location.reload(); };
-            }
-        }
-
-        async function setupPage() {
-            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
-            if (userString) { loggedUser = JSON.parse(userString); }
-            
-            await updateNavUI(loggedUser);
-            await loadOrders();
-
+        async function setupMenusAndAuth() {
             const mainMenuButton = document.getElementById('main-menu-button');
             const mainMenuDropdown = document.getElementById('main-menu-dropdown');
             mainMenuButton.addEventListener('click', (event) => { event.stopPropagation(); mainMenuDropdown.classList.toggle('hidden'); });
+
+            const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
+            if (userString) { loggedUser = JSON.parse(userString); }
+            await updateNavUI(loggedUser);
 
             window.addEventListener('click', (event) => {
                 if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) { mainMenuDropdown.classList.add('hidden'); }
                 const userMenuDropdown = document.getElementById('user-menu-dropdown');
                 if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) { userMenuDropdown.classList.add('hidden'); }
             });
-            
-            const themeSwitcher = document.getElementById('theme-switcher');
-            const docHtml = document.documentElement;
-            themeSwitcher.addEventListener('click', () => { docHtml.classList.toggle('dark'); });
         }
 
-        document.addEventListener('DOMContentLoaded', setupPage);
+        async function updateNavUI(user) {
+            const userMenuContainer = document.getElementById('user-menu-container');
+            const loginButton = document.getElementById('login-button-main');
+
+            if (user) {
+                loginButton.classList.add('hidden');
+                userMenuContainer.classList.remove('hidden');
+                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
+                const adminLink = user.role === 'admin' ? '<a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>' : '';
+
+                userMenuContainer.innerHTML = `
+                    <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
+                    <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
+                        <div class="p-4 border-b"><div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0"><div class="ml-4"><p class="text-md font-semibold">${user.nome || 'Cliente'}</p><p class="text-xs text-gray-500">${user.email}</p></div></div></div>
+                        <div class="py-2"><a href="./profile.html" class="flex items-center py-2 px-4 text-sm hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a><a href="./orders.html" class="flex items-center py-2 px-4 text-sm hover:bg-yellow-100 font-semibold"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>${adminLink}</div>
+                        <div class="p-2 border-t"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
+                    </div>`;
+
+                userMenuContainer.querySelector('#user-menu-button').addEventListener('click', (event) => { event.stopPropagation(); userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden'); });
+                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentUser'); localStorage.removeItem('currentAdmin'); window.location.reload(); };
+            } else {
+                loginButton.classList.remove('hidden');
+                userMenuContainer.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await setupMenusAndAuth();
+            await loadOrders();
+        });
     </script>
 </body>
 </html>
