@@ -6,51 +6,163 @@
     <title>Gerenciar Clientes - Admin Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .modal { transition: opacity 0.3s ease; }
+        :root {
+            /* Variáveis de Cor - Modo Claro */
+            --bg-color: #EAE0D5;
+            --particle-color: rgba(0, 0, 0, 0.1);
+            --ui-bg-color: rgba(255, 255, 255, 0.4);
+            --ui-border-color: rgba(255, 255, 255, 0.4);
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-tertiary: #6b7280;
+            --accent-color: #dc2626;
+            --accent-color-hover: #b91c1c;
+            --link-color: #ca8a04;
+            --link-color-hover: #a16207;
+            --success-color: #16a34a;
+            --success-bg-color: #dcfce7;
+            --error-color: #b91c1c;
+            --error-bg-color: #fee2e2;
+        }
+
+        html.dark {
+            /* Variáveis de Cor - Modo Escuro */
+            --bg-color: #0d1a2d;
+            --particle-color: rgba(255, 255, 255, 0.1);
+            --ui-bg-color: rgba(17, 24, 39, 0.6);
+            --ui-border-color: rgba(255, 255, 255, 0.2);
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-tertiary: #9ca3af;
+            --accent-color: #ef4444;
+            --accent-color-hover: #dc2626;
+            --link-color: #f59e0b;
+            --link-color-hover: #d97706;
+            --success-color: #22c55e;
+            --success-bg-color: #14532d;
+            --error-color: #fca5a5;
+            --error-bg-color: #7f1d1d;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* Animação de Partículas */
+        .particle-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; overflow: hidden; z-index: -1; }
+        .particle { position: absolute; display: block; list-style: none; background-color: var(--particle-color); border-radius: 50%; animation: drift 20s linear infinite alternate; bottom: -20px; transition: background-color 0.5s ease; }
+        .particle:nth-child(1) { left: 10%; width: 2px; height: 2px; animation-duration: 18s; animation-delay: -2s; }
+        .particle:nth-child(2) { left: 20%; width: 3px; height: 3px; animation-duration: 22s; animation-delay: -15s; }
+        .particle:nth-child(3) { left: 25%; width: 1px; height: 1px; animation-duration: 25s; animation-delay: -5s; }
+        .particle:nth-child(4) { left: 40%; width: 3px; height: 3px; animation-duration: 15s; animation-delay: 0s; }
+        .particle:nth-child(5) { left: 50%; width: 2px; height: 2px; animation-duration: 28s; animation-delay: -5s; }
+        .particle:nth-child(6) { left: 65%; width: 1px; height: 1px; animation-duration: 16s; animation-delay: -10s; }
+        .particle:nth-child(7) { left: 75%; width: 2px; height: 2px; animation-duration: 19s; animation-delay: -22s; }
+        .particle:nth-child(8) { left: 85%; width: 3px; height: 3px; animation-duration: 24s; animation-delay: -8s; }
+        .particle:nth-child(9) { left: 90%; width: 1px; height: 1px; animation-duration: 17s; animation-delay: -18s; }
+        .particle:nth-child(10){ left: 55%; width: 2px; height: 2px; animation-duration: 21s; animation-delay: -12s; }
+
+        @keyframes drift {
+            from { transform: translateY(0) translateX(0); opacity: 0.8; }
+            to { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+        }
+        
+        /* Efeito de Vidro */
+        .glass-effect { background: var(--ui-bg-color); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--ui-border-color); transition: background-color 0.5s ease, border-color 0.5s ease; }
+        
+        /* Seletor de Tema */
+        .theme-switch { position: relative; display: inline-flex; align-items: center; width: 80px; height: 40px; padding: 4px; border-radius: 20px; cursor: pointer; }
+        .theme-switch .switch-blob { position: absolute; width: 32px; height: 32px; border-radius: 50%; background-color: var(--accent-color); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s ease; transform: translateX(0px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        html.dark .theme-switch .switch-blob { transform: translateX(40px); }
+        .theme-switch .icon { width: 24px; height: 24px; z-index: 10; margin: 0 4px; }
+        .theme-switch .icon.sun { color: #f59e0b; }
+        .theme-switch .icon.moon { color: #e5e7eb; }
+
+        /* Themed Styles */
+        .themed-text-secondary { color: var(--text-secondary); }
+        .themed-text-tertiary { color: var(--text-tertiary); }
+        .themed-link { color: var(--link-color); }
+        
+        /* Estilos Liquid Glass */
+        .liquid-glass-btn {
+            background: var(--ui-bg-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--ui-border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), inset 0 2px 2px rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            color: var(--text-primary);
+        }
+
+        html.dark .liquid-glass-btn {
+             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.1);
+        }
+
+        .liquid-glass-btn:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.2);
+        }
+
+        html.dark .liquid-glass-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .liquid-glass-btn:active {
+            transform: translateY(0px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-transition { transition: opacity 0.3s ease, transform 0.3s ease; }
         .modal-content { transition: transform 0.3s ease; }
+        .toast-notification { transition: opacity 0.3s ease, transform 0.3s ease; }
+
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+<body class="flex flex-col min-h-screen">
+    <div class="particle-container">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
 
-    <!-- Header (Seu design) -->
-    <header class="bg-white shadow-sm sticky top-0 z-20">
+    <header class="glass-effect sticky top-0 z-20 shadow-lg">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
-                <button id="main-menu-button" class="p-2 rounded-full text-gray-600 hover:bg-gray-200">
+                <button id="main-menu-button" class="p-2 rounded-full themed-text-secondary hover:themed-accent-bg hover:text-white transition-colors">
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
-                <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                    <a href="./index.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-home w-6 mr-2"></i>Home</a>
-                    <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
-                    <a href="./ofertas.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
-                    <a href="./sobre.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
+                <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 glass-effect rounded-lg shadow-xl overflow-hidden z-30">
+                     <a href="./admin.html" class="block py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-arrow-left w-6 mr-2"></i>Voltar ao Painel</a>
                 </div>
             </div>
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
+                <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto" onerror="this.style.display='none'; this.nextSibling.style.display='block'"/><h1 class="text-3xl font-bold themed-link hidden">Lanchô</h1></a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="./login.html" id="login-button-main" class="bg-red-600 text-white font-bold text-sm py-2 px-5 rounded-full hover:bg-red-700">Entrar</a>
-                <div id="user-menu-container" class="relative hidden"></div>
+                <div id="user-menu-container" class="relative"></div>
             </div>
         </nav>
     </header>
 
-    <!-- Conteúdo Principal -->
     <main class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="max-w-6xl mx-auto">
+        <div class="glass-effect rounded-2xl shadow-xl p-6 md:p-8">
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-800">Gerenciar Clientes</h1>
-                <a href="./admin.html" class="text-sm text-yellow-600 hover:underline">‹ Voltar ao Painel</a>
+                <h1 class="text-3xl font-bold">Gerenciar Clientes</h1>
+                <a href="./admin.html" class="text-sm themed-link hover:underline">‹ Voltar ao Painel</a>
             </div>
             <div id="clients-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div id="loading-clients" class="col-span-full text-center text-gray-500 p-10">
-                    <svg class="animate-spin h-8 w-8 text-yellow-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    A carregar clientes...
+                <div id="loading-clients" class="col-span-full text-center p-10">
+                    <i class="fas fa-spinner fa-spin fa-3x themed-link"></i>
+                    <p class="mt-4 themed-text-secondary">A carregar clientes...</p>
                 </div>
                 <!-- A lista de clientes será inserida aqui -->
             </div>
@@ -58,53 +170,70 @@
     </main>
 
     <!-- Modal de Edição de Cliente -->
-    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden opacity-0 modal">
-        <div id="edit-modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform scale-95 modal-content">
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden opacity-0 modal-transition">
+        <div id="edit-modal-content" class="glass-effect rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform scale-95 modal-content">
             <!-- Conteúdo do modal é carregado dinamicamente -->
         </div>
     </div>
+    
+    <!-- Modal de Confirmação -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[70] p-4 modal-transition opacity-0">
+        <div class="glass-effect p-8 rounded-lg shadow-2xl text-center max-w-sm mx-auto modal-content transform scale-95">
+            <i class="fas fa-exclamation-triangle fa-3x mb-4 themed-link"></i>
+            <h2 class="text-2xl font-bold my-4">Tem Certeza?</h2>
+            <p id="confirm-message" class="themed-text-secondary mb-6">Essa ação não pode ser desfeita.</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-confirm-button" class="py-2 px-6 liquid-glass-btn rounded-full">Cancelar</button>
+                <button id="confirm-action-button" class="py-2 px-6 liquid-glass-btn rounded-full" style="background-color: var(--accent-color); color: white;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-24 right-8 text-white py-3 px-6 rounded-lg shadow-lg z-[80] transform translate-x-full opacity-0 toast-notification glass-effect"></div>
 
-    <!-- Footer (Seu design) -->
-    <footer class="bg-gray-800 text-white mt-auto">
+
+    <footer class="glass-effect text-white mt-auto shadow-lg">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
                 <div>
-                    <h3 class="text-lg font-bold text-yellow-500 mb-4">Lanchô</h3>
-                    <p class="text-gray-400">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
+                    <h3 class="text-lg font-bold themed-link mb-4">Lanchô</h3>
+                    <p class="themed-text-tertiary">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4">Links Rápidos</h3>
+                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Links Rápidos</h3>
                     <ul class="space-y-2">
-                        <li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li>
-                        <li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li>
-                        <li><a href="./orders.html" class="text-gray-400 hover:text-white">Meus Pedidos</a></li>
+                        <li><a href="./index.html" class="themed-text-tertiary hover:themed-link">Home</a></li>
+                        <li><a href="./catalog.html" class="themed-text-tertiary hover:themed-link">Cardápio</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4">Contato</h3>
-                    <ul class="space-y-2 text-gray-400">
+                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Contato</h3>
+                    <ul class="space-y-2 themed-text-tertiary">
                         <li>Rua Mariz e Barros, 273, Rio de Janeiro</li>
                         <li>(21) 96810-5812</li>
                         <li>contato@lancho.com.br</li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
+                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Siga-nos</h3>
                     <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="https://instagram.com/lancho.rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-instagram fa-lg"></i>
-                        </a>
-                        <a href="https://x.com/Lancho_rj" target="_blank" class="text-gray-400 hover:text-white">
-                            <i class="fab fa-twitter fa-lg"></i>
-                        </a>
+                        <a href="https://instagram.com/lancho.rj" class="themed-text-tertiary hover:themed-link"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="https://x.com/Lancho_rj" class="themed-text-tertiary hover:themed-link"><i class="fab fa-twitter fa-lg"></i></a>
                     </div>
                 </div>
             </div>
-            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500">
+            <div class="border-t mt-8 pt-6 text-center themed-text-tertiary" style="border-color: var(--ui-border-color);">
                 <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
+    
+     <div id="theme-switcher" class="theme-switch glass-effect rounded-full fixed bottom-6 right-6 z-50">
+        <div class="switch-blob"></div>
+        <svg class="icon sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        <svg class="icon moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+    </div>
 
     <script>
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
@@ -116,6 +245,38 @@
         const loadingClients = document.getElementById('loading-clients');
         const editModal = document.getElementById('edit-modal');
         const editModalContent = document.getElementById('edit-modal-content');
+        const confirmModal = document.getElementById('confirm-modal');
+        const toast = document.getElementById('toast');
+
+        function openModal(modal) {
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.modal-content').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal(modal) {
+            modal.classList.add('opacity-0');
+            modal.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }, 300);
+        }
+
+        function showToast(message, isError = false) {
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-times-circle' : 'fa-check-circle'} mr-2"></i> ${message}`;
+            toast.style.backgroundColor = isError ? 'var(--error-bg-color)' : 'var(--success-bg-color)';
+            toast.style.color = isError ? 'var(--error-color)' : 'var(--success-color)';
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.remove('translate-x-full', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.classList.add('hidden'), 500);
+            }, 3000);
+        }
 
         async function loadClients() {
             try {
@@ -128,80 +289,70 @@
                 loadingClients.style.display = 'none';
 
                 if (!clients || clients.length === 0) {
-                    clientsListContainer.innerHTML = '<p class="col-span-full text-center text-gray-500 p-10">Nenhum cliente encontrado.</p>';
+                    clientsListContainer.innerHTML = '<p class="col-span-full text-center themed-text-secondary p-10">Nenhum cliente encontrado.</p>';
                     return;
                 }
 
                 clientsListContainer.innerHTML = clients.map(client => {
                     const clientAvatar = client.avatar_url || `https://ui-avatars.com/api/?name=${client.nome}`;
                     return `
-                        <div id="client-card-${client.id}" class="bg-white rounded-lg shadow-md p-6 flex flex-col">
+                        <div id="client-card-${client.id}" class="glass-effect rounded-lg shadow-md p-6 flex flex-col">
                             <div class="flex items-center mb-4">
                                 <img class="h-16 w-16 rounded-full object-cover" src="${clientAvatar}" alt="Avatar de ${client.nome}">
                                 <div class="ml-4">
-                                    <p class="text-lg font-bold text-gray-900">${client.nome}</p>
-                                    <p class="text-sm text-gray-500">${client.email}</p>
+                                    <p class="text-lg font-bold">${client.nome}</p>
+                                    <p class="text-sm themed-text-secondary">${client.email}</p>
                                 </div>
                             </div>
-                            <p class="text-sm text-gray-600 flex-grow"><i class="fas fa-phone-alt w-4 mr-2 text-gray-400"></i>${client.contato || 'Não informado'}</p>
-                            <div class="mt-6 pt-4 border-t flex justify-end space-x-3">
-                                <button onclick='openEditModal(${JSON.stringify(client)})' class="text-sm font-semibold text-yellow-600 hover:text-yellow-800">Editar</button>
-                                <button onclick="deleteClient(${client.id}, '${client.nome.replace(/'/g, "\\'")}')" class="text-sm font-semibold text-red-600 hover:text-red-800">Excluir</button>
+                            <p class="text-sm themed-text-secondary flex-grow"><i class="fas fa-phone-alt w-4 mr-2 themed-text-tertiary"></i>${client.contato || 'Não informado'}</p>
+                            <div class="mt-6 pt-4 border-t flex justify-end space-x-3" style="border-color: var(--ui-border-color);">
+                                <button onclick='openEditModal(${JSON.stringify(client)})' class="text-sm font-semibold themed-link hover:themed-link-hover">Editar</button>
+                                <button onclick="confirmDeleteClient(${client.id}, '${client.nome.replace(/'/g, "\\'")}')" class="text-sm font-semibold" style="color: var(--accent-color);">Excluir</button>
                             </div>
                         </div>
                     `}).join('');
             } catch (error) {
                 console.error("Erro ao carregar clientes:", error);
-                loadingClients.innerHTML = `<p class="col-span-full text-center text-red-500 p-10">Ocorreu um erro ao buscar os clientes.</p>`;
+                loadingClients.innerHTML = `<p class="col-span-full text-center p-10" style="color: var(--error-color);">Ocorreu um erro ao buscar os clientes.</p>`;
             }
         }
         
         function openEditModal(client) {
-            editModal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-            setTimeout(() => { editModal.classList.remove('opacity-0'); editModalContent.classList.remove('scale-95'); }, 10);
-            
             editModalContent.innerHTML = `
-                <div class="flex justify-between items-center p-4 border-b">
+                <div class="flex justify-between items-center p-4 border-b" style="border-color: var(--ui-border-color);">
                     <h3 class="text-2xl font-bold">Editar ${client.nome}</h3>
-                    <button onclick="closeEditModal()" class="p-2 rounded-full text-gray-500 hover:bg-gray-200">&times;</button>
+                    <button onclick="closeModal(editModal)" class="p-2 rounded-full themed-text-secondary hover:themed-accent-bg hover:text-white">&times;</button>
                 </div>
                 <div class="p-6 overflow-y-auto">
                     <form id="edit-client-form" class="space-y-6">
                         <div>
-                            <label for="edit-nome" class="block text-sm font-medium text-gray-700">Nome</label>
-                            <input type="text" id="edit-nome" value="${client.nome}" required class="mt-1 block w-full px-3 py-2 border rounded-md">
+                            <label for="edit-nome" class="block text-sm font-medium themed-text-secondary">Nome</label>
+                            <input type="text" id="edit-nome" value="${client.nome}" required class="mt-1 block w-full px-3 py-2 border rounded-md bg-transparent" style="border-color: var(--ui-border-color);">
                         </div>
                         <div>
-                            <label for="edit-contato" class="block text-sm font-medium text-gray-700">Contato</label>
-                            <input type="text" id="edit-contato" value="${client.contato || ''}" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                            <label for="edit-contato" class="block text-sm font-medium themed-text-secondary">Contato</label>
+                            <input type="text" id="edit-contato" value="${client.contato || ''}" class="mt-1 block w-full px-3 py-2 border rounded-md bg-transparent" style="border-color: var(--ui-border-color);">
                         </div>
-                        <div class="border-t pt-6">
-                            <p class="text-md font-semibold text-gray-800 mb-2">Alterar Senha</p>
+                        <div class="border-t pt-6" style="border-color: var(--ui-border-color);">
+                            <p class="text-md font-semibold mb-2">Alterar Senha</p>
                             <div>
-                                <label for="edit-password" class="block text-sm font-medium text-gray-700">Nova Senha</label>
-                                <input type="password" id="edit-password" placeholder="Deixe em branco para não alterar" class="mt-1 block w-full px-3 py-2 border rounded-md">
+                                <label for="edit-password" class="block text-sm font-medium themed-text-secondary">Nova Senha</label>
+                                <input type="password" id="edit-password" placeholder="Deixe em branco para não alterar" class="mt-1 block w-full px-3 py-2 border rounded-md bg-transparent" style="border-color: var(--ui-border-color);">
                             </div>
                         </div>
                         <div class="pt-4 flex justify-end space-x-3">
-                            <button type="button" onclick="closeEditModal()" class="bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-full hover:bg-gray-300">Cancelar</button>
-                            <button type="submit" class="bg-red-600 text-white font-bold py-2 px-4 rounded-full hover:bg-red-700">Salvar Alterações</button>
+                            <button type="button" onclick="closeModal(editModal)" class="liquid-glass-btn font-bold py-2 px-4 rounded-full">Cancelar</button>
+                            <button type="submit" class="liquid-glass-btn font-bold py-2 px-4 rounded-full" style="background-color: var(--accent-color); color: white;">Salvar Alterações</button>
                         </div>
                         <p id="edit-form-message" class="text-sm text-center mt-4"></p>
                     </form>
                 </div>
             `;
-
+            openModal(editModal);
             document.getElementById('edit-client-form').addEventListener('submit', (e) => {
                 e.preventDefault();
                 saveClientChanges(client.id);
             });
-        }
-
-        function closeEditModal() {
-            editModal.classList.add('opacity-0');
-            editModalContent.classList.add('scale-95');
-            setTimeout(() => { editModal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }, 300);
         }
 
         async function saveClientChanges(clientId) {
@@ -221,34 +372,37 @@
                 const { error } = await supabaseClient.from('Cliente').update(updates).eq('id', clientId);
                 if (error) throw error;
 
-                formMessage.textContent = 'Cliente atualizado com sucesso!';
-                formMessage.className = 'text-sm text-center mt-4 text-green-600';
-                setTimeout(() => { closeEditModal(); loadClients(); }, 1500);
+                showToast('Cliente atualizado com sucesso!');
+                setTimeout(() => { closeModal(editModal); loadClients(); }, 1500);
 
             } catch (error) {
                 console.error("Erro ao salvar alterações do cliente:", error);
-                formMessage.textContent = `Erro: ${error.message}`;
-                formMessage.className = 'text-sm text-center mt-4 text-red-600';
+                showToast(`Erro: ${error.message}`, true);
             }
         }
 
-        async function deleteClient(clientId, clientName) {
-            if (!confirm(`Tem certeza que quer excluir o cliente "${clientName}"? Esta ação é irreversível e apagará todos os pedidos associados.`)) {
-                return;
-            }
+        function confirmDeleteClient(clientId, clientName) {
+            document.getElementById('confirm-message').textContent = `Tem certeza que quer excluir o cliente "${clientName}"? Esta ação é irreversível e apagará todos os pedidos associados.`;
+            openModal(confirmModal);
+            document.getElementById('confirm-action-button').onclick = () => {
+                closeModal(confirmModal);
+                deleteClient(clientId, clientName);
+            };
+        }
 
+        async function deleteClient(clientId, clientName) {
             try {
                 await supabaseClient.from('Pedido').delete().eq('id_cliente', clientId);
                 await supabaseClient.from('avaliacoes').delete().eq('cliente_id', clientId);
                 const { error } = await supabaseClient.from('Cliente').delete().eq('id', clientId);
                 if (error) throw error;
 
-                alert(`Cliente "${clientName}" e todos os seus dados foram excluídos com sucesso.`);
+                showToast(`Cliente "${clientName}" e todos os seus dados foram excluídos com sucesso.`);
                 document.getElementById(`client-card-${clientId}`).remove();
 
             } catch (error) {
                 console.error("Erro ao excluir cliente:", error);
-                alert(`Ocorreu um erro ao excluir o cliente: ${error.message}`);
+                showToast(`Ocorreu um erro ao excluir o cliente: ${error.message}`, true);
             }
         }
 
@@ -262,89 +416,87 @@
                 return { totalPedidos: 0, dinheiroGasto: 0.00 };
             }
         }
-
-        async function setupMenusAndAuth() {
-            const mainMenuButton = document.getElementById('main-menu-button');
-            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
-            mainMenuButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                mainMenuDropdown.classList.toggle('hidden');
-            });
-
+        
+        async function checkAdmin() {
             const userString = localStorage.getItem('currentAdmin');
-            if (userString) {
-                loggedUser = JSON.parse(userString);
-                if (loggedUser.role !== 'admin') {
-                    alert('Acesso negado.');
-                    window.location.href = './index.html';
-                    return;
-                }
-            } else {
-                alert('Você precisa estar logado como administrador para acessar esta página.');
-                window.location.href = './login.html';
-                return;
+            if (!userString) {
+                document.body.innerHTML = `<div class="h-screen w-screen flex flex-col items-center justify-center" style="background-color: var(--bg-color); color: var(--text-primary);"><i class="fas fa-lock fa-3x" style="color: var(--accent-color);"></i><h1 class="text-2xl font-bold mt-4">Acesso Negado</h1><p class="themed-text-secondary">Você precisa ser um administrador.</p><a href="./login.html" class="mt-6 themed-link hover:underline">Ir para Login</a></div>`;
+                return false;
             }
-            
-            await updateNavUI(loggedUser);
-
-            window.addEventListener('click', (event) => {
-                const userMenuDropdown = document.getElementById('user-menu-dropdown');
-                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuDropdown.contains(event.target) && !mainMenuButton.contains(event.target)) {
-                    mainMenuDropdown.classList.add('hidden');
-                }
-                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
-                    userMenuDropdown.classList.add('hidden');
-                }
-            });
+            const admin = JSON.parse(userString);
+            if (admin.role !== 'admin') {
+                document.body.innerHTML = `<div class="h-screen w-screen flex flex-col items-center justify-center" style="background-color: var(--bg-color); color: var(--text-primary);"><i class="fas fa-lock fa-3x" style="color: var(--accent-color);"></i><h1 class="text-2xl font-bold mt-4">Acesso Negado</h1><p class="themed-text-secondary">Permissões insuficientes.</p><a href="./index.html" class="mt-6 themed-link hover:underline">Voltar para Home</a></div>`;
+                return false;
+            }
+            await updateNavUI(admin);
+            return true;
         }
 
         async function updateNavUI(user) {
-            const userMenuContainer = document.getElementById('user-menu-container');
-            const loginButton = document.getElementById('login-button-main');
-
-            if (user) {
-                loginButton.classList.add('hidden');
-                userMenuContainer.classList.remove('hidden');
-                const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
-                const stats = await fetchUserStats(user.id);
-
-                userMenuContainer.innerHTML = `
-                    <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
-                    <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                        <div class="p-4 border-b border-gray-200">
-                            <div class="flex items-center">
-                                <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
-                                <div class="ml-4">
-                                    <p class="text-md font-semibold text-gray-800">${user.nome || 'Admin'}</p>
-                                    <p class="text-xs text-gray-500">${user.email}</p>
-                                </div>
-                            </div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 text-center">
-                                <div><p class="text-sm font-semibold text-gray-800">${stats.totalPedidos}</p><p class="text-xs text-gray-500">Pedidos</p></div>
-                                <div><p class="text-sm font-semibold text-gray-800">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs text-gray-500">Gasto Total</p></div>
+           const userMenuContainer = document.getElementById('user-menu-container');
+           const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${user.nome || user.email}&background=fde68a&color=c2410c`;
+            
+            userMenuContainer.innerHTML = `
+                <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
+                <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 glass-effect rounded-lg shadow-xl overflow-hidden z-30">
+                    <div class="p-4 border-b" style="border-color: var(--ui-border-color);">
+                        <div class="flex items-center">
+                            <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover">
+                            <div class="ml-4">
+                                <p class="font-semibold">${user.nome}</p>
+                                <p class="text-xs themed-text-secondary">${user.email}</p>
                             </div>
                         </div>
-                        <div class="py-2">
-                            <a href="./profile.html" class="flex items-center py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
-                            <a href="./admin.html" class="flex items-center py-2 px-4 text-sm text-blue-600 hover:bg-gray-100"><i class="fas fa-user-shield w-6 mr-2"></i>Painel Admin</a>
-                        </div>
-                        <div class="p-2 border-t border-gray-200"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
-                    </div>`;
-
-                const userMenuButton = userMenuContainer.querySelector('#user-menu-button');
-                const userMenuDropdown = userMenuContainer.querySelector('#user-menu-dropdown');
-                userMenuButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    userMenuDropdown.classList.toggle('hidden');
-                });
-                userMenuContainer.querySelector('#logout-button').onclick = () => { localStorage.removeItem('currentAdmin'); window.location.href = './index.html'; };
-            }
+                    </div>
+                    <div class="p-2">
+                        <a href="./profile.html" class="flex items-center py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-user-edit w-6 mr-2"></i>Editar Perfil</a>
+                    </div>
+                    <div class="p-2 border-t" style="border-color: var(--ui-border-color);">
+                        <button id="logout-button" class="w-full text-left flex items-center text-sm p-2 rounded hover:bg-red-50" style="color: var(--accent-color);"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button>
+                    </div>
+                </div>`;
+            
+            userMenuContainer.querySelector('#user-menu-button').addEventListener('click', (e) => { 
+                e.stopPropagation();
+                userMenuContainer.querySelector('#user-menu-dropdown').classList.toggle('hidden');
+            });
+            userMenuContainer.querySelector('#logout-button').onclick = () => { 
+                localStorage.removeItem('currentAdmin'); 
+                window.location.href = './login.html'; 
+            };
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            await setupMenusAndAuth();
-            await loadClients();
+             const isAdmin = await checkAdmin();
+             if (isAdmin) {
+                await loadClients();
+             }
+             document.getElementById('cancel-confirm-button')?.addEventListener('click', () => closeModal(confirmModal));
+             
+             const mainMenuButton = document.getElementById('main-menu-button');
+             const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+             mainMenuButton.addEventListener('click', (event) => {
+                 event.stopPropagation();
+                 mainMenuDropdown.classList.toggle('hidden');
+             });
+
+             window.addEventListener('click', (event) => {
+                 if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
+                     mainMenuDropdown.classList.add('hidden');
+                 }
+                 const userMenuDropdown = document.getElementById('user-menu-dropdown');
+                 if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
+                     userMenuDropdown.classList.add('hidden');
+                 }
+                 if (event.target === editModal) { closeModal(editModal); }
+                 if (event.target === confirmModal) { closeModal(confirmModal); }
+             });
+
+             const themeSwitcher = document.getElementById('theme-switcher');
+             const docHtml = document.documentElement;
+             themeSwitcher.addEventListener('click', () => { docHtml.classList.toggle('dark'); });
         });
     </script>
 </body>
 </html>
+

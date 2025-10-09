@@ -6,63 +6,164 @@
     <title>Cozinha - Lanchô</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        /* Estilos Originais */
-        body { font-family: 'Inter', sans-serif; }
-        .order-card {
-            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        :root {
+            /* Variáveis de Cor - Modo Claro */
+            --bg-color: #EAE0D5;
+            --particle-color: rgba(0, 0, 0, 0.1);
+            --ui-bg-color: rgba(255, 255, 255, 0.4);
+            --ui-border-color: rgba(255, 255, 255, 0.4);
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-tertiary: #6b7280;
+            --accent-color: #dc2626;
+            --accent-color-hover: #b91c1c;
+            --link-color: #ca8a04;
+            --link-color-hover: #a16207;
+            --success-color: #16a34a;
+            --success-bg-color: #dcfce7;
+            --error-color: #b91c1c;
+            --error-bg-color: #fee2e2;
         }
-        .order-card.completed {
-            transform: scale(0.95);
-            opacity: 0;
+
+        html.dark {
+            /* Variáveis de Cor - Modo Escuro */
+            --bg-color: #0d1a2d;
+            --particle-color: rgba(255, 255, 255, 0.1);
+            --ui-bg-color: rgba(17, 24, 39, 0.6);
+            --ui-border-color: rgba(255, 255, 255, 0.2);
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-tertiary: #9ca3af;
+            --accent-color: #ef4444;
+            --accent-color-hover: #dc2626;
+            --link-color: #f59e0b;
+            --link-color-hover: #d97706;
+            --success-color: #22c55e;
+            --success-bg-color: #14532d;
+            --error-color: #fca5a5;
+            --error-bg-color: #7f1d1d;
         }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* Animação de Partículas */
+        .particle-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; overflow: hidden; z-index: -1; }
+        .particle { position: absolute; display: block; list-style: none; background-color: var(--particle-color); border-radius: 50%; animation: drift 20s linear infinite alternate; bottom: -20px; transition: background-color 0.5s ease; }
+        .particle:nth-child(1) { left: 10%; width: 2px; height: 2px; animation-duration: 18s; animation-delay: -2s; }
+        .particle:nth-child(2) { left: 20%; width: 3px; height: 3px; animation-duration: 22s; animation-delay: -15s; }
+        .particle:nth-child(3) { left: 25%; width: 1px; height: 1px; animation-duration: 25s; animation-delay: -5s; }
+        .particle:nth-child(4) { left: 40%; width: 3px; height: 3px; animation-duration: 15s; animation-delay: 0s; }
+        .particle:nth-child(5) { left: 50%; width: 2px; height: 2px; animation-duration: 28s; animation-delay: -5s; }
+        .particle:nth-child(6) { left: 65%; width: 1px; height: 1px; animation-duration: 16s; animation-delay: -10s; }
+        .particle:nth-child(7) { left: 75%; width: 2px; height: 2px; animation-duration: 19s; animation-delay: -22s; }
+        .particle:nth-child(8) { left: 85%; width: 3px; height: 3px; animation-duration: 24s; animation-delay: -8s; }
+        .particle:nth-child(9) { left: 90%; width: 1px; height: 1px; animation-duration: 17s; animation-delay: -18s; }
+        .particle:nth-child(10){ left: 55%; width: 2px; height: 2px; animation-duration: 21s; animation-delay: -12s; }
+
+        @keyframes drift {
+            from { transform: translateY(0) translateX(0); opacity: 0.8; }
+            to { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+        }
+        
+        /* Efeito de Vidro */
+        .glass-effect { background: var(--ui-bg-color); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--ui-border-color); transition: background-color 0.5s ease, border-color 0.5s ease; }
+        
+        /* Seletor de Tema */
+        .theme-switch { position: relative; display: inline-flex; align-items: center; width: 80px; height: 40px; padding: 4px; border-radius: 20px; cursor: pointer; }
+        .theme-switch .switch-blob { position: absolute; width: 32px; height: 32px; border-radius: 50%; background-color: var(--accent-color); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s ease; transform: translateX(0px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        html.dark .theme-switch .switch-blob { transform: translateX(40px); }
+        .theme-switch .icon { width: 24px; height: 24px; z-index: 10; margin: 0 4px; }
+        .theme-switch .icon.sun { color: #f59e0b; }
+        .theme-switch .icon.moon { color: #e5e7eb; }
+
+        /* Themed Styles */
+        .themed-text-secondary { color: var(--text-secondary); }
+        .themed-text-tertiary { color: var(--text-tertiary); }
+        .themed-link { color: var(--link-color); }
+        
+        /* Estilos Liquid Glass */
+        .liquid-glass-btn {
+            background: var(--ui-bg-color);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--ui-border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), inset 0 2px 2px rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+            color: var(--text-primary);
+        }
+
+        html.dark .liquid-glass-btn {
+             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.1);
+        }
+
+        .liquid-glass-btn:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.2);
+        }
+
+        html.dark .liquid-glass-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .liquid-glass-btn:active {
+            transform: translateY(0px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-transition, .toast-notification { transition: opacity 0.3s ease, transform 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease; }
+        
         .new-order-flash {
             animation: flash-border 1.5s 2;
         }
         @keyframes flash-border {
-            0%, 100% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.7); } /* Amarelo */
-            50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.7); }  /* Vermelho */
+            0%, 100% { box-shadow: 0 0 0 4px var(--link-color); }
+            50% { box-shadow: 0 0 0 4px var(--accent-color); }
         }
-        
+
         /* Estilos do Painel Kanban */
         .kanban-container {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 1.5rem;
-            min-height: calc(100vh - 350px);
         }
 
         .kanban-column {
-            flex: 1 1 320px;
-            min-width: 320px;
-            background-color: #f1f5f9; /* Tailwind gray-100 */
-            border-radius: 0.5rem; /* rounded-lg */
-            padding: 1rem;
             display: flex;
             flex-direction: column;
-            max-height: calc(100vh - 300px);
+            max-height: calc(100vh - 250px);
         }
 
         .column-header {
             display: flex;
             align-items: center;
             padding-bottom: 1rem;
-            border-bottom: 2px solid #e5e7eb; /* Tailwind gray-200 */
+            border-bottom: 2px solid var(--ui-border-color);
             margin-bottom: 1rem;
         }
         
         .column-title {
-            font-size: 1.25rem; /* text-xl */
-            font-weight: 700; /* font-bold */
-            color: #1f2937; /* gray-800 */
+            font-size: 1.25rem;
+            font-weight: 700;
             margin-left: 0.5rem;
         }
 
         .order-count {
-            background-color: #4b5563; /* gray-600 */
-            color: white;
-            border-radius: 9999px; /* rounded-full */
+            background-color: var(--text-primary);
+            color: var(--bg-color);
+            border-radius: 9999px;
             width: 28px;
             height: 28px;
             display: flex;
@@ -76,31 +177,26 @@
         .column-body {
             flex-grow: 1;
             overflow-y: auto;
-            padding-right: 0.5rem;
+            padding: 0.5rem;
         }
         
-        /* Estilo dos Cards de Pedido (Adaptado para Tailwind) */
         .order-card-kanban {
-            background-color: white;
-            border-radius: 0.5rem; /* rounded-lg */
-            padding: 1.25rem; /* p-5 */
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-md */
-            margin-bottom: 1rem; /* space-y-4 */
+            padding: 1.25rem;
+            margin-bottom: 1rem;
             border-left-width: 8px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .order-card-kanban:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); /* shadow-lg */
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
         }
         
         .action-btn {
             width: 100%;
-            color: white;
-            font-weight: 700; /* font-bold */
-            padding: 0.75rem 1rem; /* py-3 px-4 */
-            border-radius: 0.5rem; /* rounded-lg */
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            border-radius: 9999px;
             transition: all 0.3s;
             transform: scale(1);
         }
@@ -109,30 +205,30 @@
         }
 
         /* Cores das bordas dos cards por status */
-        .status-pendente { border-color: #f59e0b; } /* amber-500 */
-        .status-em-preparo { border-color: #3b82f6; } /* blue-500 */
-        .status-saiu-para-entrega { border-color: #16a34a; } /* green-600 */
-        .status-concluido { border-color: #6b7280; } /* gray-500 */
+        .status-pendente { border-color: #f59e0b; }
+        .status-em-preparo { border-color: #3b82f6; }
+        .status-saiu-para-entrega { border-color: #8b5cf6; }
+        .status-concluido { border-color: #22c55e; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+<body class="flex flex-col min-h-screen">
+    <div class="particle-container">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
 
-    <!-- CABEÇALHO ORIGINAL -->
-    <header class="bg-white shadow-sm sticky top-0 z-20">
+    <header class="glass-effect sticky top-0 z-20 shadow-lg">
         <nav class="container mx-auto px-4 md:px-8 py-2 flex justify-between items-center">
             <div class="relative">
-                <button id="main-menu-button" class="p-2 rounded-full text-gray-600 hover:bg-gray-200">
+                <button id="main-menu-button" class="p-2 rounded-full themed-text-secondary hover:themed-accent-bg hover:text-white transition-colors">
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
-                <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                    <a href="./index.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-home w-6 mr-2"></i>Home</a>
-                    <a href="./catalog.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-book-open w-6 mr-2"></i>Cardápio</a>
-                    <a href="./ofertas.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-tags w-6 mr-2"></i>Ofertas</a>
-                    <a href="./sobre.html" class="block py-2 px-4 text-sm text-gray-700 hover:bg-yellow-100"><i class="fas fa-users w-6 mr-2"></i>Sobre Nós</a>
+                <div id="main-menu-dropdown" class="hidden absolute left-0 mt-2 w-56 glass-effect rounded-2xl shadow-xl overflow-hidden z-30">
+                     <a href="./index.html" class="block py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-home w-6 mr-2"></i>Home</a>
                 </div>
             </div>
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto"></a>
+                <a href="./index.html"><img src="./images/LANCHO_LOGO.png" alt="Logo Lanchô" class="h-16 w-auto" onerror="this.style.display='none'; this.nextSibling.style.display='block'"/><h1 class="text-3xl font-bold themed-link hidden">Lanchô</h1></a>
             </div>
             <div class="flex items-center space-x-4">
                 <div id="user-menu-container" class="relative"></div>
@@ -140,15 +236,15 @@
         </nav>
     </header>
 
-    <!-- CONTEÚDO KANBAN -->
     <main class="container mx-auto p-6 flex-grow">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Painel da Cozinha</h1>
-        <div id="loading-indicator" class="text-center text-gray-500 text-lg mt-10">Verificando permissões...</div>
+        <h1 class="text-3xl font-bold mb-6">Painel da Cozinha</h1>
+        <div id="loading-indicator" class="text-center text-lg mt-10"><i class="fas fa-spinner fa-spin fa-2x themed-link"></i><p class="mt-2 themed-text-secondary">Verificando permissões...</p></div>
         
         <div class="kanban-container" id="kanban-container" style="display: none;">
             <!-- Coluna Pendente -->
-            <div id="column-pendente" class="kanban-column">
+            <div class="kanban-column glass-effect rounded-2xl">
                 <div class="column-header">
+                    <i class="fas fa-hourglass-start fa-lg" style="color:#f59e0b;"></i>
                     <h2 class="column-title">Pendente</h2>
                     <span id="count-pendente" class="order-count">0</span>
                 </div>
@@ -156,8 +252,9 @@
             </div>
 
             <!-- Coluna Em Preparo -->
-            <div id="column-em-preparo" class="kanban-column">
+            <div class="kanban-column glass-effect rounded-2xl">
                 <div class="column-header">
+                    <i class="fas fa-fire-burner fa-lg" style="color:#3b82f6;"></i>
                     <h2 class="column-title">Em Preparo</h2>
                     <span id="count-em-preparo" class="order-count">0</span>
                 </div>
@@ -165,8 +262,9 @@
             </div>
             
             <!-- Coluna Pronto para Entrega -->
-            <div id="column-saiu-para-entrega" class="kanban-column">
+            <div class="kanban-column glass-effect rounded-2xl">
                  <div class="column-header">
+                    <i class="fas fa-shipping-fast fa-lg" style="color:#8b5cf6;"></i>
                     <h2 class="column-title">Pronto p/ Entrega</h2>
                     <span id="count-saiu-para-entrega" class="order-count">0</span>
                 </div>
@@ -174,8 +272,9 @@
             </div>
 
             <!-- Coluna Concluído -->
-            <div id="column-concluido" class="kanban-column">
+            <div class="kanban-column glass-effect rounded-2xl">
                 <div class="column-header">
+                    <i class="fas fa-flag-checkered fa-lg" style="color:#22c55e;"></i>
                     <h2 class="column-title">Concluído</h2>
                     <span id="count-concluido" class="order-count">0</span>
                 </div>
@@ -184,44 +283,49 @@
         </div>
     </main>
 
-    <!-- RODAPÉ ORIGINAL -->
-    <footer class="bg-gray-800 text-white mt-auto">
+    <footer class="glass-effect text-white mt-auto shadow-lg">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
                 <div>
-                    <h3 class="text-lg font-bold text-yellow-500 mb-4">Lanchô</h3>
-                    <p class="text-gray-400">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
+                    <h3 class="text-lg font-bold themed-link mb-4">Lanchô</h3>
+                    <p class="themed-text-tertiary">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4">Links Rápidos</h3>
+                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Links Rápidos</h3>
                     <ul class="space-y-2">
-                        <li><a href="./index.html" class="text-gray-400 hover:text-white">Home</a></li>
-                        <li><a href="./catalog.html" class="text-gray-400 hover:text-white">Cardápio</a></li>
+                        <li><a href="./index.html" class="themed-text-tertiary hover:themed-link">Home</a></li>
+                        <li><a href="./catalog.html" class="themed-text-tertiary hover:themed-link">Cardápio</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4">Contato</h3>
-                    <ul class="space-y-2 text-gray-400">
+                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Contato</h3>
+                    <ul class="space-y-2 themed-text-tertiary">
                         <li>Rua Mariz e Barros, 273, Rio de Janeiro</li>
                         <li>(21) 96810-5812</li>
                         <li>contato@lancho.com.br</li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold mb-4">Siga-nos</h3>
+                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Siga-nos</h3>
                     <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram fa-lg"></i></a>
-                        <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="https://instagram.com/lancho.rj" class="themed-text-tertiary hover:themed-link"><i class="fab fa-instagram fa-lg"></i></a>
+                        <a href="https://x.com/Lancho_rj" class="themed-text-tertiary hover:themed-link"><i class="fab fa-twitter fa-lg"></i></a>
                     </div>
                 </div>
             </div>
-            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-500">
+            <div class="border-t mt-8 pt-6 text-center themed-text-tertiary" style="border-color: var(--ui-border-color);">
                 <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
 
     <audio id="notification-sound" src="https://freesound.org/data/previews/415/415762_6142149-lq.mp3" preload="auto"></audio>
+    
+    <div id="theme-switcher" class="theme-switch glass-effect rounded-full fixed bottom-6 right-6 z-50">
+        <div class="switch-blob"></div>
+        <svg class="icon sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        <svg class="icon moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+    </div>
 
     <script>
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
@@ -230,48 +334,15 @@
 
         const userMenuContainer = document.getElementById('user-menu-container');
         const notificationSound = document.getElementById('notification-sound');
+        let allOrders = [];
 
-        // Mapa de status adaptado para o fluxo da cozinha e classes do Tailwind
         const statusMap = {
-            'pendente': {
-                next: 'em preparo',
-                columnId: 'orders-pendente',
-                countId: 'count-pendente',
-                className: 'status-pendente',
-                buttonClass: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-blue-500/50',
-                buttonIcon: 'fa-play',
-                buttonText: 'Iniciar Preparo'
-            },
-            'em preparo': {
-                next: 'saiu para entrega',
-                columnId: 'orders-em-preparo',
-                countId: 'count-em-preparo',
-                className: 'status-em-preparo',
-                buttonClass: 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-green-500/50',
-                buttonIcon: 'fa-check',
-                buttonText: 'Pronto p/ Entrega'
-            },
-            'saiu para entrega': {
-                next: 'concluido',
-                columnId: 'orders-saiu-para-entrega',
-                countId: 'count-saiu-para-entrega',
-                className: 'status-saiu-para-entrega',
-                buttonClass: 'bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 shadow-lg hover:shadow-gray-500/50',
-                buttonIcon: 'fa-check-double',
-                buttonText: 'Finalizar Pedido'
-            },
-             'concluido': {
-                next: null,
-                columnId: 'orders-concluido',
-                countId: 'count-concluido',
-                className: 'status-concluido',
-                buttonClass: 'bg-gray-400 cursor-not-allowed',
-                buttonIcon: 'fa-flag-checkered',
-                buttonText: 'Finalizado'
-            }
+            'pendente': { next: 'em preparo', columnId: 'orders-pendente', countId: 'count-pendente', className: 'status-pendente', buttonClass: 'bg-blue-500', buttonIcon: 'fa-play', buttonText: 'Iniciar Preparo' },
+            'em preparo': { next: 'saiu para entrega', columnId: 'orders-em-preparo', countId: 'count-em-preparo', className: 'status-em-preparo', buttonClass: 'bg-green-500', buttonIcon: 'fa-check', buttonText: 'Pronto p/ Entrega' },
+            'saiu para entrega': { next: 'concluido', columnId: 'orders-saiu-para-entrega', countId: 'count-saiu-para-entrega', className: 'status-saiu-para-entrega', buttonClass: 'bg-purple-500', buttonIcon: 'fa-check-double', buttonText: 'Finalizar Pedido' },
+            'concluido': { next: null, columnId: 'orders-concluido', countId: 'count-concluido', className: 'status-concluido', buttonClass: 'bg-gray-400', buttonIcon: 'fa-flag-checkered', buttonText: 'Finalizado' }
         };
         
-        // Funções do layout original
         function timeAgo(dateString) {
             const date = new Date(dateString);
             const now = new Date();
@@ -290,40 +361,27 @@
             return items.map(item => item.trim()).filter(Boolean);
         }
 
-        // Nova função para renderizar os cards no KANBAN
         function createOrderCard(order) {
             const card = document.createElement('div');
             const config = statusMap[order.status.toLowerCase()] || {};
-            card.className = `order-card-kanban ${config.className || ''}`;
+            card.className = `order-card-kanban glass-effect rounded-2xl ${config.className || ''}`;
             card.id = `order-${order.id}`;
 
             const parsedItems = parseDescription(order.descricao);
-            const itemsHtml = parsedItems.map(itemString => {
-                const match = itemString.match(/(\d+x\s)?([^()]+)(\(.*\))?/);
-                if (!match) return `<p>${itemString}</p>`;
-                const quantity = match[1] || '1x ';
-                const productName = match[2].trim();
-                const customizations = match[3] ? match[3].replace(/[()]/g, '').split(',').map(c => {
-                    const trimmed = c.trim();
-                    if (trimmed.startsWith('+')) return `<li class="text-green-600">${trimmed}</li>`;
-                    if (trimmed.startsWith('sem')) return `<li class="text-red-600">${trimmed}</li>`;
-                    return `<li>${trimmed}</li>`;
-                }).join('') : '<li class="text-gray-400 italic">Item padrão</li>';
-                return `<div class="mt-2"><p class="font-semibold text-gray-800">${quantity}${productName}</p><ul class="text-xs ml-5 list-disc">${customizations}</ul></div>`;
-            }).join('');
+            const itemsHtml = parsedItems.map(itemString => `<p class="font-semibold">${itemString}</p>`).join('');
             
             card.innerHTML = `
                 <div class="flex justify-between items-start mb-3">
                     <div>
-                        <h3 class="font-black text-xl text-gray-800">Pedido #${String(order.id).padStart(4, '0')}</h3>
-                        <p class="text-sm text-gray-500">${order.Cliente ? order.Cliente.nome : 'Não identificado'}</p>
+                        <h3 class="font-black text-xl">Pedido #${String(order.id).padStart(4, '0')}</h3>
+                        <p class="text-sm themed-text-secondary">${order.Cliente ? order.Cliente.nome : 'Não identificado'}</p>
                     </div>
-                    <span class="text-sm font-semibold text-red-600" data-time="${order.data}">${timeAgo(order.data)}</span>
+                    <span class="text-sm font-semibold themed-link" data-time="${order.data}">${timeAgo(order.data)}</span>
                 </div>
-                <div class="space-y-2 my-4 border-t border-b py-4">${itemsHtml}</div>
+                <div class="space-y-2 my-4 border-t border-b py-4" style="border-color: var(--ui-border-color);">${itemsHtml}</div>
                 <div class="mt-4">
                     <button ${config.next ? `onclick="updateOrderStatus(this, ${order.id}, '${config.next}')"` : 'disabled'} 
-                            class="action-btn ${config.buttonClass}">
+                            class="action-btn liquid-glass-btn ${config.buttonClass}">
                         <i class="fas ${config.buttonIcon} mr-2"></i> ${config.buttonText}
                     </button>
                 </div>
@@ -331,11 +389,7 @@
             return card;
         }
         
-        // Nova função para carregar os pedidos e popular o KANBAN
         async function loadOrders() {
-            const loadingIndicator = document.getElementById('loading-indicator');
-            loadingIndicator.textContent = 'Carregando pedidos ativos...';
-            
             const { data: orders, error } = await supabaseClient
                 .from('Pedido')
                 .select(`*, Cliente (nome)`)
@@ -344,30 +398,42 @@
 
             if (error) {
                 console.error("Erro ao buscar pedidos:", error);
-                loadingIndicator.textContent = 'Erro ao carregar pedidos.';
+                document.getElementById('loading-indicator').textContent = 'Erro ao carregar pedidos.';
                 return;
             }
             
-            // Limpa todas as colunas
+            const newOrderIds = new Set(orders.map(o => o.id));
+            const existingOrderIds = new Set(allOrders.map(o => o.id));
+            const newlyAddedOrders = orders.filter(o => !existingOrderIds.has(o.id) && o.status.toLowerCase() === 'pendente');
+            
+            allOrders = orders;
+            
             Object.values(statusMap).forEach(status => {
-                const column = document.getElementById(status.columnId);
-                if(column) column.innerHTML = '';
+                document.getElementById(status.columnId).innerHTML = '';
             });
             
-            orders.forEach(order => {
+            allOrders.forEach(order => {
                 const targetColumnId = statusMap[order.status.toLowerCase()]?.columnId;
                 if (targetColumnId) {
-                    const column = document.getElementById(targetColumnId);
-                    if (column) {
-                        column.appendChild(createOrderCard(order));
-                    }
+                    document.getElementById(targetColumnId).appendChild(createOrderCard(order));
                 }
             });
+            
+            if (newlyAddedOrders.length > 0) {
+                notificationSound.play().catch(e => console.error("Erro ao tocar som:", e));
+                newlyAddedOrders.forEach(order => {
+                    const newCard = document.getElementById(`order-${order.id}`);
+                    if (newCard) {
+                        newCard.classList.add('new-order-flash');
+                        newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
 
             updateAllCounts();
             updateAllTimers();
-            loadingIndicator.style.display = 'none';
-            document.getElementById('kanban-container').style.display = 'flex';
+            document.getElementById('loading-indicator').style.display = 'none';
+            document.getElementById('kanban-container').style.display = 'grid';
         }
 
         function updateAllCounts() {
@@ -385,16 +451,34 @@
                 el.textContent = `${timeAgo(el.dataset.time)}`;
             });
         }
-        setInterval(updateAllTimers, 30000);
 
-        // FUNÇÃO CORRIGIDA PARA ATUALIZAR A TELA
         async function updateOrderStatus(button, orderId, newStatus) {
-            // Adiciona feedback visual imediato ao botão
             if (button) {
                 button.disabled = true;
                 button.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Atualizando...`;
             }
 
+            // Move o card localmente de forma otimista
+            const cardToMove = document.getElementById(`order-${orderId}`);
+            if (cardToMove) {
+                // Remove o card da coluna atual
+                cardToMove.parentElement.removeChild(cardToMove);
+                
+                // Encontra o objeto do pedido para recriar o card
+                const order = allOrders.find(o => o.id === orderId);
+                if (order) {
+                    order.status = newStatus; // Atualiza o status no objeto local
+                    const newCard = createOrderCard(order); // Recria o card com o novo status e botão
+                    
+                    // Adiciona o novo card na coluna correta
+                    const newColumnId = statusMap[newStatus.toLowerCase()]?.columnId;
+                    if (newColumnId) {
+                        document.getElementById(newColumnId).appendChild(newCard);
+                    }
+                }
+                updateAllCounts(); // Atualiza as contagens
+            }
+            
             const { error } = await supabaseClient
                 .from('Pedido')
                 .update({ status: newStatus })
@@ -402,70 +486,18 @@
 
             if (error) {
                 console.error("Erro ao atualizar status:", error);
-                alert("Não foi possível atualizar o status do pedido.");
-                // Restaura o botão em caso de erro
-                if(button) {
-                    const config = statusMap[newStatus.toLowerCase()] || {};
-                    button.innerHTML = `<i class="fas ${config.buttonIcon} mr-2"></i> ${config.buttonText}`;
-                    button.disabled = false;
-                }
+                alert("Não foi possível atualizar o status do pedido no servidor. A página será recarregada para garantir a consistência.");
+                await loadOrders(); // Recarrega tudo se houver erro
             }
-            
-            // O realtime listener já vai chamar loadOrders(), então não precisamos chamar de novo aqui
-            // para evitar uma recarga dupla. A UI vai atualizar assim que o Supabase notificar a mudança.
         }
         
-        // FUNÇÃO REALTIME MELHORADA
-        function setupRealtimeListener() {
-            const channel = supabaseClient.channel('pedidos-cozinha-realtime');
-
-            channel
-                .on(
-                    'postgres_changes',
-                    { event: '*', schema: 'public', table: 'Pedido' },
-                    payload => {
-                        console.log('Mudança detectada:', payload);
-                        const isNewOrder = payload.eventType === 'INSERT' && payload.new.status.toLowerCase() === 'pendente';
-                        
-                        if (isNewOrder) {
-                            notificationSound.play().catch(e => console.error("Erro ao tocar som:", e));
-                        }
-                        
-                        // Recarrega os pedidos para refletir qualquer mudança (novo, atualização, etc.)
-                        loadOrders().then(() => {
-                           if (isNewOrder) {
-                               const newCard = document.getElementById(`order-${payload.new.id}`);
-                               if (newCard) {
-                                   console.log(`Aplicando animação ao novo pedido: ${payload.new.id}`);
-                                   newCard.classList.add('new-order-flash');
-                                   // Rola a tela para o novo pedido ficar visível
-                                   newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                               }
-                           }
-                        });
-                    }
-                )
-                .subscribe((status, err) => {
-                    if (status === 'SUBSCRIBED') {
-                        console.log('Conectado com sucesso ao painel em tempo real!');
-                    }
-                    if (status === 'CHANNEL_ERROR') {
-                        console.error('Falha na conexão em tempo real:', err);
-                        alert('A conexão em tempo real falhou. As atualizações automáticas podem não funcionar.');
-                    }
-                });
-
-            return channel;
-        }
-
-        // LÓGICA DE AUTENTICAÇÃO E UI DO HEADER (ORIGINAL)
         async function updateNavUI(user) {
             const avatar = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nome || user.email)}&background=fde68a&color=c2410c`;
             userMenuContainer.innerHTML = `
                 <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
-                <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-30">
-                    <div class="p-4 border-b"><div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover"><div class="ml-4"><p class="font-semibold">${user.nome}</p><p class="text-xs text-gray-500">${user.email}</p></div></div></div>
-                    <div class="p-2 border-t"><button id="logout-button" class="w-full text-left flex items-center text-sm text-red-600 hover:bg-red-50 p-2 rounded"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
+                <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 glass-effect rounded-2xl shadow-xl overflow-hidden z-30">
+                    <div class="p-4 border-b" style="border-color: var(--ui-border-color);"><div class="flex items-center"><img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover"><div class="ml-4"><p class="font-semibold">${user.nome}</p><p class="text-xs themed-text-secondary">${user.email}</p></div></div></div>
+                    <div class="p-2 border-t" style="border-color: var(--ui-border-color);"><button id="logout-button" class="w-full text-left flex items-center text-sm p-2 rounded-lg hover:bg-red-500/20" style="color: var(--accent-color);"><i class="fas fa-sign-out-alt w-6 mr-2"></i>Sair</button></div>
                 </div>`;
             
             userMenuContainer.querySelector('#user-menu-button').addEventListener('click', (e) => { 
@@ -478,65 +510,47 @@
                 window.location.href = './login.html'; 
             };
         }
-
-        const mainMenuButton = document.getElementById('main-menu-button');
-        const mainMenuDropdown = document.getElementById('main-menu-dropdown');
-        mainMenuButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-            mainMenuDropdown.classList.toggle('hidden');
-        });
-        window.addEventListener('click', (event) => {
-            if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
-                mainMenuDropdown.classList.add('hidden');
-            }
-            const userMenuDropdown = document.getElementById('user-menu-dropdown');
-            if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
-                userMenuDropdown.classList.add('hidden');
-            }
-        });
-
-        // INICIALIZAÇÃO USANDO O MÉTODO ORIGINAL
+        
         async function setupAuthAndInitialize() {
             const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
             if (userString) {
                 const loggedUser = JSON.parse(userString);
                 if (loggedUser.role !== 'cozinha' && loggedUser.role !== 'admin') {
-                    alert('Acesso negado. Você não tem permissão para ver esta página.');
-                    window.location.href = './login.html';
+                    document.body.innerHTML = `<div class="h-screen w-screen flex flex-col items-center justify-center" style="background-color: var(--bg-color); color: var(--text-primary);"><i class="fas fa-lock fa-3x" style="color: var(--accent-color);"></i><h1 class="text-2xl font-bold mt-4">Acesso Negado</h1><p class="themed-text-secondary">Você não tem permissão para ver esta página.</p><a href="./login.html" class="mt-6 themed-link hover:underline">Ir para Login</a></div>`;
                     return;
                 }
                 await updateNavUI(loggedUser);
-                await loadOrders(); // Carrega o Kanban
-                setupRealtimeListener();
+                await loadOrders();
+                setInterval(loadOrders, 5000); // Atualiza a cada 5 segundos
+                setInterval(updateAllTimers, 30000); // Atualiza os contadores de tempo
             } else {
-                // Removido o alert para não interromper o fluxo se a sessão do Supabase ainda for válida
-                console.log("Nenhum usuário no localStorage, aguardando verificação do Supabase Auth...");
-                // Adiciona um fallback para o Supabase Auth, caso o localStorage falhe
-                 supabaseClient.auth.onAuthStateChange(async (event, session) => {
-                    if (!session) {
-                        window.location.href = './login.html';
-                    } else {
-                        // Se houver uma sessão do Supabase mas não no localStorage, tenta carregar o perfil
-                        const { data: cliente, error } = await supabaseClient
-                            .from('Cliente')
-                            .select('*')
-                            .eq('email', session.user.email)
-                            .single();
-                        
-                        if (cliente) {
-                             // Simula o login salvando no localStorage para manter a consistência do app
-                            localStorage.setItem(cliente.role === 'admin' ? 'currentAdmin' : 'currentUser', JSON.stringify(cliente));
-                            await setupAuthAndInitialize(); // Tenta inicializar novamente com os dados agora no localStorage
-                        } else if (!window.location.pathname.endsWith('login.html')) {
-                             window.location.href = './login.html';
-                        }
-                    }
-                 });
+                 window.location.href = './login.html';
             }
         }
 
-        document.addEventListener('DOMContentLoaded', setupAuthAndInitialize);
+        document.addEventListener('DOMContentLoaded', () => {
+            setupAuthAndInitialize();
+            
+            const mainMenuButton = document.getElementById('main-menu-button');
+            const mainMenuDropdown = document.getElementById('main-menu-dropdown');
+            mainMenuButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                mainMenuDropdown.classList.toggle('hidden');
+            });
+            window.addEventListener('click', (event) => {
+                if (!mainMenuDropdown.classList.contains('hidden') && !mainMenuButton.contains(event.target) && !mainMenuDropdown.contains(event.target)) {
+                    mainMenuDropdown.classList.add('hidden');
+                }
+                const userMenuDropdown = document.getElementById('user-menu-dropdown');
+                if (userMenuDropdown && !userMenuDropdown.classList.contains('hidden') && !userMenuDropdown.contains(event.target) && !document.getElementById('user-menu-button')?.contains(event.target)) {
+                    userMenuDropdown.classList.add('hidden');
+                }
+            });
+            
+            const themeSwitcher = document.getElementById('theme-switcher');
+            const docHtml = document.documentElement;
+            themeSwitcher.addEventListener('click', () => { docHtml.classList.toggle('dark'); });
+        });
     </script>
 </body>
 </html>
-
