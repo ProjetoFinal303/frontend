@@ -175,21 +175,17 @@
                 </a>
             </div>
 
-            <!-- Barra de Ferramentas: Filtros e Busca -->
             <div class="mb-6 p-4 glass-effect rounded-lg shadow-inner flex flex-col md:flex-row items-center gap-4">
                 <div class="relative w-full md:w-1/3">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 themed-text-tertiary"></i>
                     <input type="text" id="search-input" placeholder="Buscar por nome..." class="w-full pl-10 pr-4 py-2 border rounded-full focus:ring-2 focus:outline-none bg-transparent" style="color: var(--text-primary); border-color: var(--ui-border-color); --tw-ring-color: var(--link-color);">
                 </div>
                 <div id="category-filters" class="flex-grow flex flex-wrap justify-center md:justify-start gap-2">
-                    <!-- Botões de categoria serão inseridos aqui -->
-                </div>
+                    </div>
             </div>
 
-            <!-- Grid de Produtos -->
             <div id="product-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                <!-- Cards de produto serão inseridos aqui -->
-            </div>
+                </div>
             <div id="loading-indicator" class="text-center py-16">
                 <i class="fas fa-spinner fa-spin fa-3x themed-link"></i>
                 <p class="mt-4 themed-text-secondary">Carregando produtos...</p>
@@ -201,15 +197,12 @@
         </div>
     </main>
     
-    <!-- Modal de Edição -->
     <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 modal opacity-0">
         <div id="edit-modal-content" class="glass-effect rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95 modal-content">
-            <!-- Conteúdo do modal é gerado dinamicamente -->
-        </div>
+            </div>
     </div>
 
-      <!-- Modal de Confirmação -->
-    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4 modal opacity-0">
+     <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4 modal opacity-0">
         <div class="glass-effect p-8 rounded-lg shadow-2xl text-center max-w-sm mx-auto modal-content transform scale-95">
             <i class="fas fa-exclamation-triangle fa-3x mb-4" style="color: var(--link-color);"></i>
             <h2 class="text-2xl font-bold my-4" style="color: var(--text-primary);">Tem Certeza?</h2>
@@ -221,7 +214,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast" class="hidden fixed top-24 right-8 text-white py-3 px-6 rounded-lg shadow-lg z-[70] transform translate-x-full toast"></div>
 
     <footer class="glass-effect text-white mt-auto shadow-lg">
@@ -515,6 +507,23 @@
                 const { error: updateError } = await supabaseClient.from('Produto').update(updates).eq('id', productId);
                 if (updateError) throw updateError;
                 
+                // **NOVA LÓGICA PARA ATUALIZAR O ESTOQUE**
+                const newStock = parseInt(form.estoque.value, 10);
+                const { error: stockError } = await supabaseClient
+                    .from('Estoque')
+                    .update({ quantidade: newStock })
+                    .eq('id_produto', productId);
+
+                // Se o produto não tiver uma entrada de estoque, crie uma
+                if (stockError && stockError.code === 'PGRST204') { 
+                    const { error: insertError } = await supabaseClient
+                        .from('Estoque')
+                        .insert({ id_produto: productId, quantidade: newStock });
+                    if (insertError) throw insertError;
+                } else if (stockError) {
+                    throw stockError;
+                }
+
                 showToast('Produto atualizado com sucesso!', false);
                 closeModal(editModal);
                 await loadProducts();
@@ -560,6 +569,8 @@
 
         function openEditModal(product) {
             openModal(editModal);
+            const stockQuantity = (product.Estoque && product.Estoque.quantidade !== null) ? product.Estoque.quantidade : 0;
+
             
             editModalContent.innerHTML = `
                 <div class="flex justify-between items-center p-6 border-b" style="border-color: var(--ui-border-color);">
@@ -572,13 +583,16 @@
                             <div><label class="block text-sm font-medium themed-text-secondary">Nome</label><input type="text" name="nome" value="${product.nome}" required class="mt-1 w-full rounded-md shadow-sm bg-transparent" style="color: var(--text-primary); border: 1px solid var(--ui-border-color); --tw-ring-color: var(--link-color);"></div>
                             <div><label class="block text-sm font-medium themed-text-secondary">Preço</label><input type="number" step="0.01" name="preco" value="${product.preco}" required class="mt-1 w-full rounded-md shadow-sm bg-transparent" style="color: var(--text-primary); border: 1px solid var(--ui-border-color); --tw-ring-color: var(--link-color);"></div>
                         </div>
-                        <div><label class="block text-sm font-medium themed-text-secondary">Descrição</label><textarea name="descricao" rows="3" required class="mt-1 w-full rounded-md shadow-sm bg-transparent" style="color: var(--text-primary); border: 1px solid var(--ui-border-color); --tw-ring-color: var(--link-color);">${product.descricao}</textarea></div>
-                        <div>
-                            <label class="block text-sm font-medium themed-text-secondary">Categoria</label>
-                            <select name="categoria" class="mt-1 w-full rounded-md shadow-sm bg-transparent" style="color: var(--text-primary); border: 1px solid var(--ui-border-color); --tw-ring-color: var(--link-color); background-color: var(--bg-color);">
-                                ${['Sanduíches', 'Combos', 'Acompanhamentos', 'Sobremesas', 'Bebidas', 'Mais Vendidos'].map(cat => `<option value="${cat}" ${product.categoria === cat ? 'selected' : ''}>${cat}</option>`).join('')}
-                            </select>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium themed-text-secondary">Categoria</label>
+                                <select name="categoria" class="mt-1 w-full rounded-md shadow-sm bg-transparent" style="color: var(--text-primary); border: 1px solid var(--ui-border-color); --tw-ring-color: var(--link-color); background-color: var(--bg-color);">
+                                    ${['Sanduíches', 'Combos', 'Acompanhamentos', 'Sobremesas', 'Bebidas', 'Mais Vendidos'].map(cat => `<option value="${cat}" ${product.categoria === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div><label class="block text-sm font-medium themed-text-secondary">Estoque</label><input type="number" name="estoque" value="${stockQuantity}" required class="mt-1 w-full rounded-md shadow-sm bg-transparent" style="color: var(--text-primary); border: 1px solid var(--ui-border-color); --tw-ring-color: var(--link-color);"></div>
                         </div>
+                        <div><label class="block text-sm font-medium themed-text-secondary">Descrição</label><textarea name="descricao" rows="3" required class="mt-1 w-full rounded-md shadow-sm bg-transparent" style="color: var(--text-primary); border: 1px solid var(--ui-border-color); --tw-ring-color: var(--link-color);">${product.descricao}</textarea></div>
                         <div>
                             <label class="block text-sm font-medium themed-text-secondary">Imagem</label>
                             <div class="mt-1 flex items-center space-x-4">
@@ -647,4 +661,3 @@
     </script>
 </body>
 </html>
-

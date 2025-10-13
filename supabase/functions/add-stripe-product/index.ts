@@ -1,8 +1,17 @@
-// supabase/functions/add-stripe-product/index.ts
-
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import Stripe from 'https://esm.sh/stripe@11.1.0'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import Stripe from 'https://esm.sh/stripe@12.12.0'
 import { corsHeaders } from '../_shared/cors.ts'
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
+  apiVersion: '2022-11-15',
+  httpClient: Stripe.createFetchHttpClient(),
+});
+
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -10,49 +19,73 @@ serve(async (req) => {
   }
 
   try {
-    // --- CORREÇÃO APLICADA AQUI ---
-    // Agora recebemos o 'imageUrl' do frontend.
-    const { productName, unitAmount, imageUrl } = await req.json()
+    const payload = await req.json();
+    
+    // CORREÇÃO: Lemos a 'categoria' e 'quantidadeEstoque' que vêm do site/app
+    const { nome, descricao, preco, imageUrl, quantidadeEstoque, categoria } = payload;
 
-    // Validação básica
-    if (!productName || !unitAmount) {
-        throw new Error("O nome do produto e o preço são obrigatórios.");
+    if (!nome || !preco) {
+      throw new Error("O nome do produto e o preço são obrigatórios.");
     }
 
-    const stripe = new Stripe(Deno.env.get('STRIPE_API_KEY') as string, {
-      apiVersion: '2022-11-15',
-      httpClient: Stripe.createFetchHttpClient(),
-    })
+    // 1. Criar o produto no Stripe
+    const produtoStripe = await stripe.products.create({
+      name: nome,
+      description: descricao || undefined,
+      images: imageUrl ? [imageUrl] : [],
+    });
 
-    // --- CORREÇÃO APLICADA AQUI ---
-    // Criamos um objeto de dados do produto e adicionamos o campo 'images' se o imageUrl existir.
-    const productData: Stripe.ProductCreateParams = {
-        name: productName,
-    };
+    // 2. Criar o preço para o produto no Stripe
+    const precoStripe = await stripe.prices.create({
+      product: produtoStripe.id,
+      unit_amount: Math.round(preco * 100),
+      currency: 'brl',
+    });
 
-    if (imageUrl) {
-        productData.images = [imageUrl];
+    // 3. Inserir o produto no banco de dados, AGORA INCLUINDO A CATEGORIA
+    const { data: produtoInserido, error: supabaseError } = await supabaseAdmin
+      .from('Produto')
+      .insert({
+        nome: nome,
+        descricao: descricao,
+        preco: preco,
+        image_url: imageUrl,
+        stripe_price_id: precoStripe.id,
+        categoria: categoria, // <-- CAMPO CORRIGIDO
+      })
+      .select('id')
+      .single();
+
+    if (supabaseError) {
+      throw supabaseError;
     }
 
-    // Cria o produto no Stripe com os dados (e a imagem, se disponível)
-    const product = await stripe.products.create(productData);
+    // 4. Inserir o estoque inicial com a QUANTIDADE recebida do formulário
+    const estoqueInicial = quantidadeEstoque || 0;
+    const { error: estoqueError } = await supabaseAdmin
+      .from('Estoque')
+      .insert({
+        id_produto: produtoInserido.id,
+        quantidade: estoqueInicial,
+      });
+      
+    if (estoqueError) {
+      // Não lançamos um erro aqui, pois o estoque pode falhar sem quebrar a operação principal
+      console.error("Aviso: Erro ao inserir estoque para o novo produto:", estoqueError);
+    }
 
-    // Cria o preço para o produto
-    const price = await stripe.prices.create({
-      product: product.id,
-      unit_amount: unitAmount, // O preço deve ser em centavos
-      currency: 'brl', // Moeda brasileira
-    })
-
-    // Retorna o ID do preço para o frontend
-    return new Response(JSON.stringify({ priceId: price.id }), {
+    return new Response(JSON.stringify({
+        message: `Produto '${nome}' adicionado com sucesso!`,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  } catch (e) {
-    console.error('Erro na função add-stripe-product:', e)
-    return new Response(JSON.stringify({ error: e.message }), {
+      status: 200,
+    });
+
+  } catch (error) {
+    console.error('Erro ao adicionar produto:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    });
   }
 })

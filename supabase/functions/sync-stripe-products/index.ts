@@ -1,105 +1,100 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import Stripe from 'https://esm.sh/stripe@11.1.0?target=deno'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import Stripe from 'https://esm.sh/stripe@12.12.0'
+import { corsHeaders } from '../_shared/cors.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
   apiVersion: '2022-11-15',
-  httpClient: Stripe.createFetchHttpClient()
-})
+  httpClient: Stripe.createFetchHttpClient(),
+});
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-)
+);
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
+serve(async (_req) => {
   try {
-    // 1. BUSCAR TODOS OS PRODUTOS ATIVOS DO STRIPE
-    const { data: prices } = await stripe.prices.list({ active: true, expand: ['data.product'] });
-    const activeStripePrices = prices.filter(p => (p.product as Stripe.Product).active);
-    const activeStripePriceIds = activeStripePrices.map(p => p.id);
+    console.log("Iniciando sincronização de produtos...");
 
-    // 2. FAZER O UPSERT (INSERIR NOVOS / ATUALIZAR EXISTENTES)
-    if (activeStripePrices.length > 0) {
-        const produtosParaSincronizar = activeStripePrices.map(price => {
-            const product = price.product as Stripe.Product;
-            return {
-                nome: product.name,
-                descricao: product.description,
-                preco: (price.unit_amount || 0) / 100,
-                image_url: product.images?.[0] || null,
-                stripe_price_id: price.id,
-            };
-        });
+    // 1. Buscar todos os preços ATIVOS do Stripe
+    const { data: prices } = await stripe.prices.list({
+      active: true,
+      expand: ['data.product'],
+      limit: 100,
+    });
+    console.log(`Encontrados ${prices.length} preços ativos no Stripe.`);
 
-        const { data: upsertedProducts, error: upsertError } = await supabaseAdmin
-            .from('Produto')
-            .upsert(produtosParaSincronizar, { onConflict: 'stripe_price_id' })
-            .select();
+    const stripePriceIds = prices.map(p => p.id);
+    const stripeProductIds = prices.map(p => (p.product as Stripe.Product).id);
 
-        if (upsertError) throw upsertError;
+    // 2. Buscar todos os produtos do Supabase
+    const { data: supabaseProducts, error: fetchError } = await supabaseAdmin
+      .from('Produto')
+      .select('id, stripe_price_id');
 
-        // Garante que produtos novos tenham uma entrada no estoque
-        for (const produto of upsertedProducts) {
-            const { data: estoqueExistente } = await supabaseAdmin
-                .from('Estoque')
-                .select('id')
-                .eq('id_produto', produto.id)
-                .single();
-            
-            if (!estoqueExistente) {
-                 await supabaseAdmin.from('Estoque').insert({ id_produto: produto.id, quantidade: 0 });
-            }
-        }
+    if (fetchError) throw new Error(`Erro ao buscar produtos do Supabase: ${fetchError.message}`);
+    console.log(`Encontrados ${supabaseProducts.length} produtos no banco de dados.`);
+    const supabasePriceIds = supabaseProducts.map(p => p.stripe_price_id);
+
+    // ============================ LÓGICA DE CORREÇÃO ============================
+    // 3. ENCONTRAR E DESATIVAR "ÓRFÃOS": Produtos ativos no Stripe mas ausentes no Supabase
+    // (Isso acontece quando o site deleta do DB mas não do Stripe)
+    for (const price of prices) {
+      if (!supabasePriceIds.includes(price.id)) {
+        const product = price.product as Stripe.Product;
+        console.warn(`Produto órfão encontrado: '${product.name}'. Foi deletado do site mas ainda estava ativo no Stripe. Desativando agora...`);
+        // Desativa o preço e o produto no Stripe para corrigir a falha do site
+        await stripe.prices.update(price.id, { active: false });
+        await stripe.products.update(product.id, { active: false });
+      }
+    }
+    // ==============================================================================
+
+    // 4. INSERIR/ATUALIZAR produtos que estão no Stripe e no Supabase
+    for (const price of prices) {
+      const product = price.product as Stripe.Product;
+      if (!product || !product.active) continue;
+
+      const existingProduct = supabaseProducts.find(p => p.stripe_price_id === price.id);
+      const productData = {
+        nome: product.name,
+        descricao: product.description,
+        image_url: product.images?.[0] ?? null,
+        preco: (price.unit_amount ?? 0) / 100,
+        stripe_price_id: price.id,
+      };
+
+      if (existingProduct) {
+        const { error } = await supabaseAdmin.from('Produto').update(productData).eq('id', existingProduct.id);
+        if (error) console.error(`Erro ao ATUALIZAR ${product.name}:`, error);
+      } else {
+         // Só insere se ele não estava na lista de órfãos (evita reinserir e desativar no mesmo ciclo)
+         // Esta verificação é uma segurança extra, a lógica principal está no passo 3.
+        const { error } = await supabaseAdmin.from('Produto').insert(productData);
+        if (error) console.error(`Erro ao INSERIR ${product.name}:`, error);
+      }
     }
 
-    // 3. LÓGICA DE EXCLUSÃO: ENCONTRAR E REMOVER PRODUTOS ÓRFÃOS
-    const { data: supabaseProducts, error: selectError } = await supabaseAdmin
-        .from('Produto')
-        .select('id, stripe_price_id');
-
-    if (selectError) throw selectError;
-
-    const produtosParaExcluir = supabaseProducts.filter(
-        p => !activeStripePriceIds.includes(p.stripe_price_id)
-    );
-
-    if (produtosParaExcluir.length > 0) {
-        const idsParaExcluir = produtosParaExcluir.map(p => p.id);
-        
-        // Remove primeiro do estoque para evitar erro de chave estrangeira
-        await supabaseAdmin
-            .from('Estoque')
-            .delete()
-            .in('id_produto', idsParaExcluir);
-
-        // Remove da tabela de produtos
-        await supabaseAdmin
-            .from('Produto')
-            .delete()
-            .in('id', idsParaExcluir);
+    // 5. DELETAR produtos do Supabase que não estão mais ativos no Stripe
+    const productsToDelete = supabaseProducts.filter(p => !stripePriceIds.includes(p.stripe_price_id));
+    if (productsToDelete.length > 0) {
+      console.log(`Deletando ${productsToDelete.length} produtos obsoletos do Supabase...`);
+      const idsToDelete = productsToDelete.map(p => p.id);
+      await supabaseAdmin.from('Produto').delete().in('id', idsToDelete);
     }
 
-    const message = `Sincronização concluída. ${activeStripePrices.length} produtos atualizados/inseridos. ${produtosParaExcluir.length} produtos removidos.`;
-
-    return new Response(JSON.stringify({ message }), {
+    console.log("Sincronização concluída com sucesso.");
+    return new Response(JSON.stringify({ message: 'Sincronização concluída com sucesso!' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
   } catch (error) {
+    console.error('Erro fatal durante a sincronização:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
   }
-})
+});

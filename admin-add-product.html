@@ -75,10 +75,8 @@
             to { transform: translateY(-100vh) translateX(50px); opacity: 0; }
         }
         
-        /* Efeito de Vidro */
         .glass-effect { background: var(--ui-bg-color); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--ui-border-color); transition: background-color 0.5s ease, border-color 0.5s ease; }
         
-        /* Seletor de Tema */
         .theme-switch { position: relative; display: inline-flex; align-items: center; width: 80px; height: 40px; padding: 4px; border-radius: 20px; cursor: pointer; }
         .theme-switch .switch-blob { position: absolute; width: 32px; height: 32px; border-radius: 50%; background-color: var(--accent-color); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.5s ease; transform: translateX(0px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         html.dark .theme-switch .switch-blob { transform: translateX(40px); }
@@ -86,7 +84,6 @@
         .theme-switch .icon.sun { color: #f59e0b; }
         .theme-switch .icon.moon { color: #e5e7eb; }
 
-        /* Themed Styles */
         .themed-text-secondary { color: var(--text-secondary); }
         .themed-text-tertiary { color: var(--text-tertiary); }
         .themed-link { color: var(--link-color); }
@@ -94,7 +91,6 @@
         .themed-accent-bg { background-color: var(--accent-color); }
         .themed-accent-bg:hover { background-color: var(--accent-color-hover); }
 
-        /* Form Input Styles */
         .input-group { position: relative; }
         .input-group .input-label { position: absolute; left: 0.25rem; top: 0.5rem; color: var(--text-secondary); cursor: text; transition: all 0.2s ease-in-out; }
         .input-group .input-field { background: transparent; border-bottom: 2px solid var(--ui-border-color); color: var(--text-primary); }
@@ -154,17 +150,23 @@
                     <label for="descricao" class="input-label">Descrição</label>
                 </div>
                 
-                <div class="input-group">
-                     <select id="categoria" required class="w-full py-2 px-1 outline-none input-field">
-                        <option value="Sanduíches">Sanduíches</option>
-                        <option value="Combos">Combos</option>
-                        <option value="Acompanhamentos">Acompanhamentos</option>
-                        <option value="Sobremesas">Sobremesas</option>
-                        <option value="Bebidas">Bebidas</option>
-                        <option value="Mais Vendidos">Mais Vendidos</option>
-                    </select>
-                    <label for="categoria" class="input-label !transform-translate-y-[-1.5rem] !text-xs themed-link">Categoria</label>
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="input-group">
+                         <select id="categoria" required class="w-full py-2 px-1 outline-none input-field">
+                             <option value="Sanduíches">Sanduíches</option>
+                             <option value="Combos">Combos</option>
+                             <option value="Acompanhamentos">Acompanhamentos</option>
+                             <option value="Sobremesas">Sobremesas</option>
+                             <option value="Bebidas">Bebidas</option>
+                             <option value="Mais Vendidos">Mais Vendidos</option>
+                         </select>
+                        <label for="categoria" class="input-label !transform-translate-y-[-1.5rem] !text-xs themed-link">Categoria</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="quantidadeEstoque" required class="w-full py-2 px-1 outline-none input-field" placeholder=" " value="0">
+                        <label for="quantidadeEstoque" class="input-label">Estoque Inicial</label>
+                    </div>
+                    </div>
                 
                 <div>
                     <label class="block text-sm font-medium themed-text-secondary">Imagem do Produto</label>
@@ -192,44 +194,20 @@
     <footer class="glass-effect text-white mt-auto shadow-lg">
         <div class="container mx-auto px-4 md:px-8 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
-                <div>
-                    <h3 class="text-lg font-bold themed-link mb-4">Lanchô</h3>
-                    <p class="themed-text-tertiary">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Links Rápidos</h3>
-                    <ul class="space-y-2">
-                        <li><a href="./index.html" class="themed-text-tertiary hover:themed-link">Home</a></li>
-                        <li><a href="./catalog.html" class="themed-text-tertiary hover:themed-link">Cardápio</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Contato</h3>
-                    <ul class="space-y-2 themed-text-tertiary">
-                        <li>Rua Mariz e Barros, 273, Rio de Janeiro</li>
-                        <li>(21) 96810-5812</li>
-                        <li>contato@lancho.com.br</li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold mb-4 themed-text-secondary">Siga-nos</h3>
-                    <div class="flex justify-center md:justify-start space-x-4">
-                        <a href="https://instagram.com/lancho.rj" class="themed-text-tertiary hover:themed-link"><i class="fab fa-instagram fa-lg"></i></a>
-                        <a href="https://x.com/Lancho_rj" class="themed-text-tertiary hover:themed-link"><i class="fab fa-twitter fa-lg"></i></a>
-                    </div>
-                </div>
+                <div> <h3 class="text-lg font-bold themed-link mb-4">Lanchô</h3> <p class="themed-text-tertiary">O melhor lanche da região, feito com carinho e os ingredientes mais frescos.</p> </div>
+                <div> <h3 class="text-lg font-bold mb-4 themed-text-secondary">Links Rápidos</h3> <ul class="space-y-2"> <li><a href="./index.html" class="themed-text-tertiary hover:themed-link">Home</a></li> <li><a href="./catalog.html" class="themed-text-tertiary hover:themed-link">Cardápio</a></li> </ul> </div>
+                <div> <h3 class="text-lg font-bold mb-4 themed-text-secondary">Contato</h3> <ul class="space-y-2 themed-text-tertiary"> <li>Rua Mariz e Barros, 273, Rio de Janeiro</li> <li>(21) 96810-5812</li> <li>contato@lancho.com.br</li> </ul> </div>
+                <div> <h3 class="text-lg font-bold mb-4 themed-text-secondary">Siga-nos</h3> <div class="flex justify-center md:justify-start space-x-4"> <a href="https://instagram.com/lancho.rj" class="themed-text-tertiary hover:themed-link"><i class="fab fa-instagram fa-lg"></i></a> <a href="https://x.com/Lancho_rj" class="themed-text-tertiary hover:themed-link"><i class="fab fa-twitter fa-lg"></i></a> </div> </div>
             </div>
-            <div class="border-t mt-8 pt-6 text-center themed-text-tertiary" style="border-color: var(--ui-border-color);">
-                <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p>
-            </div>
+            <div class="border-t mt-8 pt-6 text-center themed-text-tertiary" style="border-color: var(--ui-border-color);"> <p>&copy; 2025 Lanchô. Todos os direitos reservados.</p> </div>
         </div>
     </footer>
     
      <div id="theme-switcher" class="theme-switch glass-effect rounded-full fixed bottom-6 right-6 z-50">
-        <div class="switch-blob"></div>
-        <svg class="icon sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-        <svg class="icon moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-    </div>
+         <div class="switch-blob"></div>
+         <svg class="icon sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+         <svg class="icon moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+     </div>
 
     <script>
         const SUPABASE_URL = 'https://ygsziltorjcgpjbmlptr.supabase.co';
@@ -268,18 +246,18 @@
                     <button id="user-menu-button" class="p-2 rounded-full focus:outline-none"><img src="${avatar}" alt="Avatar" class="w-8 h-8 rounded-full object-cover"></button>
                     <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-72 glass-effect rounded-lg shadow-xl overflow-hidden z-30">
                          <div class="p-4 border-b" style="border-color: var(--ui-border-color);">
-                            <div class="flex items-center">
-                                <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
-                                <div class="ml-4">
-                                    <p class="text-md font-semibold" style="color: var(--text-primary);">${user.nome || 'Cliente'}</p>
-                                    <p class="text-xs themed-text-secondary">${user.email}</p>
-                                </div>
-                            </div>
-                            <div class="mt-4 grid grid-cols-2 gap-4 text-center">
-                                <div><p class="text-sm font-semibold" style="color: var(--text-primary);">${stats.totalPedidos}</p><p class="text-xs themed-text-secondary">Pedidos</p></div>
-                                <div><p class="text-sm font-semibold" style="color: var(--text-primary);">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs themed-text-secondary">Gasto Total</p></div>
-                            </div>
-                        </div>
+                             <div class="flex items-center">
+                                 <img src="${avatar}" alt="Avatar" class="w-16 h-16 rounded-full object-cover flex-shrink-0">
+                                 <div class="ml-4">
+                                     <p class="text-md font-semibold" style="color: var(--text-primary);">${user.nome || 'Cliente'}</p>
+                                     <p class="text-xs themed-text-secondary">${user.email}</p>
+                                 </div>
+                             </div>
+                             <div class="mt-4 grid grid-cols-2 gap-4 text-center">
+                                 <div><p class="text-sm font-semibold" style="color: var(--text-primary);">${stats.totalPedidos}</p><p class="text-xs themed-text-secondary">Pedidos</p></div>
+                                 <div><p class="text-sm font-semibold" style="color: var(--text-primary);">R$ ${parseFloat(stats.dinheiroGasto).toFixed(2)}</p><p class="text-xs themed-text-secondary">Gasto Total</p></div>
+                             </div>
+                         </div>
                         <div class="py-2">
                             <a href="./profile.html" class="flex items-center py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-user-edit w-6 mr-2"></i>Ver Perfil</a>
                             <a href="./orders.html" class="flex items-center py-2 px-4 text-sm themed-text-secondary hover:themed-accent-bg hover:!text-white"><i class="fas fa-receipt w-6 mr-2"></i>Meus Pedidos</a>
@@ -319,7 +297,7 @@
             const docHtml = document.documentElement;
             themeSwitcher.addEventListener('click', () => { docHtml.classList.toggle('dark'); });
             
-            // Form specific logic
+            // ============================ LÓGICA DO FORMULÁRIO CORRIGIDA ============================
             const addProductForm = document.getElementById('add-product-form');
             const submitButton = document.getElementById('submit-button');
             const buttonText = document.getElementById('button-text');
@@ -346,49 +324,46 @@
                 const descricao = document.getElementById('descricao').value;
                 const preco = parseFloat(document.getElementById('preco').value);
                 const categoria = document.getElementById('categoria').value;
+                const quantidadeEstoque = parseInt(document.getElementById('quantidadeEstoque').value, 10);
                 const imageFile = imageUploadInput.files[0];
                 
                 try {
-                    if (!imageFile) throw new Error("A imagem do produto é obrigatória.");
+                    let imageUrl = null;
+                    if (imageFile) {
+                        const fileName = `${Date.now()}-${imageFile.name}`;
+                        const { error: uploadError } = await supabaseClient.storage
+                            .from('produtos')
+                            .upload(fileName, imageFile);
+                        if (uploadError) throw uploadError;
 
-                    const fileName = `${Date.now()}-${imageFile.name}`;
-                    const { error: uploadError } = await supabaseClient.storage
-                        .from('produtos')
-                        .upload(fileName, imageFile);
-                    if (uploadError) throw uploadError;
+                        const { data: { publicUrl } } = supabaseClient.storage.from('produtos').getPublicUrl(fileName);
+                        imageUrl = publicUrl;
+                    } else {
+                        throw new Error("A imagem do produto é obrigatória.");
+                    }
 
-                    const { data: { publicUrl } } = supabaseClient.storage.from('produtos').getPublicUrl(fileName);
-                    const imageUrl = publicUrl;
+                    // Monta o payload COMPLETO para a Edge Function
+                    const payload = {
+                        nome: nome,
+                        descricao: descricao,
+                        preco: preco,
+                        imageUrl: imageUrl,
+                        quantidadeEstoque: quantidadeEstoque,
+                        categoria: categoria
+                    };
 
-                    const { data: stripeData, error: stripeError } = await supabaseClient.functions.invoke('add-stripe-product', {
-                        body: { 
-                            productName: nome, 
-                            unitAmount: Math.round(preco * 100),
-                            imageUrl: imageUrl
-                        },
+                    const { error: functionError } = await supabaseClient.functions.invoke('add-stripe-product', {
+                        body: payload
                     });
-                    if (stripeError) throw stripeError;
-                    if (stripeData.error) throw new Error(stripeData.error);
+                    if (functionError) throw functionError;
                     
-                    const stripe_price_id = stripeData.priceId;
-
-                    const { data: produtoData, error: produtoError } = await supabaseClient
-                        .from('Produto')
-                        .insert({ nome, descricao, preco, image_url: imageUrl, stripe_price_id, categoria })
-                        .select()
-                        .single();
-                    if (produtoError) throw produtoError;
-
-                    const { error: estoqueError } = await supabaseClient
-                        .from('Estoque')
-                        .insert({ id_produto: produtoData.id, quantidade: 0 }); 
-                    if (estoqueError) throw estoqueError;
-
                     formMessage.textContent = 'Produto adicionado com sucesso!';
                     formMessage.className = 'text-sm text-center mt-4';
                     formMessage.style.color = 'var(--success-text)';
                     addProductForm.reset();
                     imagePreview.src = 'https://placehold.co/128x128/eae0d5/4b5563?text=Imagem';
+                    document.getElementById('quantidadeEstoque').value = 0; // Reseta o valor do estoque para 0
+                    
                     setTimeout(() => {
                         window.location.href = './admin-manage-products.html';
                     }, 1500);
