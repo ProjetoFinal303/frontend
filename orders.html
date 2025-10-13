@@ -24,6 +24,9 @@
             --accent-color-hover: #b91c1c;
             --link-color: #ca8a04;
             --link-color-hover: #a16207;
+            --confirm-color: #16a34a; /* Verde para confirmação */
+            --confirm-color-hover: #15803d;
+
             --timeline-inactive-bg: rgba(0,0,0,0.05);
             --timeline-inactive-border: rgba(0,0,0,0.1);
             --timeline-active-bg: #fefce8;
@@ -59,6 +62,9 @@
             --accent-color-hover: #dc2626;
             --link-color: #f59e0b;
             --link-color-hover: #d97706;
+            --confirm-color: #4ade80;
+            --confirm-color-hover: #22c55e;
+
             --timeline-inactive-bg: rgba(255,255,255,0.05);
             --timeline-inactive-border: rgba(255,255,255,0.1);
             --timeline-active-bg: rgba(250, 204, 21, 0.1);
@@ -114,13 +120,23 @@
         .theme-switch .icon.sun { color: #f59e0b; }
         .theme-switch .icon.moon { color: #e5e7eb; }
 
-        /* Themed Styles */
+        /* Estilos Gerais */
         .themed-text-secondary { color: var(--text-secondary); }
         .themed-text-tertiary { color: var(--text-tertiary); }
         .themed-link { color: var(--link-color); }
         .themed-link:hover { color: var(--link-color-hover); }
         .themed-accent-bg { background-color: var(--accent-color); }
         .themed-accent-bg:hover { background-color: var(--accent-color-hover); }
+
+        /* Estilo do Botão de Confirmação */
+        .confirm-btn {
+            background-color: var(--confirm-color);
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .confirm-btn:hover {
+            background-color: var(--confirm-color-hover);
+        }
 
         /* Timeline */
         .timeline { display: flex; justify-content: space-between; align-items: flex-start; padding: 1rem 0; }
@@ -131,10 +147,10 @@
         .timeline-step.active .timeline-label { color: var(--text-primary); font-weight: 600; }
         .timeline-step.completed .timeline-icon { background-color: var(--timeline-completed-bg); border-color: var(--timeline-completed-border); color: var(--timeline-completed-text); }
         .timeline-step.completed .timeline-label { color: var(--text-secondary); }
-
         .timeline-step:not(:last-child)::after { content: ''; position: absolute; top: 25px; left: 50%; width: 100%; height: 4px; background-color: var(--timeline-inactive-border); transform: translateX(50%); z-index: -1; transition: background-color 0.3s ease; }
         .timeline-step.completed::after { background-color: var(--timeline-completed-border); }
         
+        /* Animação dos Cards */
         .order-card { animation: slideInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
         @keyframes slideInUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -173,8 +189,7 @@
             <p class="text-center themed-text-secondary mb-10">Acompanhe o status dos seus lanches e veja seu histórico de delícias.</p>
             
             <div id="orders-container" class="space-y-8">
-                <!-- Pedidos serão inseridos aqui -->
-            </div>
+                </div>
         </div>
     </main>
 
@@ -228,18 +243,18 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlnc3ppbHRvcmpjZ3BqYm1scHRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyOTUzNTQsImV4cCI6MjA2Mzg3MTM1NH0.3J19gnI_qwM3nWolVdvCcNNusC3YlOTvZEjOwM6z2PU';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // --- GLOBAL VARIABLES ---
+        // --- VARIÁVEIS GLOBAIS ---
         let allProducts = [];
         const statusInfo = {
             'pendente': { text: 'Pendente', icon: 'fa-receipt', step: 1 },
             'em preparo': { text: 'Em Preparo', icon: 'fa-kitchen-set', step: 2 },
             'saiu para entrega': { text: 'A Caminho', icon: 'fa-truck-fast', step: 3 },
-            'entregue': { text: 'Entregue', icon: 'fa-house-chimney', step: 4 },
-            'concluido': { text: 'Entregue', icon: 'fa-house-chimney', step: 4 },
+            'entregue': { text: 'Concluído', icon: 'fa-house-chimney', step: 4 }, // Alterado para Concluído
+            'concluido': { text: 'Concluído', icon: 'fa-house-chimney', step: 4 },
             'cancelado': { text: 'Cancelado', icon: 'fa-times-circle', step: 0 }
         };
 
-        // --- UI FUNCTIONS ---
+        // --- FUNÇÕES DE UI ---
 
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast-notification');
@@ -256,7 +271,7 @@
                 { label: 'Recebido', icon: 'fa-receipt' },
                 { label: 'Preparando', icon: 'fa-kitchen-set' },
                 { label: 'A Caminho', icon: 'fa-truck-fast' },
-                { label: 'Entregue', icon: 'fa-house-chimney' }
+                { label: 'Concluído', icon: 'fa-house-chimney' } // Alterado para Concluído
             ];
 
             return `
@@ -278,20 +293,36 @@
         }
         
         function renderOrderCard(order) {
-            const status = statusInfo[order.status.toLowerCase()] || { text: 'Desconhecido', icon: 'fa-question-circle', step: 0 };
+            const statusKey = order.status.toLowerCase();
+            const status = statusInfo[statusKey] || { text: 'Desconhecido', icon: 'fa-question-circle', step: 0 };
             const formattedDate = new Date(order.data).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
             
             let statusStyle = '';
-            switch(status.step) {
-                case 1: statusStyle = `background-color: var(--status-pending-bg); color: var(--status-pending-text);`; break;
-                case 2: statusStyle = `background-color: var(--status-progress-bg); color: var(--status-progress-text);`; break;
-                case 3: statusStyle = `background-color: var(--status-delivery-bg); color: var(--status-delivery-text);`; break;
-                case 4: statusStyle = `background-color: var(--status-completed-bg); color: var(--status-completed-text);`; break;
-                default: statusStyle = `background-color: var(--status-canceled-bg); color: var(--status-canceled-text);`; break;
+            switch(statusKey) {
+                case 'pendente': statusStyle = `background-color: var(--status-pending-bg); color: var(--status-pending-text);`; break;
+                case 'em preparo': statusStyle = `background-color: var(--status-progress-bg); color: var(--status-progress-text);`; break;
+                case 'saiu para entrega': statusStyle = `background-color: var(--status-delivery-bg); color: var(--status-delivery-text);`; break;
+                case 'entregue':
+                case 'concluido': statusStyle = `background-color: var(--status-completed-bg); color: var(--status-completed-text);`; break;
+                case 'cancelado': statusStyle = `background-color: var(--status-canceled-bg); color: var(--status-canceled-text);`; break;
+            }
+
+            // LÓGICA DOS BOTÕES
+            let actionButtons = '';
+            if (statusKey === 'saiu para entrega') {
+                actionButtons = `
+                    <button onclick="confirmDelivery(${order.id})" class="w-full sm:w-auto confirm-btn font-bold py-2 px-5 rounded-full transition-transform transform hover:scale-105">
+                        <i class="fas fa-check-circle mr-2"></i>Confirmar Entrega
+                    </button>`;
+            } else if (statusKey === 'entregue' || statusKey === 'concluido') {
+                actionButtons = `
+                    <button onclick="reorder('${order.descricao.replace(/'/g, "\\'")}')" class="w-full sm:w-auto themed-accent-bg text-white font-bold py-2 px-5 rounded-full transition-transform transform hover:scale-105">
+                        <i class="fas fa-redo-alt mr-2"></i>Pedir Novamente
+                    </button>`;
             }
 
             return `
-            <div class="glass-effect rounded-2xl shadow-lg overflow-hidden order-card">
+            <div id="order-${order.id}" class="glass-effect rounded-2xl shadow-lg overflow-hidden order-card">
                 <div class="p-6 border-b flex justify-between items-center" style="border-color: var(--ui-border-color);">
                     <div>
                         <p class="text-sm font-semibold themed-link">PEDIDO #${String(order.id).padStart(6, '0')}</p>
@@ -303,7 +334,7 @@
                 </div>
                 
                 <div class="p-6">
-                    ${renderTimeline(order.status.toLowerCase())}
+                    ${renderTimeline(statusKey)}
                 </div>
 
                 <div class="p-6 border-t" style="border-color: var(--ui-border-color);">
@@ -314,11 +345,7 @@
                            <i class="fas ${status.icon}"></i>
                            <span>${status.text}</span>
                        </div>
-                        ${(status.step === 4) ? 
-                            `<button onclick="reorder('${order.descricao.replace(/'/g, "\\'")}')" class="w-full sm:w-auto themed-accent-bg text-white font-bold py-2 px-5 rounded-full transition-transform transform hover:scale-105">
-                                <i class="fas fa-redo-alt mr-2"></i>Pedir Novamente
-                            </button>` : ''
-                        }
+                       ${actionButtons}
                     </div>
                 </div>
             </div>
@@ -363,7 +390,7 @@
             }
         }
 
-        // --- DATA FUNCTIONS ---
+        // --- FUNÇÕES DE DADOS ---
 
         function getLoggedUser() {
             const userString = localStorage.getItem('currentUser') || localStorage.getItem('currentAdmin');
@@ -383,6 +410,25 @@
             } catch (error) {
                 console.error("Erro ao buscar estatísticas:", error);
                 return { totalPedidos: 0, dinheiroGasto: 0.00 };
+            }
+        }
+
+        // **NOVA FUNÇÃO PARA CONFIRMAR ENTREGA**
+        async function confirmDelivery(orderId) {
+            const { data, error } = await supabaseClient
+                .from('Pedido')
+                .update({ status: 'concluido' }) // Alterado para 'concluido'
+                .eq('id', orderId)
+                .select()
+                .single(); 
+
+            if (error) {
+                console.error('Erro ao confirmar entrega:', error);
+                showToast('Erro ao concluir o pedido. Tente novamente.', true);
+            } else {
+                showToast('Oba! Pedido concluído. Bom apetite!');
+                const updatedCardHTML = renderOrderCard(data);
+                document.getElementById(`order-${orderId}`).outerHTML = updatedCardHTML;
             }
         }
 
@@ -472,7 +518,7 @@
             }
         }
         
-        // --- INITIALIZATION ---
+        // --- INICIALIZAÇÃO ---
 
         async function initApp() {
             const user = getLoggedUser();
@@ -499,4 +545,3 @@
     </script>
 </body>
 </html>
-
