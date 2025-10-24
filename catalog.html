@@ -138,6 +138,15 @@
         .star-rating input:checked ~ label { color: var(--link-color); transform: scale(1.0); }
 
     </style>
+        <script>
+        // Load theme preference before page renders to prevent flash
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 </head>
 <body class="flex flex-col min-h-screen">
     <div class="particle-container">
