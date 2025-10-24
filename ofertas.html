@@ -97,6 +97,15 @@
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
         }
     </style>
+        <script>
+        // Load theme preference before page renders to prevent flash
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 </head>
 <body class="flex flex-col min-h-screen">
     <div class="particle-container">
