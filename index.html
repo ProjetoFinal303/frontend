@@ -128,6 +128,15 @@
         }
 
     </style>
+    <script>
+        // Load theme preference before page renders to prevent flash
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 </head>
 <body class="flex flex-col min-h-screen">
     <div class="particle-container">
@@ -343,19 +352,34 @@
             });
         }
 
-        // --- THEME SWITCHER LOGIC ---
-        const themeSwitcher = document.getElementById('theme-switcher');
-        const docHtml = document.documentElement;
-        themeSwitcher.addEventListener('click', () => {
-            docHtml.classList.toggle('dark');
-        });
+        // --- THEME SWITCHER LOGIC WITH PERSISTENCE ---
+        function initTheme() {
+            const themeSwitcher = document.getElementById('theme-switcher');
+            const docHtml = document.documentElement;
+            
+            // Theme toggle function with localStorage
+            function toggleTheme() {
+                const isDark = docHtml.classList.contains('dark');
+                
+                if (isDark) {
+                    docHtml.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    docHtml.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+            
+            // Add click event listener
+            themeSwitcher.addEventListener('click', toggleTheme);
+        }
 
         // --- INITIAL LOAD ---
         document.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
             await setupMenusAndAuth();
             loadDestaque();
         });
     </script>
 </body>
 </html>
-
