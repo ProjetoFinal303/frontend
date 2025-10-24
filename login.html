@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+    <script>
+        // Load theme preference before page renders to prevent flash
+        (function() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
